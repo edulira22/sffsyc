@@ -2,22 +2,72 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* =============================================================================
+   Identidad visual SFFSyC
+   Azul gobierno #1A3A6B · Verde agua #2E8B7A · Superficie #F5F6FA · Texto #1A1A2E
+   Variables en formato HSL (triplete) para consumirse como hsl(var(--token)).
+   ========================================================================== */
 
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: 0 0% 100%;
+    --foreground: 240 28% 14%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 28% 14%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 28% 14%;
+
+    /* Acción primaria = verde agua */
+    --primary: 169 50% 36%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 222 30% 96%;
+    --secondary-foreground: 216 61% 26%;
+
+    --muted: 222 25% 95%;
+    --muted-foreground: 222 12% 45%;
+
+    --accent: 169 44% 93%;
+    --accent-foreground: 169 55% 24%;
+
+    --destructive: 0 72% 48%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 18% 88%;
+    --input: 220 18% 86%;
+    --ring: 169 50% 36%;
+
+    --chart-1: 169 50% 36%;
+    --chart-2: 216 61% 36%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 280 45% 50%;
+    --chart-5: 199 70% 45%;
+
+    --radius: 0.6rem;
+
+    /* Sidebar institucional = azul gobierno */
+    --sidebar: 216 61% 26%;
+    --sidebar-foreground: 210 30% 94%;
+    --sidebar-primary: 169 50% 42%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 216 52% 33%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 216 40% 38%;
+    --sidebar-ring: 169 50% 45%;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+  }
 }
 
 @layer utilities {

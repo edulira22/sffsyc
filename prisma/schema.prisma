@@ -1,0 +1,297 @@
+// =============================================================================
+//  SFFSyC — Sistema de la Subdirección de Fortalecimiento Familiar,
+//  Social y Comunitario · DIF Municipal de Chihuahua
+//  Esquema de base de datos (Prisma + PostgreSQL)
+// =============================================================================
+//
+//  Reglas de oro reflejadas en este esquema:
+//   - Nunca se elimina un registro: todo cambia de `estatus`.
+//   - Todas las tablas tienen created_at / updated_at.
+//   - La edad NUNCA se almacena: se calcula desde fecha_nacimiento.
+//   - La coordinadora de zona NO se guarda en el centro: se infiere de la zona.
+//   - Los horarios son estructurados (día enum + hora HH:mm), nunca texto libre.
+//
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ----------------------------- ENUMS ----------------------------------------
+
+enum RolCoordinadora {
+  general
+  zona
+  centro
+}
+
+enum EstatusActivo {
+  activa
+  inactiva
+}
+
+enum TipoCentro {
+  centro_comunitario
+  cedefam
+  stem
+}
+
+enum EstatusCentro {
+  activo
+  inactivo
+  pendiente
+}
+
+enum DiaSemana {
+  lunes
+  martes
+  miercoles
+  jueves
+  viernes
+  sabado
+  domingo
+}
+
+enum Escolaridad {
+  sin_escolaridad
+  preescolar
+  primaria
+  secundaria
+  preparatoria
+  universidad
+  otro
+}
+
+enum EstatusBeneficiario {
+  activo
+  inactivo
+  baja
+}
+
+enum EstatusInscripcion {
+  activa
+  baja
+  pendiente
+}
+
+enum RolUsuario {
+  admin
+  coordinacion_general
+  coordinadora_zona
+  oficina
+}
+
+enum EstatusUsuario {
+  activo
+  inactivo
+}
+
+// ----------------------------- TABLAS ----------------------------------------
+
+/// Las 4 zonas fijas: Norte A, Norte B, Sur A, Sur B. No se crean desde la UI.
+model Zona {
+  id        Int      @id @default(autoincrement())
+  nombre    String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  centros        Centro[]
+  coordinadoras  Coordinadora[]
+  usuarios       UsuarioSistema[]
+
+  @@map("zonas")
+}
+
+model Coordinadora {
+  id              Int             @id @default(autoincrement())
+  nombre          String
+  apellidoPaterno String          @map("apellido_paterno")
+  apellidoMaterno String?         @map("apellido_materno")
+  telefono        String?
+  rol             RolCoordinadora
+  zonaId          Int?            @map("zona_id")
+  estatus         EstatusActivo   @default(activa)
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  zona             Zona?    @relation(fields: [zonaId], references: [id])
+  centrosACargo    Centro[] @relation("CoordinadoraDeCentro")
+
+  @@index([zonaId])
+  @@index([rol])
+  @@map("coordinadoras")
+}
+
+model Centro {
+  id                  Int           @id @default(autoincrement())
+  nombre              String
+  tipo                TipoCentro    @default(centro_comunitario)
+  zonaId              Int           @map("zona_id")
+  coordinadoraId      Int?          @map("coordinadora_id")
+  direccion           String?
+  referenciaUbicacion String?       @map("referencia_ubicacion")
+  latitud             Float?
+  longitud            Float?
+  horarioGeneral      String?       @map("horario_general")
+  observaciones       String?
+  estatus             EstatusCentro @default(activo)
+  createdAt           DateTime      @default(now()) @map("created_at")
+  updatedAt           DateTime      @updatedAt @map("updated_at")
+
+  zona          Zona          @relation(fields: [zonaId], references: [id])
+  coordinadora  Coordinadora? @relation("CoordinadoraDeCentro", fields: [coordinadoraId], references: [id])
+  clasesCentro  ClaseCentro[]
+
+  @@index([zonaId])
+  @@index([estatus])
+  @@map("centros")
+}
+
+model CatalogoCategoria {
+  id        Int           @id @default(autoincrement())
+  nombre    String        @unique
+  estatus   EstatusActivo @default(activa)
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+
+  clases CatalogoClase[]
+
+  @@map("catalogo_categorias")
+}
+
+model CatalogoClase {
+  id            Int           @id @default(autoincrement())
+  nombreOficial String        @map("nombre_oficial")
+  categoriaId   Int           @map("categoria_id")
+  descripcion   String?
+  variantesAlias String?      @map("variantes_alias")
+  estatus       EstatusActivo @default(activa)
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  categoria    CatalogoCategoria @relation(fields: [categoriaId], references: [id])
+  clasesCentro ClaseCentro[]
+
+  @@index([categoriaId])
+  @@map("catalogo_clases")
+}
+
+model Profesor {
+  id              Int           @id @default(autoincrement())
+  nombre          String
+  apellidoPaterno String        @map("apellido_paterno")
+  apellidoMaterno String?       @map("apellido_materno")
+  telefono        String?
+  especialidad    String?
+  observaciones   String?
+  estatus         EstatusActivo @default(activa)
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  clasesCentro ClaseCentro[]
+
+  @@map("profesores")
+}
+
+/// Instancia local: una clase del catálogo asignada a un centro con un profesor.
+model ClaseCentro {
+  id            Int           @id @default(autoincrement())
+  centroId      Int           @map("centro_id")
+  claseId       Int           @map("clase_id")
+  profesorId    Int?          @map("profesor_id")
+  nivelGrupo    String?       @map("nivel_grupo")
+  observaciones String?
+  estatus       EstatusActivo @default(activa)
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  centro       Centro         @relation(fields: [centroId], references: [id])
+  clase        CatalogoClase  @relation(fields: [claseId], references: [id])
+  profesor     Profesor?      @relation(fields: [profesorId], references: [id])
+  horarios     HorarioClase[]
+  inscripciones Inscripcion[]
+
+  @@index([centroId])
+  @@index([claseId])
+  @@map("clases_centro")
+}
+
+/// Bloque de horario de una clase. Hora en formato "HH:mm" (24h), validado.
+model HorarioClase {
+  id            Int       @id @default(autoincrement())
+  claseCentroId Int       @map("clase_centro_id")
+  diaSemana     DiaSemana @map("dia_semana")
+  horaInicio    String    @map("hora_inicio") // "HH:mm"
+  horaFin       String    @map("hora_fin")     // "HH:mm"
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  claseCentro ClaseCentro @relation(fields: [claseCentroId], references: [id], onDelete: Cascade)
+
+  @@index([claseCentroId])
+  @@map("horarios_clase")
+}
+
+model Beneficiario {
+  id                 Int                 @id @default(autoincrement())
+  apellidoPaterno    String              @map("apellido_paterno")
+  apellidoMaterno    String?             @map("apellido_materno")
+  nombres            String
+  fechaNacimiento    DateTime            @map("fecha_nacimiento") @db.Date
+  curp               String?             @unique
+  telefono           String?
+  domicilio          String?
+  escolaridad        Escolaridad?
+  gradoEscolar       String?             @map("grado_escolar")
+  nombreEscuela      String?             @map("nombre_escuela")
+  observaciones      String?
+  estatus            EstatusBeneficiario @default(activo)
+  fechaPrimerIngreso DateTime            @default(now()) @map("fecha_primer_ingreso") @db.Date
+  createdAt          DateTime            @default(now()) @map("created_at")
+  updatedAt          DateTime            @updatedAt @map("updated_at")
+
+  inscripciones Inscripcion[]
+
+  @@index([apellidoPaterno, apellidoMaterno, nombres])
+  @@index([estatus])
+  @@map("beneficiarios")
+}
+
+/// Tabla puente: un beneficiario inscrito en una clase de un centro.
+model Inscripcion {
+  id              Int                @id @default(autoincrement())
+  beneficiarioId  Int                @map("beneficiario_id")
+  claseCentroId   Int                @map("clase_centro_id")
+  fechaInscripcion DateTime          @default(now()) @map("fecha_inscripcion") @db.Date
+  estatus         EstatusInscripcion @default(activa)
+  observaciones   String?
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+
+  beneficiario Beneficiario @relation(fields: [beneficiarioId], references: [id])
+  claseCentro  ClaseCentro  @relation(fields: [claseCentroId], references: [id])
+
+  @@index([beneficiarioId])
+  @@index([claseCentroId])
+  @@index([estatus])
+  @@map("inscripciones")
+}
+
+model UsuarioSistema {
+  id           Int            @id @default(autoincrement())
+  nombre       String
+  email        String         @unique
+  passwordHash String         @map("password_hash")
+  rol          RolUsuario
+  zonaId       Int?           @map("zona_id")
+  estatus      EstatusUsuario @default(activo)
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+
+  zona Zona? @relation(fields: [zonaId], references: [id])
+
+  @@map("usuarios_sistema")
+}
