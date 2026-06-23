@@ -9,7 +9,6 @@ import {
   Users,
   GraduationCap,
   ArrowRight,
-  ClipboardList,
 } from "lucide-react"
 
 import { requerirSesion } from "@/lib/session"
@@ -117,12 +116,6 @@ export default async function CentroFichaPage({
               <Link href={`/centros/${centro.id}/clases/nueva`}>
                 <Plus className="size-4" />
                 Asignar clase
-              </Link>
-            </Button>
-            <Button asChild className="bg-gobierno hover:bg-gobierno/90">
-              <Link href={`/centros/${centro.id}/beneficiarios/registrar`}>
-                <ClipboardList className="size-4" />
-                Registrar beneficiarios
               </Link>
             </Button>
           </div>
