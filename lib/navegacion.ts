@@ -6,6 +6,8 @@ import {
   BookMarked,
   ShieldCheck,
   FileSpreadsheet,
+  Wrench,
+  CalendarDays,
   type LucideIcon,
 } from "lucide-react"
 import type { RolUsuario } from "@prisma/client"
@@ -17,6 +19,10 @@ import { puedeGestionarCatalogos, puedeAdministrar } from "@/lib/permisos"
 //  con el tiempo se sumarán otras. Cada área agrupa sus propios módulos y solo
 //  se muestra a quien tiene acceso a ella. Así, un usuario ajeno a un área no
 //  ve sus módulos y el menú queda claro y separado.
+//
+//  Para agregar un área nueva:
+//    1. Agregar un objeto a NAV_AREAS con proximamente: true mientras se construye.
+//    2. Cuando esté lista, quitar proximamente y agregar sus módulos.
 // =============================================================================
 
 export type ModuloNav = {
@@ -29,9 +35,9 @@ export type ModuloNav = {
 export type AreaNav = {
   id: string
   titulo: string
+  descripcion: string
   icono: LucideIcon
-  // Acceso al área completa. Hoy depende del rol; cuando existan más áreas
-  // pasará a depender de los permisos de área del usuario.
+  proximamente?: boolean
   visible: (rol: RolUsuario) => boolean
   modulos: ModuloNav[]
 }
@@ -58,11 +64,12 @@ export const NAV_ADMINISTRACION: ItemSimple = {
   visible: puedeAdministrar,
 }
 
-// Áreas de la plataforma. (Por ahora solo Centros Comunitarios.)
+// Áreas de la plataforma.
 export const NAV_AREAS: AreaNav[] = [
   {
     id: "centros-comunitarios",
     titulo: "Centros Comunitarios",
+    descripcion: "Centros, beneficiarios, clases y coordinación",
     icono: Building2,
     visible: () => true,
     modulos: [
@@ -81,5 +88,23 @@ export const NAV_AREAS: AreaNav[] = [
         visible: puedeGestionarCatalogos,
       },
     ],
+  },
+  {
+    id: "mantenimiento",
+    titulo: "Mantenimiento",
+    descripcion: "Bitácoras, solicitudes y seguimiento de mantenimiento",
+    icono: Wrench,
+    proximamente: true,
+    visible: () => true,
+    modulos: [],
+  },
+  {
+    id: "eventos",
+    titulo: "Eventos",
+    descripcion: "Programación y seguimiento de eventos institucionales",
+    icono: CalendarDays,
+    proximamente: true,
+    visible: () => true,
+    modulos: [],
   },
 ]

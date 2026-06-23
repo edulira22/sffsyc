@@ -46,6 +46,19 @@ function EnlaceSimple({
   )
 }
 
+function AreaProximamente({ area }: { area: AreaNav }) {
+  const Icono = area.icono
+  return (
+    <div className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-white/30 cursor-not-allowed select-none">
+      <Icono className="size-[18px] shrink-0" />
+      <span className="flex-1">{area.titulo}</span>
+      <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium text-white/40">
+        Próximamente
+      </span>
+    </div>
+  )
+}
+
 function GrupoArea({
   area,
   rol,
@@ -61,7 +74,6 @@ function GrupoArea({
 
   const [abierto, setAbierto] = useState(areaActiva)
 
-  // Al entrar a un módulo del área (p. ej. desde un acceso rápido), se despliega.
   useEffect(() => {
     if (areaActiva) setAbierto(true)
   }, [areaActiva])
@@ -142,9 +154,13 @@ export function SidebarNav({
         </div>
       )}
 
-      {areasVisibles.map((area) => (
-        <GrupoArea key={area.id} area={area} rol={rol} onNavigate={onNavigate} />
-      ))}
+      {areasVisibles.map((area) =>
+        area.proximamente ? (
+          <AreaProximamente key={area.id} area={area} />
+        ) : (
+          <GrupoArea key={area.id} area={area} rol={rol} onNavigate={onNavigate} />
+        )
+      )}
 
       {NAV_ADMINISTRACION.visible(rol) && (
         <>

@@ -7,6 +7,7 @@ import {
   UserPlus,
   FileSpreadsheet,
   Cake,
+  Clock,
 } from "lucide-react"
 
 import { requerirSesion } from "@/lib/session"
@@ -14,7 +15,7 @@ import { NOMBRE_ROL, puedeGestionarCatalogos } from "@/lib/permisos"
 import { prisma } from "@/lib/prisma"
 import { metricasDashboard } from "@/lib/data/dashboard"
 import { calcularEdad } from "@/lib/fechas"
-import { PageHeader } from "@/components/ui-patterns/page-header"
+import { NAV_AREAS } from "@/lib/navegacion"
 import { Card, CardContent } from "@/components/ui/card"
 import { StatusBadge } from "@/components/ui-patterns/status-badge"
 
@@ -73,41 +74,112 @@ export default async function DashboardPage() {
       : []),
   ]
 
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        titulo={`Hola, ${session.user.nombre.split(" ")[0]}`}
-        descripcion={
-          esZona && zonaNombre
-            ? `${NOMBRE_ROL[session.user.rol]} · Zona ${zonaNombre}`
-            : `Has iniciado sesión como ${NOMBRE_ROL[session.user.rol]}.`
-        }
-      />
+  const areasActivas = NAV_AREAS.filter((a) => !a.proximamente)
+  const areasProximas = NAV_AREAS.filter((a) => a.proximamente)
 
-      {/* Métricas */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <TarjetaMetrica
-          href="/centros"
-          icono={Building2}
-          valor={centrosActivos}
-          etiqueta="Centros activos"
-          color="bg-gobierno-50 text-gobierno"
-        />
-        <TarjetaMetrica
-          href="/beneficiarios"
-          icono={Users}
-          valor={beneficiariosActivos}
-          etiqueta="Beneficiarios activos"
-          color="bg-agua-50 text-agua"
-        />
-        <TarjetaMetrica
-          href="/centros"
-          icono={GraduationCap}
-          valor={clasesActivas}
-          etiqueta="Clases activas"
-          color="bg-amber-50 text-amber-600"
-        />
+  return (
+    <div className="space-y-8">
+
+      {/* Encabezado de la plataforma */}
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+          Plataforma SFFSyC · DIF Municipal de Chihuahua
+        </p>
+        <h1 className="mt-1 text-2xl font-bold text-foreground">
+          Hola, {session.user.nombre.split(" ")[0]}
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          {esZona && zonaNombre
+            ? `${NOMBRE_ROL[session.user.rol]} · Zona ${zonaNombre}`
+            : NOMBRE_ROL[session.user.rol]}
+        </p>
       </div>
+
+      {/* Áreas de la subdirección */}
+      <section>
+        <h2 className="mb-3 text-sm font-semibold text-foreground">
+          Áreas de la subdirección
+        </h2>
+        <div className="grid gap-3 sm:grid-cols-3">
+          {areasActivas.map((area) => {
+            const Icono = area.icono
+            return (
+              <Link
+                key={area.id}
+                href={area.modulos[0]?.href ?? "/dashboard"}
+                className="group flex items-start gap-3 rounded-xl border bg-white p-4 transition-all hover:border-gobierno/30 hover:shadow-sm"
+              >
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-gobierno-50 text-gobierno">
+                  <Icono className="size-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-foreground">{area.titulo}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground leading-snug">
+                    {area.descripcion}
+                  </p>
+                </div>
+                <ArrowRight className="size-4 shrink-0 text-muted-foreground/40 transition-transform group-hover:translate-x-0.5 group-hover:text-gobierno mt-0.5" />
+              </Link>
+            )
+          })}
+
+          {areasProximas.map((area) => {
+            const Icono = area.icono
+            return (
+              <div
+                key={area.id}
+                className="flex items-start gap-3 rounded-xl border border-dashed bg-muted/20 p-4"
+              >
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground/50">
+                  <Icono className="size-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-muted-foreground">{area.titulo}</p>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                      <Clock className="size-3" />
+                      Próximamente
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-xs text-muted-foreground/70 leading-snug">
+                    {area.descripcion}
+                  </p>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </section>
+
+      {/* Métricas de Centros Comunitarios */}
+      <section>
+        <h2 className="mb-3 text-sm font-semibold text-foreground">
+          Centros Comunitarios — resumen
+        </h2>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <TarjetaMetrica
+            href="/centros"
+            icono={Building2}
+            valor={centrosActivos}
+            etiqueta="Centros activos"
+            color="bg-gobierno-50 text-gobierno"
+          />
+          <TarjetaMetrica
+            href="/beneficiarios"
+            icono={Users}
+            valor={beneficiariosActivos}
+            etiqueta="Beneficiarios activos"
+            color="bg-agua-50 text-agua"
+          />
+          <TarjetaMetrica
+            href="/centros"
+            icono={GraduationCap}
+            valor={clasesActivas}
+            etiqueta="Clases activas"
+            color="bg-amber-50 text-amber-600"
+          />
+        </div>
+      </section>
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Últimos beneficiarios */}
