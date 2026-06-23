@@ -243,6 +243,7 @@ model Beneficiario {
   nombres            String
   fechaNacimiento    DateTime            @map("fecha_nacimiento") @db.Date
   curp               String?             @unique
+  sinCurp            Boolean             @default(false) @map("sin_curp")
   telefono           String?
   domicilio          String?
   escolaridad        Escolaridad?

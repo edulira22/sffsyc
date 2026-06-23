@@ -62,6 +62,7 @@ export function BeneficiarioForm({
         ? beneficiario.fechaNacimiento.toISOString().slice(0, 10)
         : valoresIniciales?.fechaNacimiento ?? "",
       curp: beneficiario?.curp ?? valoresIniciales?.curp ?? "",
+      sinCurp: beneficiario?.sinCurp ?? false,
       telefono: beneficiario?.telefono ?? "",
       domicilio: beneficiario?.domicilio ?? "",
       escolaridad: beneficiario?.escolaridad ?? undefined,

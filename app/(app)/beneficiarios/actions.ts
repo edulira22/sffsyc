@@ -38,6 +38,7 @@ function datosBeneficiario(d: BeneficiarioInput) {
     nombres: d.nombres,
     fechaNacimiento: new Date(d.fechaNacimiento),
     curp: d.curp ? d.curp.toUpperCase() : null,
+    sinCurp: d.sinCurp ?? false,
     telefono: d.telefono || null,
     domicilio: d.domicilio || null,
     escolaridad: d.escolaridad ?? null,

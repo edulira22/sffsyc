@@ -45,6 +45,7 @@ export const beneficiarioSchema = z.object({
     })
     .optional()
     .or(z.literal("")),
+  sinCurp: z.boolean().optional(),
   telefono: z.string().trim().optional().or(z.literal("")),
   domicilio: z.string().trim().optional().or(z.literal("")),
   escolaridad: z.enum(ESCOLARIDADES).optional().nullable(),

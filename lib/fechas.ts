@@ -30,6 +30,37 @@ export function hoyISO(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
+/**
+ * Extrae la fecha de nacimiento de una CURP (posiciones 4-9: AAMMDD).
+ * Heurística de siglo: AA > 24 → 19XX, si no → 20XX.
+ * Retorna "YYYY-MM-DD" o null si el formato no es válido.
+ */
+export function fechaDesCurp(curp: string): string | null {
+  if (!curp || curp.length < 10) return null
+  const yy = curp.slice(4, 6)
+  const mm = curp.slice(6, 8)
+  const dd = curp.slice(8, 10)
+  if (!/^\d{2}$/.test(yy) || !/^\d{2}$/.test(mm) || !/^\d{2}$/.test(dd)) return null
+  const mes = parseInt(mm, 10)
+  const dia = parseInt(dd, 10)
+  if (mes < 1 || mes > 12 || dia < 1 || dia > 31) return null
+  const year = parseInt(yy, 10)
+  const fullYear = year > 24 ? 1900 + year : 2000 + year
+  return `${fullYear}-${mm}-${dd}`
+}
+
+/** Calcula la edad en años a partir de una cadena YYYY-MM-DD (útil en formularios). */
+export function edadDeISO(fechaISO: string): number | null {
+  if (!fechaISO || !/^\d{4}-\d{2}-\d{2}$/.test(fechaISO)) return null
+  const [y, m, d] = fechaISO.split("-").map(Number)
+  const hoy = new Date()
+  let edad = hoy.getFullYear() - y
+  if (hoy.getMonth() + 1 < m || (hoy.getMonth() + 1 === m && hoy.getDate() < d)) {
+    edad--
+  }
+  return edad >= 0 ? edad : null
+}
+
 /** Antigüedad legible desde una fecha (ej. "2 años", "3 meses"). */
 export function antiguedad(desde: Date): string {
   const meses =
