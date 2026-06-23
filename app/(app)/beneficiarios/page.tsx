@@ -57,12 +57,14 @@ export default async function BeneficiariosPage({
         titulo="Beneficiarios"
         descripcion="Registro único de personas beneficiarias."
         acciones={
-          <Button asChild className="bg-agua hover:bg-agua-600">
-            <Link href="/beneficiarios/nuevo">
-              <Plus className="size-4" />
-              Nuevo beneficiario
-            </Link>
-          </Button>
+          !esZona ? (
+            <Button asChild className="bg-agua hover:bg-agua-600">
+              <Link href="/beneficiarios/nuevo">
+                <Plus className="size-4" />
+                Nuevo beneficiario
+              </Link>
+            </Button>
+          ) : undefined
         }
       />
 
@@ -78,7 +80,7 @@ export default async function BeneficiariosPage({
               : "Registra al primer beneficiario. El sistema buscará duplicados antes de crearlo."
           }
           accion={
-            !hayFiltros ? (
+            !hayFiltros && !esZona ? (
               <Button asChild className="bg-agua hover:bg-agua-600">
                 <Link href="/beneficiarios/nuevo">
                   <Plus className="size-4" />

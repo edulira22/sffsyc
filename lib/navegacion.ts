@@ -8,6 +8,7 @@ import {
   FileSpreadsheet,
   Wrench,
   CalendarDays,
+  ClipboardList,
   type LucideIcon,
 } from "lucide-react"
 import type { RolUsuario } from "@prisma/client"
@@ -73,6 +74,11 @@ export const NAV_AREAS: AreaNav[] = [
     icono: Building2,
     visible: () => true,
     modulos: [
+      {
+        titulo: "Captura mensual",
+        href: "/captura-mensual",
+        icono: ClipboardList,
+      },
       { titulo: "Centros", href: "/centros", icono: MapPin },
       { titulo: "Beneficiarios", href: "/beneficiarios", icono: Users },
       {

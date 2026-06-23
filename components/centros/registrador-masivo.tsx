@@ -80,9 +80,11 @@ const inputCls =
 export function RegistradorMasivo({
   centroId,
   clases,
+  periodoFecha,
 }: {
   centroId: number
   clases: ClaseOpcion[]
+  periodoFecha?: string
 }) {
   const [clasesDefault, setClasesDefault] = useState<number[]>(
     clases.length === 1 ? [clases[0].id] : []
@@ -188,7 +190,7 @@ export function RegistradorMasivo({
 
     setEnviando(true)
     try {
-      const r = await registrarMasivo(centroId, filasConDatos as never)
+      const r = await registrarMasivo(centroId, filasConDatos as never, periodoFecha)
       if (!r.ok) { toast.error("Error al registrar la lista."); return }
       setResultados(r.resultados)
       const ok = r.resultados.filter((x) => x.tipo !== "error").length
@@ -757,8 +759,8 @@ function FilaTabla({
 // ---- ResultadosRegistro -----------------------------------------------------
 
 function ResultadosRegistro({ resultados }: { resultados: ResultadoFila[] }) {
-  const creados = resultados.filter((r) => r.tipo === "creado")
-  const inscritos = resultados.filter((r) => r.tipo === "inscrito")
+  const nuevos = resultados.filter((r) => r.tipo === "nuevo")
+  const reingresos = resultados.filter((r) => r.tipo === "reingreso")
   const yaInscritos = resultados.filter((r) => r.tipo === "ya_inscrito")
   const errores = resultados.filter((r) => r.tipo === "error")
 
@@ -769,19 +771,19 @@ function ResultadosRegistro({ resultados }: { resultados: ResultadoFila[] }) {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Chip
           icono={<CheckCircle2 className="size-4" />}
-          label="Registrados"
-          count={creados.length}
+          label="Nuevos"
+          count={nuevos.length}
           className="border-green-200 bg-green-50 text-green-700"
         />
         <Chip
           icono={<UserCheck className="size-4" />}
-          label="Ya existían (inscritos)"
-          count={inscritos.length}
+          label="Reingresos"
+          count={reingresos.length}
           className="border-blue-200 bg-blue-50 text-blue-700"
         />
         <Chip
           icono={<Clock className="size-4" />}
-          label="Ya inscritos"
+          label="Ya registrados"
           count={yaInscritos.length}
           className="border-border bg-muted/50 text-muted-foreground"
         />
@@ -793,12 +795,12 @@ function ResultadosRegistro({ resultados }: { resultados: ResultadoFila[] }) {
         />
       </div>
 
-      {inscritos.length > 0 && (
+      {reingresos.length > 0 && (
         <div className="rounded-lg border border-blue-100 bg-blue-50/50 p-3">
           <p className="mb-1 text-xs font-semibold text-blue-700">
-            Personas que ya existían en el sistema — se inscribieron directamente:
+            Reingresos — ya existían en el sistema:
           </p>
-          {inscritos.map((r) => (
+          {reingresos.map((r) => (
             <p key={r.index} className="text-xs text-blue-600">
               • {r.nombre}
             </p>

@@ -40,7 +40,7 @@ export type FilaBatch = z.infer<typeof filaSchema>
 
 export type ResultadoFila = {
   index: number
-  tipo: "creado" | "inscrito" | "ya_inscrito" | "error"
+  tipo: "nuevo" | "reingreso" | "ya_inscrito" | "error"
   nombre: string
   detalle?: string
 }
@@ -93,7 +93,8 @@ function construirObservaciones(
 
 export async function registrarMasivo(
   centroId: number,
-  filas: FilaBatch[]
+  filas: FilaBatch[],
+  periodoFecha?: string
 ): Promise<{ ok: boolean; resultados: ResultadoFila[] }> {
   const session = await requerirSesion()
 
@@ -163,14 +164,16 @@ export async function registrarMasivo(
       }
 
       // Inscribir en cada clase solicitada.
+      const fechaInsc = periodoFecha ? new Date(periodoFecha) : new Date()
       let yaInscritos = 0
       for (const claseId of d.clasesCentroIds) {
-        const yaActiva = await prisma.inscripcion.findFirst({
-          where: { beneficiarioId: beneficiarioId!, claseCentroId: claseId, estatus: "activa" },
-        })
+        const whereYa = periodoFecha
+          ? { beneficiarioId: beneficiarioId!, claseCentroId: claseId, fechaInscripcion: fechaInsc }
+          : { beneficiarioId: beneficiarioId!, claseCentroId: claseId, estatus: "activa" as const }
+        const yaActiva = await prisma.inscripcion.findFirst({ where: whereYa })
         if (yaActiva) { yaInscritos++; continue }
         await prisma.inscripcion.create({
-          data: { beneficiarioId: beneficiarioId!, claseCentroId: claseId },
+          data: { beneficiarioId: beneficiarioId!, claseCentroId: claseId, fechaInscripcion: fechaInsc },
         })
       }
 
@@ -179,12 +182,12 @@ export async function registrarMasivo(
           index: i,
           tipo: "ya_inscrito",
           nombre: nombreCompleto,
-          detalle: "Ya estaba inscrito en todas las clases seleccionadas",
+          detalle: "Ya estaba registrado en este periodo",
         })
       } else if (esNuevo) {
-        resultados.push({ index: i, tipo: "creado", nombre: nombreCompleto })
+        resultados.push({ index: i, tipo: "nuevo", nombre: nombreCompleto })
       } else {
-        resultados.push({ index: i, tipo: "inscrito", nombre: nombreCompleto })
+        resultados.push({ index: i, tipo: "reingreso", nombre: nombreCompleto })
       }
     } catch (e) {
       if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
