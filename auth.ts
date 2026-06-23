@@ -43,6 +43,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: usuario.nombre,
           rol: usuario.rol,
           zonaId: usuario.zonaId,
+          areasPermitidas: usuario.areasPermitidas,
         }
       },
     }),

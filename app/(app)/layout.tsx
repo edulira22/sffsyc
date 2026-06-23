@@ -2,8 +2,6 @@ import { requerirSesion } from "@/lib/session"
 import { prisma } from "@/lib/prisma"
 import { AppShell } from "@/components/layout/app-shell"
 
-// Layout compartido por todas las rutas autenticadas (dashboard, centros,
-// beneficiarios, catálogos, administración). Verifica sesión en el servidor.
 export default async function AppLayout({
   children,
 }: {
@@ -11,7 +9,6 @@ export default async function AppLayout({
 }) {
   const session = await requerirSesion()
 
-  // La zona solo es relevante para coordinadoras de zona (indicador en header).
   let zonaNombre: string | null = null
   if (session.user.rol === "coordinadora_zona" && session.user.zonaId) {
     const zona = await prisma.zona.findUnique({
@@ -27,6 +24,7 @@ export default async function AppLayout({
         rol: session.user.rol,
         email: session.user.email ?? null,
         zonaNombre,
+        areasPermitidas: session.user.areasPermitidas,
       }}
     >
       {children}

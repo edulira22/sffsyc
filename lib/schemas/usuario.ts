@@ -9,13 +9,10 @@ export const ROLES_USUARIO = [
 
 const campos = z.object({
   nombre: z.string().trim().min(1, "El nombre es obligatorio"),
-  email: z
-    .string()
-    .trim()
-    .toLowerCase()
-    .email("Correo no válido"),
+  email: z.string().trim().toLowerCase().email("Correo no válido"),
   rol: z.enum(ROLES_USUARIO, { message: "Selecciona un rol" }),
   zonaId: z.number().int().positive().nullable().optional(),
+  areasPermitidas: z.array(z.string()).default([]),
 })
 
 const MENSAJE_ZONA = "La coordinadora de zona requiere una zona asignada"

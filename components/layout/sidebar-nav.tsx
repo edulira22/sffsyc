@@ -7,6 +7,7 @@ import { ChevronDown } from "lucide-react"
 import type { RolUsuario } from "@prisma/client"
 
 import { cn } from "@/lib/utils"
+import { tieneAccesoArea } from "@/lib/permisos"
 import {
   NAV_INICIO,
   NAV_ADMINISTRACION,
@@ -133,12 +134,16 @@ function GrupoArea({
 
 export function SidebarNav({
   rol,
+  areasPermitidas,
   onNavigate,
 }: {
   rol: RolUsuario
+  areasPermitidas: string[]
   onNavigate?: () => void
 }) {
-  const areasVisibles = NAV_AREAS.filter((a) => a.visible(rol))
+  const areasVisibles = NAV_AREAS.filter(
+    (a) => a.visible(rol) && tieneAccesoArea(a.id, rol, areasPermitidas)
+  )
 
   return (
     <nav className="flex flex-col gap-1">

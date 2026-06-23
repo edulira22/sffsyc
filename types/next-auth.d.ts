@@ -1,7 +1,6 @@
 import type { RolUsuario } from "@prisma/client"
 import type { DefaultSession } from "next-auth"
 
-// Extiende los tipos de NextAuth con los datos institucionales del usuario.
 declare module "next-auth" {
   interface Session {
     user: {
@@ -9,6 +8,7 @@ declare module "next-auth" {
       rol: RolUsuario
       zonaId: number | null
       nombre: string
+      areasPermitidas: string[]
     } & DefaultSession["user"]
   }
 
@@ -16,6 +16,7 @@ declare module "next-auth" {
     rol: RolUsuario
     zonaId: number | null
     nombre: string
+    areasPermitidas: string[]
   }
 }
 
@@ -25,5 +26,6 @@ declare module "next-auth/jwt" {
     rol: RolUsuario
     zonaId: number | null
     nombre: string
+    areasPermitidas: string[]
   }
 }

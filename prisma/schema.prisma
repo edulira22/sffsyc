@@ -282,15 +282,18 @@ model Inscripcion {
 }
 
 model UsuarioSistema {
-  id           Int            @id @default(autoincrement())
-  nombre       String
-  email        String         @unique
-  passwordHash String         @map("password_hash")
-  rol          RolUsuario
-  zonaId       Int?           @map("zona_id")
-  estatus      EstatusUsuario @default(activo)
-  createdAt    DateTime       @default(now()) @map("created_at")
-  updatedAt    DateTime       @updatedAt @map("updated_at")
+  id               Int            @id @default(autoincrement())
+  nombre           String
+  email            String         @unique
+  passwordHash     String         @map("password_hash")
+  rol              RolUsuario
+  zonaId           Int?           @map("zona_id")
+  /// IDs de las áreas a las que tiene acceso (ej. "centros-comunitarios").
+  /// Array vacío = admin (acceso total). Para no-admin debe tener al menos uno.
+  areasPermitidas  String[]       @default([]) @map("areas_permitidas")
+  estatus          EstatusUsuario @default(activo)
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
 
   zona Zona? @relation(fields: [zonaId], references: [id])
 
