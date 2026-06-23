@@ -34,7 +34,7 @@ import {
   aplicaGradoEscuela,
   type BeneficiarioInput,
 } from "@/lib/schemas/beneficiario"
-import { calcularEdad } from "@/lib/fechas"
+import { calcularEdad, fechaDesCurp } from "@/lib/fechas"
 import {
   crearBeneficiario,
   editarBeneficiario,
@@ -74,6 +74,7 @@ export function BeneficiarioForm({
 
   const fechaNac = form.watch("fechaNacimiento")
   const escolaridad = form.watch("escolaridad")
+  const sinCurp = form.watch("sinCurp") ?? false
   const mostrarEscuela = aplicaGradoEscuela(escolaridad)
 
   let edad: number | null = null
@@ -183,16 +184,47 @@ export function BeneficiarioForm({
                 name="curp"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>CURP</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="18 caracteres (opcional)"
-                        maxLength={18}
-                        className="uppercase"
-                        {...field}
-                        value={field.value ?? ""}
-                      />
-                    </FormControl>
+                    <div className="flex items-center justify-between">
+                      <FormLabel>CURP</FormLabel>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const nuevoValor = !sinCurp
+                          form.setValue("sinCurp", nuevoValor)
+                          if (nuevoValor) form.setValue("curp", "")
+                        }}
+                        className={
+                          sinCurp
+                            ? "text-xs font-medium text-orange-600 underline-offset-2 hover:underline"
+                            : "text-xs text-muted-foreground underline-offset-2 hover:underline"
+                        }
+                      >
+                        {sinCurp ? "✕ Quitar «Sin CURP»" : "Sin CURP"}
+                      </button>
+                    </div>
+                    {sinCurp ? (
+                      <div className="flex h-9 items-center rounded-md border border-orange-200 bg-orange-50 px-3">
+                        <span className="text-sm text-orange-700">No cuenta con CURP</span>
+                      </div>
+                    ) : (
+                      <FormControl>
+                        <Input
+                          placeholder="18 caracteres"
+                          maxLength={18}
+                          className="uppercase"
+                          {...field}
+                          value={field.value ?? ""}
+                          onChange={(e) => {
+                            const val = e.target.value.toUpperCase()
+                            field.onChange(val)
+                            if (val.length >= 10) {
+                              const fecha = fechaDesCurp(val)
+                              if (fecha) form.setValue("fechaNacimiento", fecha)
+                            }
+                          }}
+                        />
+                      </FormControl>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
