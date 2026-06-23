@@ -2,24 +2,11 @@
 
 import { useState, useCallback } from "react"
 import { useFieldArray, useForm, Controller } from "react-hook-form"
-import {
-  Plus,
-  Trash2,
-  AlertCircle,
-  Loader2,
-  OctagonMinus,
-  CheckCircle2,
-  UserCheck,
-  Clock,
-} from "lucide-react"
+import { Plus, Trash2, Loader2, CheckCircle2, UserCheck, AlertCircle, Clock, ChevronDown } from "lucide-react"
 import { toast } from "sonner"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Textarea } from "@/components/ui/textarea"
 import {
   Select,
   SelectContent,
@@ -27,9 +14,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { ESCOLARIDADES, ESCOLARIDAD_LABEL, aplicaGradoEscuela } from "@/lib/schemas/beneficiario"
+import { ESCOLARIDADES, ESCOLARIDAD_LABEL } from "@/lib/schemas/beneficiario"
 import { fechaDesCurp, edadDeISO } from "@/lib/fechas"
 import {
   verificarCurp,
@@ -62,9 +49,6 @@ type FilaForm = {
   domicilio: string
   sinDomicilio: boolean
   escolaridad: string
-  gradoEscolar: string
-  nombreEscuela: string
-  observaciones: string
   clasesCentroIds: number[]
 }
 
@@ -81,14 +65,17 @@ function filaVacia(clasesDefault: number[]): FilaForm {
     domicilio: "",
     sinDomicilio: false,
     escolaridad: "",
-    gradoEscolar: "",
-    nombreEscuela: "",
-    observaciones: "",
     clasesCentroIds: [...clasesDefault],
   }
 }
 
-// ---- RegistradorMasivo ------------------------------------------------------
+// ---- Estilos de celda (compactos, sin border en el input) -------------------
+
+const cellCls = "border-r border-muted/40 last:border-r-0 px-1.5 py-1"
+const inputCls =
+  "h-7 w-full border-0 bg-transparent px-1.5 py-0 text-sm shadow-none outline-none placeholder:text-muted-foreground/50 focus:ring-0"
+
+// ---- RegistradorMasivo (componente principal) --------------------------------
 
 export function RegistradorMasivo({
   centroId,
@@ -100,11 +87,9 @@ export function RegistradorMasivo({
   const [clasesDefault, setClasesDefault] = useState<number[]>(
     clases.length === 1 ? [clases[0].id] : []
   )
-  const [curpEstados, setCurpEstados] = useState<CurpEstado[]>([
-    { verificado: false },
-    { verificado: false },
-    { verificado: false },
-  ])
+  const [curpEstados, setCurpEstados] = useState<CurpEstado[]>(
+    Array.from({ length: 10 }, () => ({ verificado: false }))
+  )
   const [resultados, setResultados] = useState<ResultadoFila[] | null>(null)
   const [enviando, setEnviando] = useState(false)
 
@@ -112,13 +97,13 @@ export function RegistradorMasivo({
     filas: FilaForm[]
   }>({
     defaultValues: {
-      filas: [filaVacia([]), filaVacia([]), filaVacia([])],
+      filas: Array.from({ length: 10 }, () => filaVacia([])),
     },
   })
 
   const { fields, append, remove } = useFieldArray({ control, name: "filas" })
 
-  // CURP: verificar duplicado en blur
+  // CURP: verificar duplicado al salir del campo
   const verificarCurpFila = useCallback(async (index: number, curp: string) => {
     if (!curp || curp.length !== 18) return
     const r = await verificarCurp(curp)
@@ -140,9 +125,12 @@ export function RegistradorMasivo({
     })
   }
 
-  function agregarFila() {
-    append(filaVacia(clasesDefault))
-    setCurpEstados((prev) => [...prev, { verificado: false }])
+  function agregarFilas(n: number) {
+    for (let i = 0; i < n; i++) append(filaVacia(clasesDefault))
+    setCurpEstados((prev) => [
+      ...prev,
+      ...Array.from({ length: n }, () => ({ verificado: false })),
+    ])
   }
 
   function eliminarFila(index: number) {
@@ -161,39 +149,39 @@ export function RegistradorMasivo({
     )
   }
 
-  function toggleClaseDefault(claseId: number) {
-    setClasesDefault((prev) =>
-      prev.includes(claseId) ? prev.filter((id) => id !== claseId) : [...prev, claseId]
+  function aplicarClasesATodas() {
+    fields.forEach((_, i) =>
+      setValue(`filas.${i}.clasesCentroIds`, [...clasesDefault])
     )
+    toast.success("Clases aplicadas a todas las filas")
   }
 
   async function onSubmit(data: { filas: FilaForm[] }) {
-    // Filtrar filas con datos
     const filasConDatos = data.filas.filter(
       (f) => f.apellidoPaterno.trim() || f.nombres.trim()
     )
     if (filasConDatos.length === 0) {
-      toast.error("Agrega al menos una persona antes de registrar.")
+      toast.error("Llena al menos una fila antes de registrar.")
       return
     }
 
-    // Validación básica en cliente
     const errores: string[] = []
     filasConDatos.forEach((f, i) => {
       const n = i + 1
-      if (!f.nombres.trim()) errores.push(`Fila ${n}: nombre requerido`)
       if (!f.apellidoPaterno.trim()) errores.push(`Fila ${n}: apellido paterno requerido`)
-      if (!f.fechaNacimiento) errores.push(`Fila ${n}: fecha de nacimiento requerida`)
-      if (!f.sinCurp && !f.curp.trim()) errores.push(`Fila ${n}: CURP requerida o marca "Sin CURP"`)
-      if (!f.sinTelefono && !f.telefono.trim()) errores.push(`Fila ${n}: teléfono requerido o marca "Sin tel."`)
-      if (!f.sinDomicilio && !f.domicilio.trim()) errores.push(`Fila ${n}: domicilio requerido o marca "Sin dom."`)
+      if (!f.nombres.trim()) errores.push(`Fila ${n}: nombre(s) requerido`)
+      if (!f.fechaNacimiento) errores.push(`Fila ${n}: fecha de nac. requerida`)
+      if (!f.sinCurp && !f.curp.trim()) errores.push(`Fila ${n}: CURP requerida — marca S/C si no la tiene`)
+      if (!f.sinTelefono && !f.telefono.trim()) errores.push(`Fila ${n}: teléfono requerido — marca S/T si no lo tiene`)
+      if (!f.sinDomicilio && !f.domicilio.trim()) errores.push(`Fila ${n}: domicilio requerido — marca S/D si no lo tiene`)
       if (!f.escolaridad) errores.push(`Fila ${n}: escolaridad requerida`)
       if (f.clasesCentroIds.length === 0) errores.push(`Fila ${n}: selecciona al menos una clase`)
     })
 
     if (errores.length > 0) {
       toast.error(errores[0], {
-        description: errores.length > 1 ? `+${errores.length - 1} campo(s) más con error` : undefined,
+        description:
+          errores.length > 1 ? `+${errores.length - 1} campo(s) más con error` : undefined,
       })
       return
     }
@@ -201,41 +189,32 @@ export function RegistradorMasivo({
     setEnviando(true)
     try {
       const r = await registrarMasivo(centroId, filasConDatos as never)
-      if (!r.ok) {
-        toast.error("No se pudo completar el registro.")
-        return
-      }
+      if (!r.ok) { toast.error("Error al registrar la lista."); return }
       setResultados(r.resultados)
-      const creados = r.resultados.filter((x) => x.tipo === "creado").length
-      const inscritos = r.resultados.filter((x) => x.tipo === "inscrito").length
+      const ok = r.resultados.filter((x) => x.tipo !== "error").length
       const errF = r.resultados.filter((x) => x.tipo === "error").length
       if (errF === 0) {
-        toast.success(`${creados + inscritos} persona(s) registradas correctamente`)
+        toast.success(`${ok} persona(s) registradas correctamente`)
       } else {
-        toast.warning(
-          `${creados + inscritos} registradas · ${errF} con error`
-        )
+        toast.warning(`${ok} registradas · ${errF} con error`)
       }
     } finally {
       setEnviando(false)
     }
   }
 
-  const filasLlenas = watch("filas").filter(
+  const filasConDatos = watch("filas").filter(
     (f) => f.apellidoPaterno.trim() || f.nombres.trim()
   ).length
 
   return (
-    <div className="space-y-5">
-      {/* Clase(s) por defecto */}
+    <div className="space-y-4">
+      {/* Clases por defecto */}
       {clases.length > 0 && (
-        <div className="rounded-xl border bg-card p-4">
-          <p className="mb-1 text-sm font-semibold text-foreground">
-            Clase(s) por defecto
-          </p>
-          <p className="mb-3 text-xs text-muted-foreground">
-            Se pre-seleccionarán en las nuevas filas que agregues.
-          </p>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border bg-card px-4 py-3">
+          <span className="shrink-0 text-sm font-medium text-foreground">
+            Clase(s) predeterminada para la lista:
+          </span>
           <div className="flex flex-wrap gap-2">
             {clases.map((c) => {
               const sel = clasesDefault.includes(c.id)
@@ -243,62 +222,162 @@ export function RegistradorMasivo({
                 <button
                   key={c.id}
                   type="button"
-                  onClick={() => toggleClaseDefault(c.id)}
+                  onClick={() =>
+                    setClasesDefault((p) =>
+                      p.includes(c.id)
+                        ? p.filter((id) => id !== c.id)
+                        : [...p, c.id]
+                    )
+                  }
                   className={cn(
-                    "rounded-lg border px-3 py-1.5 text-sm transition-colors",
+                    "rounded-lg border px-3 py-1 text-xs font-medium transition-colors",
                     sel
-                      ? "border-gobierno/40 bg-gobierno-50 font-medium text-gobierno"
-                      : "border-border hover:bg-muted/50"
+                      ? "border-gobierno/40 bg-gobierno-50 text-gobierno"
+                      : "border-border hover:bg-muted/50 text-muted-foreground"
                   )}
                 >
-                  {c.nombre}
-                  <span className="ml-1.5 text-[10px] text-muted-foreground">
-                    {c.categoria}
-                  </span>
+                  {sel ? "✓" : "+"} {c.nombre}
                 </button>
               )
             })}
           </div>
+          {clasesDefault.length > 0 && (
+            <button
+              type="button"
+              onClick={aplicarClasesATodas}
+              className="ml-auto text-xs text-gobierno underline-offset-2 hover:underline"
+            >
+              Aplicar a toda la lista
+            </button>
+          )}
         </div>
       )}
 
-      {/* Filas */}
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {fields.map((field, index) => (
-          <FilaRegistro
-            key={field.id}
-            index={index}
-            control={control}
-            watch={watch}
-            clases={clases}
-            curpEstado={curpEstados[index] ?? { verificado: false }}
-            onCurpChange={() => resetCurpEstado(index)}
-            onCurpBlur={(curp) => verificarCurpFila(index, curp)}
-            onFechaAutoFill={(fecha) => setValue(`filas.${index}.fechaNacimiento`, fecha)}
-            onToggleClase={(claseId) => toggleClaseFila(index, claseId)}
-            onEliminar={() => eliminarFila(index)}
-            puedeEliminar={fields.length > 1}
-          />
-        ))}
+      {/* Leyenda de indicadores */}
+      <div className="flex flex-wrap items-center gap-4 px-1 text-xs text-muted-foreground">
+        <span className="flex items-center gap-1">
+          <span className="inline-block size-2 rounded-full bg-amber-400" />
+          CURP ya registrada — se inscribirá al existente
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="inline-block size-2 rounded-full bg-orange-400" />
+          Sin CURP declarado
+        </span>
+        <span>
+          <strong>S/C</strong> = Sin CURP &nbsp;·&nbsp; <strong>S/T</strong> = Sin teléfono &nbsp;·&nbsp;{" "}
+          <strong>S/D</strong> = Sin domicilio (aparecen al pasar el cursor)
+        </span>
+      </div>
 
-        {/* Pie de formulario */}
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3">
-          <Button type="button" variant="outline" size="sm" onClick={agregarFila}>
-            <Plus className="size-4" />
-            Agregar persona
-          </Button>
+      {/* Tabla */}
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <div className="overflow-x-auto rounded-xl border bg-card shadow-sm">
+          <table className="min-w-[1080px] w-full border-collapse text-sm">
+            <thead>
+              <tr className="border-b bg-muted/30">
+                <th className="w-8 px-3 py-2.5 text-left text-[11px] font-semibold tracking-wide text-muted-foreground">
+                  #
+                </th>
+                <th className="min-w-[130px] px-2 py-2.5 text-left text-[11px] font-semibold tracking-wide text-muted-foreground">
+                  Ap. Paterno <span className="text-red-400">*</span>
+                </th>
+                <th className="min-w-[110px] px-2 py-2.5 text-left text-[11px] font-semibold tracking-wide text-muted-foreground">
+                  Ap. Materno
+                </th>
+                <th className="min-w-[120px] px-2 py-2.5 text-left text-[11px] font-semibold tracking-wide text-muted-foreground">
+                  Nombre(s) <span className="text-red-400">*</span>
+                </th>
+                <th className="min-w-[175px] px-2 py-2.5 text-left text-[11px] font-semibold tracking-wide text-muted-foreground">
+                  CURP <span className="text-red-400">*</span>
+                </th>
+                <th className="w-[110px] px-2 py-2.5 text-left text-[11px] font-semibold tracking-wide text-muted-foreground">
+                  F. Nac. <span className="text-red-400">*</span>
+                </th>
+                <th className="w-12 px-2 py-2.5 text-left text-[11px] font-semibold tracking-wide text-muted-foreground">
+                  Edad
+                </th>
+                <th className="min-w-[110px] px-2 py-2.5 text-left text-[11px] font-semibold tracking-wide text-muted-foreground">
+                  Teléfono <span className="text-red-400">*</span>
+                </th>
+                <th className="min-w-[145px] px-2 py-2.5 text-left text-[11px] font-semibold tracking-wide text-muted-foreground">
+                  Domicilio <span className="text-red-400">*</span>
+                </th>
+                <th className="min-w-[125px] px-2 py-2.5 text-left text-[11px] font-semibold tracking-wide text-muted-foreground">
+                  Escolaridad <span className="text-red-400">*</span>
+                </th>
+                <th className="min-w-[130px] px-2 py-2.5 text-left text-[11px] font-semibold tracking-wide text-muted-foreground">
+                  Clase(s) <span className="text-red-400">*</span>
+                </th>
+                <th className="w-8 px-2 py-2.5" />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-muted/30">
+              {fields.map((field, index) => (
+                <FilaTabla
+                  key={field.id}
+                  index={index}
+                  control={control}
+                  watch={watch}
+                  clases={clases}
+                  curpEstado={curpEstados[index] ?? { verificado: false }}
+                  onCurpChange={() => resetCurpEstado(index)}
+                  onCurpBlur={(curp) => verificarCurpFila(index, curp)}
+                  onFechaAutoFill={(fecha) =>
+                    setValue(`filas.${index}.fechaNacimiento`, fecha)
+                  }
+                  onToggleClase={(claseId) => toggleClaseFila(index, claseId)}
+                  onEliminar={() => eliminarFila(index)}
+                  puedeEliminar={fields.length > 1}
+                  setValue={setValue}
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pie de página */}
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => agregarFilas(10)}
+            >
+              <Plus className="size-3.5" />
+              +10 filas
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => agregarFilas(5)}
+            >
+              <Plus className="size-3.5" />
+              +5 filas
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => agregarFilas(1)}
+            >
+              <Plus className="size-3.5" />
+              +1 fila
+            </Button>
+          </div>
+
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground">
-              {filasLlenas} de {fields.length} fila(s) con datos
+              {filasConDatos} persona{filasConDatos !== 1 ? "s" : ""} para registrar
             </span>
             <Button
               type="submit"
-              disabled={enviando || filasLlenas === 0}
-              className="bg-agua hover:bg-agua-600"
+              disabled={enviando || filasConDatos === 0}
+              className="bg-gobierno hover:bg-gobierno/90"
             >
-              {enviando && <Loader2 className="size-4 animate-spin" />}
-              Registrar {filasLlenas > 0 ? filasLlenas : ""} persona
-              {filasLlenas !== 1 ? "s" : ""}
+              {enviando && <Loader2 className="mr-1 size-4 animate-spin" />}
+              Registrar lista
             </Button>
           </div>
         </div>
@@ -310,9 +389,9 @@ export function RegistradorMasivo({
   )
 }
 
-// ---- FilaRegistro -----------------------------------------------------------
+// ---- FilaTabla --------------------------------------------------------------
 
-function FilaRegistro({
+function FilaTabla({
   index,
   control,
   watch,
@@ -324,6 +403,7 @@ function FilaRegistro({
   onToggleClase,
   onEliminar,
   puedeEliminar,
+  setValue,
 }: {
   index: number
   control: ReturnType<typeof useForm<{ filas: FilaForm[] }>>["control"]
@@ -336,348 +416,341 @@ function FilaRegistro({
   onToggleClase: (claseId: number) => void
   onEliminar: () => void
   puedeEliminar: boolean
+  setValue: ReturnType<typeof useForm<{ filas: FilaForm[] }>>["setValue"]
 }) {
-  const sinCurp = watch(`filas.${index}.sinCurp`)
-  const sinTelefono = watch(`filas.${index}.sinTelefono`)
-  const sinDomicilio = watch(`filas.${index}.sinDomicilio`)
-  const fechaNacimiento = watch(`filas.${index}.fechaNacimiento`)
-  const escolaridad = watch(`filas.${index}.escolaridad`)
-  const clasesCentroIds: number[] = (watch(`filas.${index}.clasesCentroIds`) as number[]) ?? []
+  const sinCurp: boolean = watch(`filas.${index}.sinCurp`) ?? false
+  const sinTelefono: boolean = watch(`filas.${index}.sinTelefono`) ?? false
+  const sinDomicilio: boolean = watch(`filas.${index}.sinDomicilio`) ?? false
+  const fechaNacimiento: string = watch(`filas.${index}.fechaNacimiento`) ?? ""
+  const clasesCentroIds: number[] =
+    (watch(`filas.${index}.clasesCentroIds`) as number[]) ?? []
   const edad = edadDeISO(fechaNacimiento)
-  const aplicaGE = aplicaGradoEscuela(escolaridad || undefined)
+
+  const nombreAp = watch(`filas.${index}.apellidoPaterno`) ?? ""
+  const nombre = watch(`filas.${index}.nombres`) ?? ""
+  const isEmpty = !nombreAp.trim() && !nombre.trim()
+
+  const rowCls = cn(
+    "group relative transition-colors",
+    curpEstado.duplicado
+      ? "bg-amber-50/50 hover:bg-amber-50"
+      : sinCurp
+        ? "bg-orange-50/30 hover:bg-orange-50/50"
+        : isEmpty
+          ? "hover:bg-muted/10"
+          : "bg-white hover:bg-muted/20"
+  )
+
+  const clasesSeleccionadas = clases.filter((c) => clasesCentroIds.includes(c.id))
 
   return (
-    <Card
-      className={cn(
-        "border transition-colors",
-        curpEstado.duplicado && "border-amber-300 bg-amber-50/20"
-      )}
-    >
-      <CardContent className="p-4">
-        {/* Encabezado de fila */}
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-gobierno/10 text-xs font-bold text-gobierno">
-              {index + 1}
+    <tr className={rowCls}>
+      {/* Número */}
+      <td className="w-8 border-r border-muted/40 pl-3 pr-1.5 py-1 text-center">
+        <span className="text-[11px] font-medium text-muted-foreground/60">
+          {index + 1}
+        </span>
+      </td>
+
+      {/* Apellido Paterno */}
+      <td className={cellCls}>
+        <Controller
+          control={control}
+          name={`filas.${index}.apellidoPaterno`}
+          render={({ field }) => (
+            <input
+              {...field}
+              className={inputCls}
+              placeholder="Apellido..."
+              autoComplete="off"
+            />
+          )}
+        />
+      </td>
+
+      {/* Apellido Materno */}
+      <td className={cellCls}>
+        <Controller
+          control={control}
+          name={`filas.${index}.apellidoMaterno`}
+          render={({ field }) => (
+            <input {...field} className={inputCls} placeholder="Apellido..." autoComplete="off" />
+          )}
+        />
+      </td>
+
+      {/* Nombre(s) */}
+      <td className={cellCls}>
+        <Controller
+          control={control}
+          name={`filas.${index}.nombres`}
+          render={({ field }) => (
+            <input {...field} className={inputCls} placeholder="Nombre(s)..." autoComplete="off" />
+          )}
+        />
+      </td>
+
+      {/* CURP */}
+      <td className={cellCls}>
+        {sinCurp ? (
+          <div className="flex items-center gap-1.5">
+            <span className="rounded bg-orange-100 px-2 py-0.5 text-[11px] font-semibold text-orange-700">
+              Sin CURP
             </span>
-            {curpEstado.duplicado && (
-              <Badge
-                variant="outline"
-                className="gap-1 border-amber-400 bg-amber-50 text-amber-700 text-xs"
-              >
-                <AlertCircle className="size-3" />
-                Ya existe: {curpEstado.duplicado.nombre} — se inscribirá directamente
-              </Badge>
-            )}
-            {sinCurp && !curpEstado.duplicado && (
-              <Badge
-                variant="outline"
-                className="gap-1 border-orange-400 bg-orange-50 text-orange-700 text-xs"
-              >
-                <OctagonMinus className="size-3" />
-                Sin CURP
-              </Badge>
-            )}
+            <button
+              type="button"
+              onClick={() => {
+                setValue(`filas.${index}.sinCurp`, false)
+                onCurpChange()
+              }}
+              className="text-[11px] text-muted-foreground hover:text-foreground"
+              title="Quitar"
+            >
+              ×
+            </button>
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={onEliminar}
-            disabled={!puedeEliminar}
-            className="size-7 shrink-0 text-muted-foreground hover:text-destructive"
-          >
-            <Trash2 className="size-3.5" />
-          </Button>
-        </div>
-
-        <div className="space-y-3">
-          {/* Nombre */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <Campo label="Apellido Paterno *">
-              <Controller
-                control={control}
-                name={`filas.${index}.apellidoPaterno`}
-                render={({ field }) => (
-                  <Input {...field} placeholder="González" />
-                )}
-              />
-            </Campo>
-            <Campo label="Apellido Materno">
-              <Controller
-                control={control}
-                name={`filas.${index}.apellidoMaterno`}
-                render={({ field }) => (
-                  <Input {...field} placeholder="López" />
-                )}
-              />
-            </Campo>
-            <Campo label="Nombre(s) *">
-              <Controller
-                control={control}
-                name={`filas.${index}.nombres`}
-                render={({ field }) => (
-                  <Input {...field} placeholder="María José" />
-                )}
-              />
-            </Campo>
-          </div>
-
-          {/* CURP + Fecha + Edad */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <div>
-              <div className="mb-1 flex items-center justify-between">
-                <Label className="text-xs font-medium">
-                  {sinCurp ? "CURP (omitida)" : "CURP *"}
-                </Label>
-                <Controller
-                  control={control}
-                  name={`filas.${index}.sinCurp`}
-                  render={({ field }) => (
-                    <label className="flex cursor-pointer select-none items-center gap-1 text-[11px] text-orange-600">
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={(v: boolean | "indeterminate") => {
-                          field.onChange(v)
-                          if (v === true) onCurpChange()
-                        }}
-                        className="size-3 rounded-sm"
-                      />
-                      Sin CURP
-                    </label>
-                  )}
-                />
-              </div>
-              <Controller
-                control={control}
-                name={`filas.${index}.curp`}
-                render={({ field }) => (
-                  <Input
-                    {...field}
-                    disabled={sinCurp}
-                    placeholder={sinCurp ? "—" : "18 caracteres"}
-                    maxLength={18}
-                    className={cn(
-                      "font-mono text-sm uppercase tracking-wider",
-                      sinCurp && "bg-muted text-muted-foreground"
-                    )}
-                    onChange={(e) => {
-                      const val = e.target.value.toUpperCase()
-                      field.onChange(val)
-                      onCurpChange()
-                      if (val.length >= 10) {
-                        const fecha = fechaDesCurp(val)
-                        if (fecha) onFechaAutoFill(fecha)
-                      }
-                    }}
-                    onBlur={() => {
-                      field.onBlur()
-                      if (field.value && field.value.length === 18) {
-                        onCurpBlur(field.value)
-                      }
-                    }}
-                  />
-                )}
-              />
-            </div>
-            <Campo label="Fecha de Nacimiento *">
-              <Controller
-                control={control}
-                name={`filas.${index}.fechaNacimiento`}
-                render={({ field }) => (
-                  <Input {...field} type="date" />
-                )}
-              />
-            </Campo>
-            <div>
-              <Label className="text-xs font-medium">Edad</Label>
-              <div className="mt-1 flex h-9 items-center rounded-md border bg-muted/40 px-3 text-sm text-muted-foreground">
-                {edad !== null ? `${edad} años` : "—"}
-              </div>
-            </div>
-          </div>
-
-          {/* Teléfono + Domicilio */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              <div className="mb-1 flex items-center justify-between">
-                <Label className="text-xs font-medium">
-                  {sinTelefono ? "Teléfono (no proporcionado)" : "Teléfono *"}
-                </Label>
-                <Controller
-                  control={control}
-                  name={`filas.${index}.sinTelefono`}
-                  render={({ field }) => (
-                    <label className="flex cursor-pointer select-none items-center gap-1 text-[11px] text-muted-foreground">
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        className="size-3 rounded-sm"
-                      />
-                      Sin tel.
-                    </label>
-                  )}
-                />
-              </div>
-              <Controller
-                control={control}
-                name={`filas.${index}.telefono`}
-                render={({ field }) => (
-                  <Input
-                    {...field}
-                    disabled={sinTelefono}
-                    placeholder={sinTelefono ? "—" : "614 000 0000"}
-                    className={cn(sinTelefono && "bg-muted text-muted-foreground")}
-                  />
-                )}
-              />
-            </div>
-            <div>
-              <div className="mb-1 flex items-center justify-between">
-                <Label className="text-xs font-medium">
-                  {sinDomicilio ? "Domicilio (no proporcionado)" : "Domicilio *"}
-                </Label>
-                <Controller
-                  control={control}
-                  name={`filas.${index}.sinDomicilio`}
-                  render={({ field }) => (
-                    <label className="flex cursor-pointer select-none items-center gap-1 text-[11px] text-muted-foreground">
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        className="size-3 rounded-sm"
-                      />
-                      Sin dom.
-                    </label>
-                  )}
-                />
-              </div>
-              <Controller
-                control={control}
-                name={`filas.${index}.domicilio`}
-                render={({ field }) => (
-                  <Input
-                    {...field}
-                    disabled={sinDomicilio}
-                    placeholder={sinDomicilio ? "—" : "Calle, colonia, número..."}
-                    className={cn(sinDomicilio && "bg-muted text-muted-foreground")}
-                  />
-                )}
-              />
-            </div>
-          </div>
-
-          {/* Escolaridad */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <Campo label="Escolaridad *">
-              <Controller
-                control={control}
-                name={`filas.${index}.escolaridad`}
-                render={({ field }) => (
-                  <Select value={field.value || ""} onValueChange={field.onChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ESCOLARIDADES.map((e) => (
-                        <SelectItem key={e} value={e}>
-                          {ESCOLARIDAD_LABEL[e]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-            </Campo>
-            {aplicaGE && (
-              <>
-                <Campo label="Grado">
-                  <Controller
-                    control={control}
-                    name={`filas.${index}.gradoEscolar`}
-                    render={({ field }) => (
-                      <Input {...field} placeholder="Ej. 3° primaria" />
-                    )}
-                  />
-                </Campo>
-                <Campo label="Escuela">
-                  <Controller
-                    control={control}
-                    name={`filas.${index}.nombreEscuela`}
-                    render={({ field }) => (
-                      <Input {...field} placeholder="Nombre de la escuela" />
-                    )}
-                  />
-                </Campo>
-              </>
-            )}
-          </div>
-
-          {/* Clase(s) */}
-          <div>
-            <Label className="text-xs font-medium">Clase(s) a inscribir *</Label>
-            <div className="mt-1.5 flex flex-wrap gap-2">
-              {clases.map((c) => {
-                const sel = clasesCentroIds.includes(c.id)
-                return (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => onToggleClase(c.id)}
-                    className={cn(
-                      "rounded-lg border px-3 py-1.5 text-xs transition-colors",
-                      sel
-                        ? "border-gobierno/40 bg-gobierno-50 font-medium text-gobierno"
-                        : "border-border hover:bg-muted/50"
-                    )}
-                  >
-                    {c.nombre}
-                  </button>
-                )
-              })}
-              {clases.length === 0 && (
-                <p className="text-xs text-muted-foreground italic">
-                  Este centro no tiene clases activas asignadas.
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Observaciones */}
-          <Campo label="Observaciones">
+        ) : (
+          <div className="flex items-center gap-1">
             <Controller
               control={control}
-              name={`filas.${index}.observaciones`}
+              name={`filas.${index}.curp`}
               render={({ field }) => (
-                <Textarea
+                <input
                   {...field}
-                  rows={2}
-                  placeholder="Notas adicionales..."
-                  className="resize-none text-sm"
+                  className={cn(
+                    inputCls,
+                    "font-mono uppercase tracking-wider",
+                    curpEstado.duplicado && "text-amber-700"
+                  )}
+                  placeholder="18 caracteres"
+                  maxLength={18}
+                  autoComplete="off"
+                  onChange={(e) => {
+                    const val = e.target.value.toUpperCase()
+                    field.onChange(val)
+                    onCurpChange()
+                    if (val.length >= 10) {
+                      const fecha = fechaDesCurp(val)
+                      if (fecha) onFechaAutoFill(fecha)
+                    }
+                  }}
+                  onBlur={() => {
+                    field.onBlur()
+                    const v = field.value ?? ""
+                    if (v.length === 18) onCurpBlur(v)
+                  }}
                 />
               )}
             />
-          </Campo>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
+            <button
+              type="button"
+              title="Marcar sin CURP"
+              onClick={() => {
+                setValue(`filas.${index}.sinCurp`, true)
+                setValue(`filas.${index}.curp`, "")
+                onCurpChange()
+              }}
+              className="shrink-0 rounded px-1 text-[10px] font-semibold text-muted-foreground/0 transition-all hover:bg-orange-50 hover:text-orange-600 group-hover:text-muted-foreground/50"
+            >
+              S/C
+            </button>
+          </div>
+        )}
+        {curpEstado.duplicado && (
+          <p className="mt-0.5 truncate text-[10px] leading-tight text-amber-600">
+            ↳ {curpEstado.duplicado.nombre}
+          </p>
+        )}
+      </td>
 
-// ---- Campo helper -----------------------------------------------------------
+      {/* Fecha Nacimiento */}
+      <td className={cellCls}>
+        <Controller
+          control={control}
+          name={`filas.${index}.fechaNacimiento`}
+          render={({ field }) => (
+            <input
+              {...field}
+              type="date"
+              className={cn(inputCls, "text-xs")}
+            />
+          )}
+        />
+      </td>
 
-function Campo({
-  label,
-  children,
-}: {
-  label: string
-  children: React.ReactNode
-}) {
-  return (
-    <div>
-      <Label className="mb-1 block text-xs font-medium">{label}</Label>
-      {children}
-    </div>
+      {/* Edad */}
+      <td className={cellCls}>
+        <span className="block text-center text-sm text-muted-foreground">
+          {edad !== null ? `${edad}a` : "—"}
+        </span>
+      </td>
+
+      {/* Teléfono */}
+      <td className={cellCls}>
+        {sinTelefono ? (
+          <div className="flex items-center gap-1.5">
+            <span className="rounded bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
+              Sin tel.
+            </span>
+            <button
+              type="button"
+              onClick={() => setValue(`filas.${index}.sinTelefono`, false)}
+              className="text-[11px] text-muted-foreground hover:text-foreground"
+            >
+              ×
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1">
+            <Controller
+              control={control}
+              name={`filas.${index}.telefono`}
+              render={({ field }) => (
+                <input {...field} className={inputCls} placeholder="614..." autoComplete="off" />
+              )}
+            />
+            <button
+              type="button"
+              title="Sin teléfono"
+              onClick={() => {
+                setValue(`filas.${index}.sinTelefono`, true)
+                setValue(`filas.${index}.telefono`, "")
+              }}
+              className="shrink-0 rounded px-1 text-[10px] font-semibold text-muted-foreground/0 transition-all hover:bg-muted hover:text-muted-foreground group-hover:text-muted-foreground/40"
+            >
+              S/T
+            </button>
+          </div>
+        )}
+      </td>
+
+      {/* Domicilio */}
+      <td className={cellCls}>
+        {sinDomicilio ? (
+          <div className="flex items-center gap-1.5">
+            <span className="rounded bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
+              Sin dom.
+            </span>
+            <button
+              type="button"
+              onClick={() => setValue(`filas.${index}.sinDomicilio`, false)}
+              className="text-[11px] text-muted-foreground hover:text-foreground"
+            >
+              ×
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1">
+            <Controller
+              control={control}
+              name={`filas.${index}.domicilio`}
+              render={({ field }) => (
+                <input
+                  {...field}
+                  className={inputCls}
+                  placeholder="Calle, colonia..."
+                  autoComplete="off"
+                />
+              )}
+            />
+            <button
+              type="button"
+              title="Sin domicilio"
+              onClick={() => {
+                setValue(`filas.${index}.sinDomicilio`, true)
+                setValue(`filas.${index}.domicilio`, "")
+              }}
+              className="shrink-0 rounded px-1 text-[10px] font-semibold text-muted-foreground/0 transition-all hover:bg-muted hover:text-muted-foreground group-hover:text-muted-foreground/40"
+            >
+              S/D
+            </button>
+          </div>
+        )}
+      </td>
+
+      {/* Escolaridad */}
+      <td className={cellCls}>
+        <Controller
+          control={control}
+          name={`filas.${index}.escolaridad`}
+          render={({ field }) => (
+            <Select value={field.value || ""} onValueChange={field.onChange}>
+              <SelectTrigger className="h-7 border-0 bg-transparent px-1.5 text-xs shadow-none focus:ring-0 focus:ring-offset-0 [&>svg]:size-3">
+                <SelectValue placeholder="Seleccionar…" />
+              </SelectTrigger>
+              <SelectContent>
+                {ESCOLARIDADES.map((e) => (
+                  <SelectItem key={e} value={e} className="text-xs">
+                    {ESCOLARIDAD_LABEL[e]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+      </td>
+
+      {/* Clases */}
+      <td className={cellCls}>
+        <Popover>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className={cn(
+                "flex h-7 w-full items-center justify-between gap-1 rounded px-1.5 text-xs transition-colors hover:bg-muted/50",
+                clasesSeleccionadas.length === 0
+                  ? "text-muted-foreground/50"
+                  : "text-foreground"
+              )}
+            >
+              <span className="truncate">
+                {clasesSeleccionadas.length === 0
+                  ? "Seleccionar…"
+                  : clasesSeleccionadas.map((c) => c.nombre).join(", ")}
+              </span>
+              <ChevronDown className="size-3 shrink-0 text-muted-foreground" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-52 p-2">
+            {clases.length === 0 ? (
+              <p className="px-2 py-1.5 text-xs text-muted-foreground">
+                No hay clases activas en este centro.
+              </p>
+            ) : (
+              clases.map((c) => {
+                const sel = clasesCentroIds.includes(c.id)
+                return (
+                  <label
+                    key={c.id}
+                    className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-muted"
+                  >
+                    <Checkbox
+                      checked={sel}
+                      onCheckedChange={() => onToggleClase(c.id)}
+                      className="size-3.5"
+                    />
+                    <span className="flex-1">{c.nombre}</span>
+                  </label>
+                )
+              })
+            )}
+          </PopoverContent>
+        </Popover>
+      </td>
+
+      {/* Eliminar */}
+      <td className="w-8 px-1.5 py-1">
+        <button
+          type="button"
+          onClick={onEliminar}
+          disabled={!puedeEliminar}
+          title="Eliminar fila"
+          className="flex size-6 items-center justify-center rounded text-muted-foreground/0 transition-all hover:bg-destructive/10 hover:text-destructive group-hover:text-muted-foreground/40 disabled:pointer-events-none"
+        >
+          <Trash2 className="size-3.5" />
+        </button>
+      </td>
+    </tr>
   )
 }
 
@@ -694,36 +767,36 @@ function ResultadosRegistro({ resultados }: { resultados: ResultadoFila[] }) {
       <h3 className="font-semibold text-foreground">Resultado del registro</h3>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <ChipResultado
+        <Chip
           icono={<CheckCircle2 className="size-4" />}
-          label="Nuevos"
+          label="Registrados"
           count={creados.length}
-          className="bg-green-50 border-green-200 text-green-700"
+          className="border-green-200 bg-green-50 text-green-700"
         />
-        <ChipResultado
+        <Chip
           icono={<UserCheck className="size-4" />}
-          label="Ya existían"
+          label="Ya existían (inscritos)"
           count={inscritos.length}
-          className="bg-blue-50 border-blue-200 text-blue-700"
+          className="border-blue-200 bg-blue-50 text-blue-700"
         />
-        <ChipResultado
+        <Chip
           icono={<Clock className="size-4" />}
           label="Ya inscritos"
           count={yaInscritos.length}
-          className="bg-muted/60 border-border text-muted-foreground"
+          className="border-border bg-muted/50 text-muted-foreground"
         />
-        <ChipResultado
+        <Chip
           icono={<AlertCircle className="size-4" />}
           label="Con error"
           count={errores.length}
-          className="bg-red-50 border-red-200 text-red-700"
+          className="border-red-200 bg-red-50 text-red-700"
         />
       </div>
 
       {inscritos.length > 0 && (
-        <div className="rounded-lg bg-blue-50/50 border border-blue-200 p-3">
+        <div className="rounded-lg border border-blue-100 bg-blue-50/50 p-3">
           <p className="mb-1 text-xs font-semibold text-blue-700">
-            Inscritos (ya existían en el sistema)
+            Personas que ya existían en el sistema — se inscribieron directamente:
           </p>
           {inscritos.map((r) => (
             <p key={r.index} className="text-xs text-blue-600">
@@ -734,7 +807,7 @@ function ResultadosRegistro({ resultados }: { resultados: ResultadoFila[] }) {
       )}
 
       {errores.length > 0 && (
-        <div className="rounded-lg bg-red-50 border border-red-200 p-3">
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3">
           <p className="mb-1 text-xs font-semibold text-red-700">Errores</p>
           {errores.map((r) => (
             <p key={r.index} className="text-xs text-red-600">
@@ -747,7 +820,7 @@ function ResultadosRegistro({ resultados }: { resultados: ResultadoFila[] }) {
   )
 }
 
-function ChipResultado({
+function Chip({
   icono,
   label,
   count,
@@ -760,9 +833,9 @@ function ChipResultado({
 }) {
   return (
     <div className={cn("rounded-lg border p-3 text-center", className)}>
-      <div className="mb-1 flex justify-center opacity-70">{icono}</div>
+      <div className="mb-1 flex justify-center opacity-60">{icono}</div>
       <p className="text-xl font-bold">{count}</p>
-      <p className="text-xs">{label}</p>
+      <p className="text-[11px] leading-tight">{label}</p>
     </div>
   )
 }
