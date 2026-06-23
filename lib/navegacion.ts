@@ -9,6 +9,7 @@ import {
   Wrench,
   CalendarDays,
   ClipboardList,
+  Rocket,
   type LucideIcon,
 } from "lucide-react"
 import type { RolUsuario } from "@prisma/client"
@@ -109,8 +110,13 @@ export const NAV_AREAS: AreaNav[] = [
     titulo: "Eventos",
     descripcion: "Programación y seguimiento de eventos institucionales",
     icono: CalendarDays,
-    proximamente: true,
     visible: () => true,
-    modulos: [],
+    modulos: [
+      {
+        titulo: "Verano DIFertido 2026",
+        href: "/eventos/verano-difertido",
+        icono: Rocket,
+      },
+    ],
   },
 ]
