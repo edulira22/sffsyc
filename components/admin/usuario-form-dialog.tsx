@@ -45,8 +45,8 @@ import { NAV_AREAS } from "@/lib/navegacion"
 import { crearUsuario, editarUsuario } from "@/app/(app)/admin/usuarios/actions"
 import type { UsuarioListado } from "@/lib/data/usuarios"
 
-// Áreas adicionales que el admin puede asignar (fuera de CC, que es automática)
-const AREAS_OPCIONALES = NAV_AREAS.filter((a) => a.id !== "centros-comunitarios")
+// Todas las áreas de la plataforma son seleccionables por el admin.
+const AREAS_OPCIONALES = NAV_AREAS
 
 export function UsuarioFormDialog({
   open,
@@ -84,9 +84,7 @@ export function UsuarioFormDialog({
       rol: usuario?.rol ?? "oficina",
       zonaId: usuario?.zonaId ?? null,
       password: "",
-      areasPermitidas: usuario?.areasPermitidas.filter(
-        (a) => a !== "centros-comunitarios"
-      ) ?? [],
+      areasPermitidas: usuario?.areasPermitidas ?? [],
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, usuario])
@@ -250,14 +248,6 @@ export function UsuarioFormDialog({
                   </div>
                 ) : (
                   <div className="mt-2 space-y-2">
-                    <div className="flex items-center gap-3 rounded-lg border bg-muted/40 px-3 py-2.5">
-                      <input type="checkbox" checked readOnly className="size-4 accent-gobierno" />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-foreground">Centros Comunitarios</p>
-                        <p className="text-xs text-muted-foreground">Incluido automáticamente por el rol</p>
-                      </div>
-                    </div>
-
                     {AREAS_OPCIONALES.map((area) => {
                       const Icono = area.icono
                       const seleccionada = areasActuales.includes(area.id)

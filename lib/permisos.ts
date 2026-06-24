@@ -31,18 +31,15 @@ export function tieneAccesoArea(
 
 /**
  * Calcula las áreas que debe tener un usuario al crearlo/editarlo.
- * - Admin: array vacío (acceso total, sin restricciones).
- * - Roles de CC: siempre incluye "centros-comunitarios" + lo que el admin agregue.
+ * - Admin: array vacío (acceso total implícito).
+ * - Cualquier otro rol: exactamente las áreas que el admin seleccionó.
  */
 export function calcularAreasPermitidas(
   rol: RolUsuario,
   areasSeleccionadas: string[]
 ): string[] {
   if (rol === "admin") return []
-  const areas = new Set(areasSeleccionadas)
-  // Los roles de CC siempre tienen acceso a Centros Comunitarios.
-  areas.add("centros-comunitarios")
-  return Array.from(areas)
+  return [...areasSeleccionadas]
 }
 
 // --- Permisos por rol --------------------------------------------------------
