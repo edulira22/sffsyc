@@ -4,7 +4,6 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { MoreHorizontal, Pencil, KeyRound, Power, PowerOff } from "lucide-react"
 import { toast } from "sonner"
-import type { Zona } from "@prisma/client"
 
 import {
   Table,
@@ -25,17 +24,10 @@ import { StatusBadge } from "@/components/ui-patterns/status-badge"
 import { ConfirmDialog } from "@/components/ui-patterns/confirm-dialog"
 import { UsuarioFormDialog } from "@/components/admin/usuario-form-dialog"
 import { ResetPasswordDialog } from "@/components/admin/reset-password-dialog"
-import { NOMBRE_ROL } from "@/lib/permisos"
 import { cambiarEstatusUsuario } from "@/app/(app)/admin/usuarios/actions"
 import type { UsuarioListado } from "@/lib/data/usuarios"
 
-export function UsuariosTabla({
-  usuarios,
-  zonas,
-}: {
-  usuarios: UsuarioListado[]
-  zonas: Pick<Zona, "id" | "nombre">[]
-}) {
+export function UsuariosTabla({ usuarios }: { usuarios: UsuarioListado[] }) {
   const router = useRouter()
   const [editando, setEditando] = useState<UsuarioListado | null>(null)
   const [reseteando, setReseteando] = useState<UsuarioListado | null>(null)
@@ -57,8 +49,6 @@ export function UsuariosTabla({
             <TableRow className="bg-muted/40">
               <TableHead>Nombre</TableHead>
               <TableHead>Correo</TableHead>
-              <TableHead>Rol</TableHead>
-              <TableHead>Zona</TableHead>
               <TableHead>Estatus</TableHead>
               <TableHead className="w-12" />
             </TableRow>
@@ -68,12 +58,6 @@ export function UsuariosTabla({
               <TableRow key={u.id}>
                 <TableCell className="font-medium">{u.nombre}</TableCell>
                 <TableCell className="text-muted-foreground">{u.email}</TableCell>
-                <TableCell className="text-muted-foreground">
-                  {NOMBRE_ROL[u.rol]}
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {u.zona?.nombre ?? "—"}
-                </TableCell>
                 <TableCell>
                   <StatusBadge estatus={u.estatus} />
                 </TableCell>
@@ -119,7 +103,6 @@ export function UsuariosTabla({
       <UsuarioFormDialog
         open={editando !== null}
         onOpenChange={(o) => !o && setEditando(null)}
-        zonas={zonas}
         usuario={editando ?? undefined}
       />
 

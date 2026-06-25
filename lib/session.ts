@@ -1,9 +1,5 @@
 import { redirect } from "next/navigation"
-import type { RolUsuario } from "@prisma/client"
 import { auth } from "@/auth"
-
-// Helpers de sesión para Server Components y Route Handlers.
-// Siempre verifican en el servidor; nunca confían solo en la UI.
 
 /** Devuelve la sesión actual (o null). */
 export async function obtenerSesion() {
@@ -19,11 +15,7 @@ export async function requerirSesion() {
   return session
 }
 
-/** Exige sesión iniciada y uno de los roles dados; si no, redirige al dashboard. */
-export async function requerirRol(rolesPermitidos: RolUsuario[]) {
-  const session = await requerirSesion()
-  if (!rolesPermitidos.includes(session.user.rol)) {
-    redirect("/dashboard")
-  }
-  return session
+/** Alias de requerirSesion — el parámetro de roles ya no se usa. */
+export async function requerirRol(_roles?: string[]) {
+  return requerirSesion()
 }

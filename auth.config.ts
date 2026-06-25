@@ -25,20 +25,18 @@ export const authConfig = {
     jwt({ token, user }) {
       if (user) {
         token.id = user.id as string
+        token.nombre = user.nombre
         token.rol = user.rol
         token.zonaId = user.zonaId
-        token.nombre = user.nombre
-        token.areasPermitidas = user.areasPermitidas ?? []
       }
       return token
     },
     session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string
+        session.user.nombre = token.nombre as string
         session.user.rol = token.rol as RolUsuario
         session.user.zonaId = (token.zonaId as number | null) ?? null
-        session.user.nombre = token.nombre as string
-        session.user.areasPermitidas = (token.areasPermitidas as string[]) ?? []
       }
       return session
     },

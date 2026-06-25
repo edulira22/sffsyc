@@ -1,7 +1,6 @@
 import Link from "next/link"
 
-import { requerirRol } from "@/lib/session"
-import { prisma } from "@/lib/prisma"
+import { requerirSesion } from "@/lib/session"
 import { listarUsuarios } from "@/lib/data/usuarios"
 import { PageHeader } from "@/components/ui-patterns/page-header"
 import { UsuariosTabla } from "@/components/admin/usuarios-tabla"
@@ -10,12 +9,9 @@ import { NuevoUsuarioButton } from "@/components/admin/nuevo-usuario-button"
 export const metadata = { title: "Usuarios" }
 
 export default async function UsuariosPage() {
-  await requerirRol(["admin"])
+  await requerirSesion()
 
-  const [usuarios, zonas] = await Promise.all([
-    listarUsuarios(),
-    prisma.zona.findMany({ orderBy: { nombre: "asc" } }),
-  ])
+  const usuarios = await listarUsuarios()
 
   return (
     <div>
@@ -27,10 +23,10 @@ export default async function UsuariosPage() {
       </Link>
       <PageHeader
         titulo="Usuarios del sistema"
-        descripcion="Cuentas de acceso, roles y contraseñas."
-        acciones={<NuevoUsuarioButton zonas={zonas} />}
+        descripcion="Cuentas de acceso al sistema."
+        acciones={<NuevoUsuarioButton />}
       />
-      <UsuariosTabla usuarios={usuarios} zonas={zonas} />
+      <UsuariosTabla usuarios={usuarios} />
     </div>
   )
 }

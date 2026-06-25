@@ -30,7 +30,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           where: { email: email.toLowerCase().trim() },
         })
 
-        // Usuario inexistente o dado de baja: acceso denegado.
         if (!usuario || usuario.estatus !== "activo") return null
 
         const passwordValida = await bcrypt.compare(password, usuario.passwordHash)
@@ -43,7 +42,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: usuario.nombre,
           rol: usuario.rol,
           zonaId: usuario.zonaId,
-          areasPermitidas: usuario.areasPermitidas,
         }
       },
     }),

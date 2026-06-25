@@ -2,16 +2,11 @@
 
 import { useState } from "react"
 import { Plus } from "lucide-react"
-import type { Zona } from "@prisma/client"
 
 import { Button } from "@/components/ui/button"
 import { UsuarioFormDialog } from "@/components/admin/usuario-form-dialog"
 
-export function NuevoUsuarioButton({
-  zonas,
-}: {
-  zonas: Pick<Zona, "id" | "nombre">[]
-}) {
+export function NuevoUsuarioButton() {
   const [open, setOpen] = useState(false)
   return (
     <>
@@ -19,7 +14,7 @@ export function NuevoUsuarioButton({
         <Plus className="size-4" />
         Nuevo usuario
       </Button>
-      <UsuarioFormDialog open={open} onOpenChange={setOpen} zonas={zonas} />
+      <UsuarioFormDialog open={open} onOpenChange={setOpen} />
     </>
   )
 }

@@ -2,11 +2,10 @@
 
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useForm, type Resolver } from "react-hook-form"
+import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
-import type { Zona } from "@prisma/client"
 
 import {
   Dialog,
@@ -25,80 +24,48 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
   crearUsuarioSchema,
   editarUsuarioSchema,
-  ROLES_USUARIO,
   type CrearUsuarioInput,
+  type EditarUsuarioInput,
 } from "@/lib/schemas/usuario"
-import { NOMBRE_ROL } from "@/lib/permisos"
-import { NAV_AREAS } from "@/lib/navegacion"
 import { crearUsuario, editarUsuario } from "@/app/(app)/admin/usuarios/actions"
 import type { UsuarioListado } from "@/lib/data/usuarios"
+
+type FormValues = CrearUsuarioInput
 
 export function UsuarioFormDialog({
   open,
   onOpenChange,
-  zonas,
   usuario,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  zonas: Pick<Zona, "id" | "nombre">[]
   usuario?: UsuarioListado
 }) {
   const router = useRouter()
   const esEdicion = Boolean(usuario)
 
-  const form = useForm<CrearUsuarioInput>({
-    resolver: zodResolver(
-      esEdicion ? editarUsuarioSchema : crearUsuarioSchema
-    ) as unknown as Resolver<CrearUsuarioInput>,
-    defaultValues: {
-      nombre: "",
-      email: "",
-      rol: "oficina",
-      zonaId: null,
-      password: "",
-      areasPermitidas: NAV_AREAS.map((a) => a.id),
-    },
+  const form = useForm<FormValues>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(esEdicion ? editarUsuarioSchema : crearUsuarioSchema) as any,
+    defaultValues: { nombre: "", email: "", password: "" },
   })
 
   useEffect(() => {
     if (!open) return
-    const areas = usuario?.areasPermitidas ?? []
     form.reset({
       nombre: usuario?.nombre ?? "",
       email: usuario?.email ?? "",
-      rol: usuario?.rol ?? "oficina",
-      zonaId: usuario?.zonaId ?? null,
       password: "",
-      areasPermitidas: areas.length > 0 ? areas : NAV_AREAS.map((a) => a.id),
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, usuario])
 
-  const rol = form.watch("rol")
-  const areasActuales = form.watch("areasPermitidas")
-
-  function toggleArea(areaId: string) {
-    const actual = form.getValues("areasPermitidas")
-    form.setValue(
-      "areasPermitidas",
-      actual.includes(areaId) ? actual.filter((a) => a !== areaId) : [...actual, areaId]
-    )
-  }
-
-  async function onSubmit(valores: CrearUsuarioInput) {
+  async function onSubmit(valores: FormValues) {
     const r = esEdicion
       ? await editarUsuario(usuario!.id, valores)
       : await crearUsuario(valores)
@@ -113,18 +80,16 @@ export function UsuarioFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{esEdicion ? "Editar usuario" : "Nuevo usuario"}</DialogTitle>
           <DialogDescription>
-            {esEdicion
-              ? "Actualiza los datos del usuario."
-              : "Crea una cuenta de acceso al sistema."}
+            {esEdicion ? "Actualiza los datos del usuario." : "Crea una cuenta de acceso al sistema."}
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="nombre"
@@ -168,103 +133,6 @@ export function UsuarioFormDialog({
                   </FormItem>
                 )}
               />
-            )}
-
-            <FormField
-              control={form.control}
-              name="rol"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Rol</FormLabel>
-                  <Select
-                    value={field.value}
-                    onValueChange={(v) => {
-                      field.onChange(v)
-                      if (v !== "coordinadora_zona") form.setValue("zonaId", null)
-                    }}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {ROLES_USUARIO.map((r) => (
-                        <SelectItem key={r} value={r}>
-                          {NOMBRE_ROL[r]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {rol === "coordinadora_zona" && (
-              <FormField
-                control={form.control}
-                name="zonaId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Zona asignada</FormLabel>
-                    <Select
-                      value={field.value ? String(field.value) : ""}
-                      onValueChange={(v) => field.onChange(Number(v))}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecciona la zona" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {zonas.map((z) => (
-                          <SelectItem key={z.id} value={String(z.id)}>
-                            {z.nombre}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-
-            {rol !== "admin" && (
-              <div className="border-t pt-4">
-                <FormLabel className="text-sm font-semibold">Acceso a secciones</FormLabel>
-                <div className="mt-2 space-y-2">
-                  {NAV_AREAS.map((area) => {
-                    const Icono = area.icono
-                    const activa = areasActuales.includes(area.id)
-                    return (
-                      <button
-                        key={area.id}
-                        type="button"
-                        onClick={() => toggleArea(area.id)}
-                        className={`flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors ${
-                          activa ? "border-gobierno/40 bg-gobierno-50" : "hover:bg-muted/30"
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={activa}
-                          readOnly
-                          className="size-4 accent-gobierno pointer-events-none"
-                        />
-                        <Icono className="size-4 shrink-0 text-muted-foreground" />
-                        <span className="text-sm font-medium text-foreground">{area.titulo}</span>
-                        {area.proximamente && (
-                          <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
-                            Próximamente
-                          </span>
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
             )}
 
             <DialogFooter className="gap-2 pt-2">

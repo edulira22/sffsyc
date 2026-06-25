@@ -2,32 +2,19 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Building2, MapPin, Menu } from "lucide-react"
-import type { RolUsuario } from "@prisma/client"
+import { Building2, Menu } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
-import { Badge } from "@/components/ui/badge"
 import { SidebarNav } from "@/components/layout/sidebar-nav"
 import { UserMenu } from "@/components/layout/user-menu"
 
 export type UsuarioShell = {
   nombre: string
-  rol: RolUsuario
   email: string | null
-  zonaNombre: string | null
-  areasPermitidas: string[]
 }
 
-function ContenidoSidebar({
-  rol,
-  areasPermitidas,
-  onNavigate,
-}: {
-  rol: RolUsuario
-  areasPermitidas: string[]
-  onNavigate?: () => void
-}) {
+function ContenidoSidebar({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="flex h-full flex-col">
       <Link
@@ -45,7 +32,7 @@ function ContenidoSidebar({
       </Link>
 
       <div className="mt-2 flex-1 overflow-y-auto px-3">
-        <SidebarNav rol={rol} areasPermitidas={areasPermitidas} onNavigate={onNavigate} />
+        <SidebarNav onNavigate={onNavigate} />
       </div>
 
       <div className="px-5 py-4 text-[11px] text-white/40">
@@ -67,17 +54,13 @@ export function AppShell({
   return (
     <div className="flex min-h-screen">
       <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col bg-gobierno md:flex">
-        <ContenidoSidebar rol={usuario.rol} areasPermitidas={usuario.areasPermitidas} />
+        <ContenidoSidebar />
       </aside>
 
       <Sheet open={menuAbierto} onOpenChange={setMenuAbierto}>
         <SheetContent side="left" className="w-64 border-0 bg-gobierno p-0">
           <SheetTitle className="sr-only">Menú de navegación</SheetTitle>
-          <ContenidoSidebar
-            rol={usuario.rol}
-            areasPermitidas={usuario.areasPermitidas}
-            onNavigate={() => setMenuAbierto(false)}
-          />
+          <ContenidoSidebar onNavigate={() => setMenuAbierto(false)} />
         </SheetContent>
       </Sheet>
 
@@ -93,19 +76,9 @@ export function AppShell({
             >
               <Menu className="size-5" />
             </Button>
-
-            {usuario.rol === "coordinadora_zona" && usuario.zonaNombre && (
-              <Badge
-                variant="secondary"
-                className="gap-1.5 bg-gobierno-50 text-gobierno hover:bg-gobierno-50"
-              >
-                <MapPin className="size-3.5" />
-                Zona {usuario.zonaNombre}
-              </Badge>
-            )}
           </div>
 
-          <UserMenu nombre={usuario.nombre} rol={usuario.rol} email={usuario.email} />
+          <UserMenu nombre={usuario.nombre} email={usuario.email} />
         </header>
 
         <main className="flex-1 bg-superficie p-4 sm:p-6 lg:p-8">{children}</main>

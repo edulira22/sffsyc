@@ -4,7 +4,6 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { ChevronDown } from "lucide-react"
-import type { RolUsuario } from "@prisma/client"
 
 import { cn } from "@/lib/utils"
 import {
@@ -61,17 +60,13 @@ function AreaProximamente({ area }: { area: AreaNav }) {
 
 function GrupoArea({
   area,
-  rol,
   onNavigate,
 }: {
   area: AreaNav
-  rol: RolUsuario
   onNavigate?: () => void
 }) {
   const pathname = usePathname()
-  const modulos = area.modulos.filter((m) => !m.visible || m.visible(rol))
-  const areaActiva = modulos.some((m) => estaActivo(pathname, m.href))
-
+  const areaActiva = area.modulos.some((m) => estaActivo(pathname, m.href))
   const [abierto, setAbierto] = useState(areaActiva)
 
   useEffect(() => {
@@ -105,7 +100,7 @@ function GrupoArea({
 
       {abierto && (
         <div className="mt-1 space-y-1 border-l border-white/15 pl-3 ml-4">
-          {modulos.map((m) => {
+          {area.modulos.map((m) => {
             const activo = estaActivo(pathname, m.href)
             const IconoModulo = m.icono
             return (
@@ -131,50 +126,27 @@ function GrupoArea({
   )
 }
 
-export function SidebarNav({
-  rol,
-  areasPermitidas,
-  onNavigate,
-}: {
-  rol: RolUsuario
-  areasPermitidas: string[]
-  onNavigate?: () => void
-}) {
-  const areasVisibles = NAV_AREAS.filter((a) => {
-    if (!a.visible(rol)) return false
-    if (rol === "admin") return true
-    if (areasPermitidas.length === 0) return true
-    return areasPermitidas.includes(a.id)
-  })
-
+export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <nav className="flex flex-col gap-1">
-      {NAV_INICIO.visible(rol) && (
-        <EnlaceSimple item={NAV_INICIO} onNavigate={onNavigate} />
-      )}
+      <EnlaceSimple item={NAV_INICIO} onNavigate={onNavigate} />
 
-      {areasVisibles.length > 0 && (
-        <div className="my-2 px-3">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-white/35">
-            Áreas
-          </p>
-        </div>
-      )}
+      <div className="my-2 px-3">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-white/35">
+          Áreas
+        </p>
+      </div>
 
-      {areasVisibles.map((area) =>
+      {NAV_AREAS.map((area) =>
         area.proximamente ? (
           <AreaProximamente key={area.id} area={area} />
         ) : (
-          <GrupoArea key={area.id} area={area} rol={rol} onNavigate={onNavigate} />
+          <GrupoArea key={area.id} area={area} onNavigate={onNavigate} />
         )
       )}
 
-      {NAV_ADMINISTRACION.visible(rol) && (
-        <>
-          <div className="my-2 border-t border-white/10" />
-          <EnlaceSimple item={NAV_ADMINISTRACION} onNavigate={onNavigate} />
-        </>
-      )}
+      <div className="my-2 border-t border-white/10" />
+      <EnlaceSimple item={NAV_ADMINISTRACION} onNavigate={onNavigate} />
     </nav>
   )
 }

@@ -2,7 +2,6 @@
 
 import { signOut } from "next-auth/react"
 import { LogOut, ChevronDown } from "lucide-react"
-import type { RolUsuario } from "@prisma/client"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
@@ -13,7 +12,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { NOMBRE_ROL } from "@/lib/permisos"
 
 function iniciales(nombre: string) {
   return nombre
@@ -26,11 +24,9 @@ function iniciales(nombre: string) {
 
 export function UserMenu({
   nombre,
-  rol,
   email,
 }: {
   nombre: string
-  rol: RolUsuario
   email: string | null
 }) {
   return (
@@ -45,9 +41,9 @@ export function UserMenu({
           <p className="text-sm font-medium leading-tight text-foreground">
             {nombre}
           </p>
-          <p className="text-xs leading-tight text-muted-foreground">
-            {NOMBRE_ROL[rol]}
-          </p>
+          {email && (
+            <p className="text-xs leading-tight text-muted-foreground">{email}</p>
+          )}
         </div>
         <ChevronDown className="size-4 text-muted-foreground" />
       </DropdownMenuTrigger>
