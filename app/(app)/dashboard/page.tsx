@@ -16,7 +16,6 @@ import { prisma } from "@/lib/prisma"
 import { metricasDashboard } from "@/lib/data/dashboard"
 import { calcularEdad } from "@/lib/fechas"
 import { NAV_AREAS } from "@/lib/navegacion"
-import { puedeAccederArea } from "@/lib/areas"
 import { Card, CardContent } from "@/components/ui/card"
 import { StatusBadge } from "@/components/ui-patterns/status-badge"
 
@@ -75,11 +74,8 @@ export default async function DashboardPage() {
       : []),
   ]
 
-  const areasConAcceso = NAV_AREAS.filter((a) =>
-    puedeAccederArea(session.user.areasPermitidas, a.id)
-  )
-  const areasActivas = areasConAcceso.filter((a) => !a.proximamente)
-  const areasProximas = areasConAcceso.filter((a) => a.proximamente)
+  const areasActivas = NAV_AREAS.filter((a) => !a.proximamente)
+  const areasProximas = NAV_AREAS.filter((a) => a.proximamente)
 
   return (
     <div className="space-y-8">

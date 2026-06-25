@@ -13,7 +13,6 @@ export default async function AppLayout({
       usuario={{
         nombre: session.user.nombre,
         email: session.user.email ?? null,
-        areasPermitidas: session.user.areasPermitidas,
       }}
     >
       {children}
