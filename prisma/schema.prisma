@@ -289,9 +289,6 @@ model UsuarioSistema {
   passwordHash     String         @map("password_hash")
   rol              RolUsuario
   zonaId           Int?           @map("zona_id")
-  /// IDs de las áreas a las que tiene acceso (ej. "centros-comunitarios").
-  /// Array vacío = admin (acceso total). Para no-admin debe tener al menos uno.
-  areasPermitidas  String[]       @default([]) @map("areas_permitidas")
   estatus          EstatusUsuario @default(activo)
   createdAt        DateTime       @default(now()) @map("created_at")
   updatedAt        DateTime       @updatedAt @map("updated_at")

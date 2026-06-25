@@ -7,7 +7,6 @@ import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import { requerirRol } from "@/lib/session"
 import { exito, fallo, type ResultadoAccion } from "@/lib/acciones"
-import { calcularAreasPermitidas } from "@/lib/permisos"
 import {
   crearUsuarioSchema,
   editarUsuarioSchema,
@@ -38,7 +37,6 @@ export async function crearUsuario(
         passwordHash: await bcrypt.hash(d.password, 12),
         rol: d.rol,
         zonaId: zonaSegunRol(d.rol, d.zonaId),
-        areasPermitidas: calcularAreasPermitidas(d.rol, d.areasPermitidas),
       },
     })
     revalidatePath("/admin/usuarios")
@@ -69,7 +67,6 @@ export async function editarUsuario(
         email: d.email,
         rol: d.rol,
         zonaId: zonaSegunRol(d.rol, d.zonaId),
-        areasPermitidas: calcularAreasPermitidas(d.rol, d.areasPermitidas),
       },
     })
     revalidatePath("/admin/usuarios")

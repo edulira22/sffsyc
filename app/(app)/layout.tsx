@@ -24,7 +24,6 @@ export default async function AppLayout({
         rol: session.user.rol,
         email: session.user.email ?? null,
         zonaNombre,
-        areasPermitidas: session.user.areasPermitidas,
       }}
     >
       {children}

@@ -8,7 +8,6 @@ declare module "next-auth" {
       rol: RolUsuario
       zonaId: number | null
       nombre: string
-      areasPermitidas: string[]
     } & DefaultSession["user"]
   }
 
@@ -16,7 +15,6 @@ declare module "next-auth" {
     rol: RolUsuario
     zonaId: number | null
     nombre: string
-    areasPermitidas: string[]
   }
 }
 
@@ -26,6 +24,5 @@ declare module "next-auth/jwt" {
     rol: RolUsuario
     zonaId: number | null
     nombre: string
-    areasPermitidas: string[]
   }
 }

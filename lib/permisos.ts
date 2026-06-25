@@ -14,36 +14,6 @@ export const NOMBRE_ROL: Record<RolUsuario, string> = {
   oficina: "Oficina",
 }
 
-// --- Permisos de área --------------------------------------------------------
-
-/**
- * Determina si un usuario tiene acceso a un área de la plataforma.
- * Admin siempre tiene acceso a todo. Los demás deben tener el área en su lista.
- */
-export function tieneAccesoArea(
-  areaId: string,
-  rol: RolUsuario,
-  areasPermitidas: string[]
-): boolean {
-  if (rol === "admin") return true
-  return areasPermitidas.includes(areaId)
-}
-
-/**
- * Calcula las áreas que debe tener un usuario al crearlo/editarlo.
- * - Admin: array vacío (acceso total implícito).
- * - Cualquier otro rol: exactamente las áreas que el admin seleccionó.
- */
-export function calcularAreasPermitidas(
-  rol: RolUsuario,
-  areasSeleccionadas: string[]
-): string[] {
-  if (rol === "admin") return []
-  return [...areasSeleccionadas]
-}
-
-// --- Permisos por rol --------------------------------------------------------
-
 /** Solo el administrador gestiona usuarios y zonas del sistema. */
 export const puedeAdministrar = (rol: RolUsuario) => rol === "admin"
 
