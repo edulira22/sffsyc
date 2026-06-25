@@ -289,6 +289,7 @@ model UsuarioSistema {
   passwordHash     String         @map("password_hash")
   rol              RolUsuario
   zonaId           Int?           @map("zona_id")
+  areasPermitidas  String[]       @default([]) @map("areas_permitidas")
   estatus          EstatusUsuario @default(activo)
   createdAt        DateTime       @default(now()) @map("created_at")
   updatedAt        DateTime       @updatedAt @map("updated_at")

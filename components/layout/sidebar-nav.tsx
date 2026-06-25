@@ -133,12 +133,19 @@ function GrupoArea({
 
 export function SidebarNav({
   rol,
+  areasPermitidas,
   onNavigate,
 }: {
   rol: RolUsuario
+  areasPermitidas: string[]
   onNavigate?: () => void
 }) {
-  const areasVisibles = NAV_AREAS.filter((a) => a.visible(rol))
+  const areasVisibles = NAV_AREAS.filter((a) => {
+    if (!a.visible(rol)) return false
+    if (rol === "admin") return true
+    if (areasPermitidas.length === 0) return true
+    return areasPermitidas.includes(a.id)
+  })
 
   return (
     <nav className="flex flex-col gap-1">

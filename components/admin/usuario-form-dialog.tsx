@@ -41,6 +41,7 @@ import {
   type CrearUsuarioInput,
 } from "@/lib/schemas/usuario"
 import { NOMBRE_ROL } from "@/lib/permisos"
+import { NAV_AREAS } from "@/lib/navegacion"
 import { crearUsuario, editarUsuario } from "@/app/(app)/admin/usuarios/actions"
 import type { UsuarioListado } from "@/lib/data/usuarios"
 
@@ -68,22 +69,34 @@ export function UsuarioFormDialog({
       rol: "oficina",
       zonaId: null,
       password: "",
+      areasPermitidas: NAV_AREAS.map((a) => a.id),
     },
   })
 
   useEffect(() => {
     if (!open) return
+    const areas = usuario?.areasPermitidas ?? []
     form.reset({
       nombre: usuario?.nombre ?? "",
       email: usuario?.email ?? "",
       rol: usuario?.rol ?? "oficina",
       zonaId: usuario?.zonaId ?? null,
       password: "",
+      areasPermitidas: areas.length > 0 ? areas : NAV_AREAS.map((a) => a.id),
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, usuario])
 
   const rol = form.watch("rol")
+  const areasActuales = form.watch("areasPermitidas")
+
+  function toggleArea(areaId: string) {
+    const actual = form.getValues("areasPermitidas")
+    form.setValue(
+      "areasPermitidas",
+      actual.includes(areaId) ? actual.filter((a) => a !== areaId) : [...actual, areaId]
+    )
+  }
 
   async function onSubmit(valores: CrearUsuarioInput) {
     const r = esEdicion
@@ -216,6 +229,42 @@ export function UsuarioFormDialog({
                   </FormItem>
                 )}
               />
+            )}
+
+            {rol !== "admin" && (
+              <div className="border-t pt-4">
+                <FormLabel className="text-sm font-semibold">Acceso a secciones</FormLabel>
+                <div className="mt-2 space-y-2">
+                  {NAV_AREAS.map((area) => {
+                    const Icono = area.icono
+                    const activa = areasActuales.includes(area.id)
+                    return (
+                      <button
+                        key={area.id}
+                        type="button"
+                        onClick={() => toggleArea(area.id)}
+                        className={`flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors ${
+                          activa ? "border-gobierno/40 bg-gobierno-50" : "hover:bg-muted/30"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={activa}
+                          readOnly
+                          className="size-4 accent-gobierno pointer-events-none"
+                        />
+                        <Icono className="size-4 shrink-0 text-muted-foreground" />
+                        <span className="text-sm font-medium text-foreground">{area.titulo}</span>
+                        {area.proximamente && (
+                          <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+                            Próximamente
+                          </span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
             )}
 
             <DialogFooter className="gap-2 pt-2">

@@ -28,6 +28,7 @@ export const authConfig = {
         token.rol = user.rol
         token.zonaId = user.zonaId
         token.nombre = user.nombre
+        token.areasPermitidas = user.areasPermitidas ?? []
       }
       return token
     },
@@ -37,6 +38,7 @@ export const authConfig = {
         session.user.rol = token.rol as RolUsuario
         session.user.zonaId = (token.zonaId as number | null) ?? null
         session.user.nombre = token.nombre as string
+        session.user.areasPermitidas = (token.areasPermitidas as string[]) ?? []
       }
       return session
     },

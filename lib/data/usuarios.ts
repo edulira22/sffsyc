@@ -10,6 +10,7 @@ export async function listarUsuarios() {
       rol: true,
       estatus: true,
       zonaId: true,
+      areasPermitidas: true,
       zona: { select: { nombre: true } },
       createdAt: true,
     },

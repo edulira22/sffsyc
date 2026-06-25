@@ -12,6 +12,7 @@ const campos = z.object({
   email: z.string().trim().toLowerCase().email("Correo no válido"),
   rol: z.enum(ROLES_USUARIO, { message: "Selecciona un rol" }),
   zonaId: z.number().int().positive().nullable().optional(),
+  areasPermitidas: z.array(z.string()).default([]),
 
 })
 

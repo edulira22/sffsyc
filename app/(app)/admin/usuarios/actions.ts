@@ -37,6 +37,7 @@ export async function crearUsuario(
         passwordHash: await bcrypt.hash(d.password, 12),
         rol: d.rol,
         zonaId: zonaSegunRol(d.rol, d.zonaId),
+        areasPermitidas: d.rol === "admin" ? [] : (d.areasPermitidas ?? []),
       },
     })
     revalidatePath("/admin/usuarios")
@@ -67,6 +68,7 @@ export async function editarUsuario(
         email: d.email,
         rol: d.rol,
         zonaId: zonaSegunRol(d.rol, d.zonaId),
+        areasPermitidas: d.rol === "admin" ? [] : (d.areasPermitidas ?? []),
       },
     })
     revalidatePath("/admin/usuarios")
