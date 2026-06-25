@@ -7,6 +7,7 @@ import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import { requerirSesion } from "@/lib/session"
 import { exito, fallo, type ResultadoAccion } from "@/lib/acciones"
+import { normalizarAreas } from "@/lib/areas"
 import {
   crearUsuarioSchema,
   editarUsuarioSchema,
@@ -29,7 +30,10 @@ export async function crearUsuario(input: CrearUsuarioInput): Promise<ResultadoA
         nombre: d.nombre,
         email: d.email,
         passwordHash: await bcrypt.hash(d.password, 12),
+        // Herramienta interna: todos con acceso pleno al negocio; el control
+        // real es por área (abajo). El rol queda en "admin" por compatibilidad.
         rol: "admin",
+        areasPermitidas: normalizarAreas(d.areasPermitidas),
       },
     })
     revalidatePath("/admin/usuarios")
@@ -55,7 +59,11 @@ export async function editarUsuario(
   try {
     await prisma.usuarioSistema.update({
       where: { id },
-      data: { nombre: d.nombre, email: d.email },
+      data: {
+        nombre: d.nombre,
+        email: d.email,
+        areasPermitidas: normalizarAreas(d.areasPermitidas),
+      },
     })
     revalidatePath("/admin/usuarios")
     return exito("Cambios guardados")

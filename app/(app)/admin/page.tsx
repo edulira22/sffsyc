@@ -11,7 +11,7 @@ const SECCIONES = [
   {
     href: "/admin/usuarios",
     titulo: "Usuarios del sistema",
-    descripcion: "Crear cuentas, asignar roles y restablecer contraseñas.",
+    descripcion: "Crear cuentas, dar acceso por sección y restablecer contraseñas.",
     icono: Users,
   },
   {

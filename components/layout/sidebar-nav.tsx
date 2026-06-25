@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation"
 import { ChevronDown } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { puedeAccederArea } from "@/lib/areas"
 import {
   NAV_INICIO,
   NAV_ADMINISTRACION,
@@ -126,18 +127,30 @@ function GrupoArea({
   )
 }
 
-export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
+export function SidebarNav({
+  areasPermitidas,
+  onNavigate,
+}: {
+  areasPermitidas: string[]
+  onNavigate?: () => void
+}) {
+  const areasVisibles = NAV_AREAS.filter((a) =>
+    puedeAccederArea(areasPermitidas, a.id)
+  )
+
   return (
     <nav className="flex flex-col gap-1">
       <EnlaceSimple item={NAV_INICIO} onNavigate={onNavigate} />
 
-      <div className="my-2 px-3">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-white/35">
-          Áreas
-        </p>
-      </div>
+      {areasVisibles.length > 0 && (
+        <div className="my-2 px-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-white/35">
+            Áreas
+          </p>
+        </div>
+      )}
 
-      {NAV_AREAS.map((area) =>
+      {areasVisibles.map((area) =>
         area.proximamente ? (
           <AreaProximamente key={area.id} area={area} />
         ) : (

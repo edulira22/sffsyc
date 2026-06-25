@@ -2,7 +2,7 @@
 
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useForm } from "react-hook-form"
+import { useForm, type Resolver } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
@@ -31,10 +31,11 @@ import {
   editarUsuarioSchema,
   type CrearUsuarioInput,
 } from "@/lib/schemas/usuario"
+import { NAV_AREAS } from "@/lib/navegacion"
 import { crearUsuario, editarUsuario } from "@/app/(app)/admin/usuarios/actions"
 import type { UsuarioListado } from "@/lib/data/usuarios"
 
-type FormValues = CrearUsuarioInput
+const TODAS_LAS_AREAS = NAV_AREAS.map((a) => a.id)
 
 export function UsuarioFormDialog({
   open,
@@ -48,23 +49,45 @@ export function UsuarioFormDialog({
   const router = useRouter()
   const esEdicion = Boolean(usuario)
 
-  const form = useForm<FormValues>({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(esEdicion ? editarUsuarioSchema : crearUsuarioSchema) as any,
-    defaultValues: { nombre: "", email: "", password: "" },
+  const form = useForm<CrearUsuarioInput>({
+    resolver: zodResolver(
+      esEdicion ? editarUsuarioSchema : crearUsuarioSchema
+    ) as unknown as Resolver<CrearUsuarioInput>,
+    defaultValues: {
+      nombre: "",
+      email: "",
+      password: "",
+      areasPermitidas: TODAS_LAS_AREAS,
+    },
   })
 
   useEffect(() => {
     if (!open) return
+    // Al editar: si el usuario no tenía áreas (acceso total), mostramos todo
+    // marcado para que el admin vea el estado real y pueda restringir.
+    const areas = usuario?.areasPermitidas ?? []
     form.reset({
       nombre: usuario?.nombre ?? "",
       email: usuario?.email ?? "",
       password: "",
+      areasPermitidas: areas.length > 0 ? areas : TODAS_LAS_AREAS,
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, usuario])
 
-  async function onSubmit(valores: FormValues) {
+  const areasActuales = form.watch("areasPermitidas")
+
+  function toggleArea(areaId: string) {
+    const actual = form.getValues("areasPermitidas")
+    form.setValue(
+      "areasPermitidas",
+      actual.includes(areaId)
+        ? actual.filter((a) => a !== areaId)
+        : [...actual, areaId]
+    )
+  }
+
+  async function onSubmit(valores: CrearUsuarioInput) {
     const r = esEdicion
       ? await editarUsuario(usuario!.id, valores)
       : await crearUsuario(valores)
@@ -77,13 +100,17 @@ export function UsuarioFormDialog({
     }
   }
 
+  const todasMarcadas = areasActuales.length === TODAS_LAS_AREAS.length
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{esEdicion ? "Editar usuario" : "Nuevo usuario"}</DialogTitle>
           <DialogDescription>
-            {esEdicion ? "Actualiza los datos del usuario." : "Crea una cuenta de acceso al sistema."}
+            {esEdicion
+              ? "Actualiza los datos y el acceso del usuario."
+              : "Crea una cuenta de acceso al sistema."}
           </DialogDescription>
         </DialogHeader>
 
@@ -133,6 +160,45 @@ export function UsuarioFormDialog({
                 )}
               />
             )}
+
+            <div className="border-t pt-4">
+              <FormLabel className="text-sm font-semibold">Acceso a secciones</FormLabel>
+              <FormDescription className="mt-0.5">
+                {todasMarcadas
+                  ? "Tiene acceso a todas las secciones."
+                  : "Solo verá las secciones marcadas."}
+              </FormDescription>
+              <div className="mt-2 space-y-2">
+                {NAV_AREAS.map((area) => {
+                  const Icono = area.icono
+                  const activa = areasActuales.includes(area.id)
+                  return (
+                    <button
+                      key={area.id}
+                      type="button"
+                      onClick={() => toggleArea(area.id)}
+                      className={`flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors ${
+                        activa ? "border-gobierno/40 bg-gobierno-50" : "hover:bg-muted/30"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={activa}
+                        readOnly
+                        className="size-4 accent-gobierno pointer-events-none"
+                      />
+                      <Icono className="size-4 shrink-0 text-muted-foreground" />
+                      <span className="text-sm font-medium text-foreground">{area.titulo}</span>
+                      {area.proximamente && (
+                        <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+                          Próximamente
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
 
             <DialogFooter className="gap-2 pt-2">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

@@ -23,7 +23,7 @@ export default async function UsuariosPage() {
       </Link>
       <PageHeader
         titulo="Usuarios del sistema"
-        descripcion="Cuentas de acceso al sistema."
+        descripcion="Cuentas de acceso y permisos por sección."
         acciones={<NuevoUsuarioButton />}
       />
       <UsuariosTabla usuarios={usuarios} />

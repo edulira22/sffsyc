@@ -3,6 +3,8 @@ import { z } from "zod"
 const campos = z.object({
   nombre: z.string().trim().min(1, "El nombre es obligatorio"),
   email: z.string().trim().toLowerCase().email("Correo no válido"),
+  // Áreas a las que puede entrar. Lista vacía = acceso a todo (uso interno).
+  areasPermitidas: z.array(z.string()).default([]),
 })
 
 export const editarUsuarioSchema = campos

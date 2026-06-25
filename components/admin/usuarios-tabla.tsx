@@ -24,8 +24,14 @@ import { StatusBadge } from "@/components/ui-patterns/status-badge"
 import { ConfirmDialog } from "@/components/ui-patterns/confirm-dialog"
 import { UsuarioFormDialog } from "@/components/admin/usuario-form-dialog"
 import { ResetPasswordDialog } from "@/components/admin/reset-password-dialog"
+import { nombresAreas } from "@/lib/areas"
 import { cambiarEstatusUsuario } from "@/app/(app)/admin/usuarios/actions"
 import type { UsuarioListado } from "@/lib/data/usuarios"
+
+function textoAcceso(areas: string[]): string {
+  if (!areas || areas.length === 0) return "Todas las secciones"
+  return nombresAreas(areas).join(", ")
+}
 
 export function UsuariosTabla({ usuarios }: { usuarios: UsuarioListado[] }) {
   const router = useRouter()
@@ -49,6 +55,7 @@ export function UsuariosTabla({ usuarios }: { usuarios: UsuarioListado[] }) {
             <TableRow className="bg-muted/40">
               <TableHead>Nombre</TableHead>
               <TableHead>Correo</TableHead>
+              <TableHead>Acceso</TableHead>
               <TableHead>Estatus</TableHead>
               <TableHead className="w-12" />
             </TableRow>
@@ -58,6 +65,9 @@ export function UsuariosTabla({ usuarios }: { usuarios: UsuarioListado[] }) {
               <TableRow key={u.id}>
                 <TableCell className="font-medium">{u.nombre}</TableCell>
                 <TableCell className="text-muted-foreground">{u.email}</TableCell>
+                <TableCell className="text-muted-foreground">
+                  {textoAcceso(u.areasPermitidas)}
+                </TableCell>
                 <TableCell>
                   <StatusBadge estatus={u.estatus} />
                 </TableCell>

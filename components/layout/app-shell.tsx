@@ -12,9 +12,16 @@ import { UserMenu } from "@/components/layout/user-menu"
 export type UsuarioShell = {
   nombre: string
   email: string | null
+  areasPermitidas: string[]
 }
 
-function ContenidoSidebar({ onNavigate }: { onNavigate?: () => void }) {
+function ContenidoSidebar({
+  areasPermitidas,
+  onNavigate,
+}: {
+  areasPermitidas: string[]
+  onNavigate?: () => void
+}) {
   return (
     <div className="flex h-full flex-col">
       <Link
@@ -32,7 +39,7 @@ function ContenidoSidebar({ onNavigate }: { onNavigate?: () => void }) {
       </Link>
 
       <div className="mt-2 flex-1 overflow-y-auto px-3">
-        <SidebarNav onNavigate={onNavigate} />
+        <SidebarNav areasPermitidas={areasPermitidas} onNavigate={onNavigate} />
       </div>
 
       <div className="px-5 py-4 text-[11px] text-white/40">
@@ -54,13 +61,16 @@ export function AppShell({
   return (
     <div className="flex min-h-screen">
       <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col bg-gobierno md:flex">
-        <ContenidoSidebar />
+        <ContenidoSidebar areasPermitidas={usuario.areasPermitidas} />
       </aside>
 
       <Sheet open={menuAbierto} onOpenChange={setMenuAbierto}>
         <SheetContent side="left" className="w-64 border-0 bg-gobierno p-0">
           <SheetTitle className="sr-only">Menú de navegación</SheetTitle>
-          <ContenidoSidebar onNavigate={() => setMenuAbierto(false)} />
+          <ContenidoSidebar
+            areasPermitidas={usuario.areasPermitidas}
+            onNavigate={() => setMenuAbierto(false)}
+          />
         </SheetContent>
       </Sheet>
 
