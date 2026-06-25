@@ -15,7 +15,8 @@ export async function requerirSesion() {
   return session
 }
 
-/** Alias de requerirSesion — el parámetro de roles ya no se usa. */
-export async function requerirRol(_roles?: string[]) {
+/** Alias de requerirSesion — roles ignorados, solo verifica sesión activa. */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function requerirRol(..._args: unknown[]) {
   return requerirSesion()
 }

@@ -30,7 +30,6 @@ import {
   crearUsuarioSchema,
   editarUsuarioSchema,
   type CrearUsuarioInput,
-  type EditarUsuarioInput,
 } from "@/lib/schemas/usuario"
 import { crearUsuario, editarUsuario } from "@/app/(app)/admin/usuarios/actions"
 import type { UsuarioListado } from "@/lib/data/usuarios"
