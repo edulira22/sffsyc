@@ -101,11 +101,13 @@ function BarraSeccion({ children }: { children: React.ReactNode }) {
 function Campo({
   etiqueta,
   requerido,
+  opcional,
   className,
   children,
 }: {
   etiqueta: string
   requerido?: boolean
+  opcional?: boolean
   className?: string
   children: React.ReactNode
 }) {
@@ -114,6 +116,9 @@ function Campo({
       <span className="mb-1 block text-xs font-medium text-foreground">
         {etiqueta}
         {requerido && <span className="text-rose-500"> *</span>}
+        {opcional && (
+          <span className="font-normal text-muted-foreground"> (opcional)</span>
+        )}
       </span>
       {children}
     </label>
@@ -230,6 +235,10 @@ export function InscripcionForm() {
     setConfirmacion(null)
   }
 
+  // Borde rojo en los campos obligatorios sin llenar.
+  const errClase = (k: keyof InscripcionForm) =>
+    errors[k] ? "border-rose-400" : ""
+
   if (confirmacion) {
     return (
       <Confirmacion
@@ -268,13 +277,14 @@ export function InscripcionForm() {
         {/* Talla */}
         <div className="flex flex-wrap items-end gap-6 border-b border-rose-100 bg-rose-50/60 px-6 py-4">
           <div className="max-w-[180px]">
-            <Campo etiqueta="Talla de playera">
+            <Campo etiqueta="Talla de playera" requerido>
               <Controller
                 control={control}
                 name="talla"
+                rules={{ required: true }}
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger className={inputSm}>
+                    <SelectTrigger className={cn(inputSm, errClase("talla"))}>
                       <SelectValue placeholder="Talla…" />
                     </SelectTrigger>
                     <SelectContent>
@@ -306,18 +316,27 @@ export function InscripcionForm() {
                 placeholder="Apellidos y nombre(s)"
               />
             </Campo>
-            <Campo etiqueta="Fecha de inscripción" className="sm:col-span-4">
-              <Input className={inputSm} type="date" {...register("fechaInscripcion")} />
+            <Campo etiqueta="Fecha de inscripción" requerido className="sm:col-span-4">
+              <Input
+                className={cn(inputSm, errClase("fechaInscripcion"))}
+                type="date"
+                {...register("fechaInscripcion", { required: true })}
+              />
             </Campo>
 
             {/* CURP con auto-llenado */}
-            <Campo etiqueta="CURP del NNA" className="sm:col-span-12">
+            <Campo etiqueta="CURP del NNA" requerido className="sm:col-span-12">
               <Controller
                 control={control}
                 name="curp"
+                rules={{ required: true }}
                 render={({ field }) => (
                   <Input
-                    className={cn(inputSm, "font-mono uppercase tracking-wider")}
+                    className={cn(
+                      inputSm,
+                      "font-mono uppercase tracking-wider",
+                      errClase("curp")
+                    )}
                     maxLength={18}
                     value={field.value}
                     onChange={(e) => {
@@ -345,13 +364,13 @@ export function InscripcionForm() {
                 {...register("fechaNacimiento", { required: true })}
               />
             </Campo>
-            <Campo etiqueta="Edad (años)" className="sm:col-span-2">
+            <Campo etiqueta="Edad (años)" requerido className="sm:col-span-2">
               <Input
-                className={inputSm}
+                className={cn(inputSm, errClase("edad"))}
                 type="number"
                 min={4}
                 max={17}
-                {...register("edad")}
+                {...register("edad", { required: true })}
               />
             </Campo>
             <div className="flex items-end pb-1 sm:col-span-5">
@@ -374,6 +393,10 @@ export function InscripcionForm() {
 
           {/* Padres / Tutores */}
           <BarraSeccion>Padres / Tutores — encargados legales del NNA</BarraSeccion>
+          <p className="-mt-1 text-xs text-muted-foreground">
+            Captura al menos a un tutor. Si por una situación de custodia no debes
+            escribir a alguno de los padres, deja ese par de campos en blanco.
+          </p>
           <div className="grid gap-4 sm:grid-cols-12">
             <Campo etiqueta="Padre" className="sm:col-span-8">
               <Input className={inputSm} {...register("padre")} />
@@ -387,19 +410,28 @@ export function InscripcionForm() {
             <Campo etiqueta="Celular" className="sm:col-span-4">
               <Input className={inputSm} type="tel" {...register("celularMadre")} />
             </Campo>
-            <Campo etiqueta="Teléfono de casa" className="sm:col-span-4">
-              <Input className={inputSm} type="tel" {...register("telefonoCasa")} />
+            <Campo etiqueta="Teléfono de casa" requerido className="sm:col-span-4">
+              <Input
+                className={cn(inputSm, errClase("telefonoCasa"))}
+                type="tel"
+                {...register("telefonoCasa", { required: true })}
+              />
             </Campo>
             <Campo
               etiqueta="Celular autorizado para el grupo de WhatsApp"
+              requerido
               className="sm:col-span-8"
             >
-              <Input className={inputSm} type="tel" {...register("celularWhatsapp")} />
-            </Campo>
-            <Campo etiqueta="Domicilio" className="sm:col-span-12">
               <Input
-                className={inputSm}
-                {...register("domicilio")}
+                className={cn(inputSm, errClase("celularWhatsapp"))}
+                type="tel"
+                {...register("celularWhatsapp", { required: true })}
+              />
+            </Campo>
+            <Campo etiqueta="Domicilio" requerido className="sm:col-span-12">
+              <Input
+                className={cn(inputSm, errClase("domicilio"))}
+                {...register("domicilio", { required: true })}
                 placeholder="Calle, número, colonia"
               />
             </Campo>
@@ -407,8 +439,12 @@ export function InscripcionForm() {
 
           {/* Autorizados para recoger */}
           <BarraSeccion>
-            Autorizados para recoger al NNA (si los padres/tutores no pueden)
+            Autorizados para recoger al NNA · opcional
           </BarraSeccion>
+          <p className="-mt-1 text-center text-xs text-muted-foreground">
+            Personas que pueden recoger al NNA si los padres/tutores no pueden.
+            Puedes dejarlo en blanco.
+          </p>
           <div className="space-y-3">
             {[0, 1, 2].map((i) => (
               <div key={i} className="grid gap-3 sm:grid-cols-12">
@@ -436,7 +472,11 @@ export function InscripcionForm() {
           </div>
 
           {/* Salud */}
-          <BarraSeccion>Aspectos relacionados con la salud del NNA</BarraSeccion>
+          <BarraSeccion>Aspectos de salud del NNA · opcional</BarraSeccion>
+          <p className="-mt-1 text-center text-xs text-muted-foreground">
+            Llena solo lo que aplique. Si el NNA está sano o no usas estos
+            servicios, puedes dejarlo en blanco.
+          </p>
           <div className="grid gap-4 sm:grid-cols-2">
             <Campo etiqueta="Enfermedades (especifique)">
               <Textarea rows={2} {...register("enfermedades")} />

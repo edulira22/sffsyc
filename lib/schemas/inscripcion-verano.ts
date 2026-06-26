@@ -11,25 +11,29 @@ const autorizadoSchema = z.object({
 })
 
 export const inscripcionVeranoSchema = z.object({
+  // Obligatorios: identidad del NNA y contacto principal.
   nombre: z.string().trim().min(1, "El nombre del NNA es obligatorio"),
-  curp: z.string().trim().toUpperCase().max(18).optional().default(""),
+  curp: z.string().trim().toUpperCase().min(1, "Captura la CURP del NNA").max(18),
   fechaNacimiento: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Captura la fecha de nacimiento"),
-  talla: z.string().trim().default(""),
+  talla: z.string().trim().min(1, "Selecciona la talla"),
   fechaInscripcion: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)
     .optional(),
 
+  // Tutores: los nombres son opcionales (caso de custodia / familias
+  // monoparentales), pero el contacto principal sí es obligatorio.
   padre: z.string().trim().default(""),
   celularPadre: z.string().trim().default(""),
   madre: z.string().trim().default(""),
   celularMadre: z.string().trim().default(""),
-  telefonoCasa: z.string().trim().default(""),
-  celularWhatsapp: z.string().trim().default(""),
-  domicilio: z.string().trim().default(""),
+  telefonoCasa: z.string().trim().min(1, "Captura el teléfono de casa"),
+  celularWhatsapp: z.string().trim().min(1, "Captura el celular para WhatsApp"),
+  domicilio: z.string().trim().min(1, "Captura el domicilio"),
 
+  // Opcional: autorizados para recoger.
   autorizados: z.array(autorizadoSchema).max(3).default([]),
 
   enfermedades: z.string().trim().default(""),
