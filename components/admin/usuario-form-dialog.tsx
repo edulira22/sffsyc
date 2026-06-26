@@ -63,14 +63,11 @@ export function UsuarioFormDialog({
 
   useEffect(() => {
     if (!open) return
-    // Al editar: si el usuario no tenía áreas (acceso total), mostramos todo
-    // marcado para que el admin vea el estado real y pueda restringir.
-    const areas = usuario?.areasPermitidas ?? []
     form.reset({
       nombre: usuario?.nombre ?? "",
       email: usuario?.email ?? "",
       password: "",
-      areasPermitidas: areas.length > 0 ? areas : TODAS_LAS_AREAS,
+      areasPermitidas: TODAS_LAS_AREAS,
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, usuario])
