@@ -133,3 +133,38 @@ export const TALLAS_VERANO = [
 ] as const
 
 export type TallaVerano = (typeof TALLAS_VERANO)[number]
+
+// --- Folio -------------------------------------------------------------------
+
+/** Folio legible y estable derivado del id del expediente: VD26-0001. */
+export function folioVerano(id: number): string {
+  return `VD26-${String(id).padStart(4, "0")}`
+}
+
+// --- Reglamento --------------------------------------------------------------
+//  Texto oficial del reglamento del curso. Fuente única de verdad: se muestra
+//  en la ventana del formulario y NO se imprime en el expediente.
+
+export const REGLAMENTO_VERANO = {
+  reglas: [
+    "Respetar la hora de entrada y salida (se debe acudir a todas las clases). Entrada a las 8:00 am / Salida escalonada: Botzitos 1:30 pm; Robotines, Botix y TurboBots 2:15 pm; Megatronix 2:30 pm.",
+    "Cuidar y respetar las instalaciones.",
+    "Respetar a compañeros, maestros y staff.",
+    "Los NNA que reincidan con faltas de respeto a maestros, staff y/o compañeros, quedarán suspendidos(a) de manera definitiva del curso.",
+    "Traer ropa cómoda y adecuada para realizar las actividades diarias.",
+    "Traer refrigerio (sano y variado), ya que habrá 30 minutos de receso (11:00 am).",
+    "Prohibido el uso de celular, tablet y/o audífonos; en caso de que su hijo(a) requiera comunicarle algo, o se presente alguna situación extraordinaria, la coordinadora se comunicará con usted (Claudia 6141166982).",
+    "La institución no se hace responsable de objetos perdidos, por ello, marque todas las pertenencias de su hijo(a); habrá una mesa de objetos perdidos, que se instalará a la hora de salida, para que su hijo(a) o usted estén al tanto de revisarla.",
+    "Los NNA deberán presentarse en condiciones de salud adecuadas; no se permitirá el acceso si presenta fiebre, tos, moco abundante, vómito, dolor de cabeza, evacuaciones constantes, ronchas, etc., por tal motivo deberá ser atendido por su médico familiar.",
+    "En caso de que usted, por motivos ajenos al curso, decida dar de baja a su hijo(a), no podrá ser reembolsado su dinero.",
+    "La seguridad de sus hijos es nuestra prioridad. Todas las personas autorizadas para recogerlos, ya sea a la hora de salida o durante las actividades, deberán estar registradas tanto en la solicitud de inscripción como en la credencial del curso. Es OBLIGATORIO que la persona autorizada PRESENTE DICHA CREDENCIAL al staff para realizar la entrega del NNA. Sin la credencial no será posible autorizar la salida.",
+  ],
+  entradaSalida: [
+    "A la hora de entrada, no te estaciones; solo acerca tu vehículo a la puerta principal y nuestro staff ayudará a tu hijo(a) a descender y lo llevará al interior de las instalaciones.",
+    "A la hora de salida se hará la misma dinámica, pero debes poner una hoja y/o cartulina en el vidrio de tu vehículo con el nombre y grupo de tu hijo(a); de esta manera lo vocearemos y lo llevaremos hasta la puerta de tu automóvil.",
+  ],
+  whatsapp:
+    "En la hoja de inscripción deberás indicar qué número será ingresado al grupo de WhatsApp, en el cual solamente el/la administrador(a) podrá escribir mensajes, con el objetivo de dar a conocer anuncios y/o pormenores del curso (la administradora será Claudia Arvizo, 6141166982).",
+  cierre:
+    "He leído atentamente las indicaciones arriba mencionadas, por ello me comprometo a cumplir cada una de ellas y firmo de conformidad.",
+} as const

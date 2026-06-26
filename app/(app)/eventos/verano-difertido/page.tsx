@@ -7,10 +7,12 @@ import {
   CalendarClock,
   ArrowRight,
   Clock,
+  FileText,
 } from "lucide-react"
 
 import { requerirSesion } from "@/lib/session"
 import { EVENTO_VERANO, GRUPOS_VERANO } from "@/lib/eventos/verano"
+import { contarInscripcionesVerano } from "@/lib/data/verano"
 import { Card, CardContent } from "@/components/ui/card"
 import { CuentaRegresiva } from "@/components/eventos/cuenta-regresiva"
 import { cn } from "@/lib/utils"
@@ -25,21 +27,23 @@ function fechaLarga(iso: string) {
   })
 }
 
-// Accesos del evento. Solo "Inscribir" está activo; el resto llega después.
+// Accesos del evento.
 const SECCIONES = [
   {
-    href: "/eventos/verano-difertido/inscripcion",
+    href: "/verano",
     titulo: "Inscribir niño/a",
-    descripcion: "Captura el formato de inscripción del NNA.",
+    descripcion: "Abre el formulario de inscripción (también es la liga pública).",
     icono: UserPlus,
     activo: true,
+    externo: true,
   },
   {
-    href: "#",
-    titulo: "Grupos y asignación",
-    descripcion: "Reparto por edad y color, con nivelación de equipos.",
-    icono: Users,
-    activo: false,
+    href: "/eventos/verano-difertido/inscripciones",
+    titulo: "Inscripciones y expedientes",
+    descripcion: "Consulta a los inscritos e imprime su expediente.",
+    icono: FileText,
+    activo: true,
+    externo: false,
   },
   {
     href: "#",
@@ -47,11 +51,14 @@ const SECCIONES = [
     descripcion: "Configura clases, maestros y horarios del curso.",
     icono: GraduationCap,
     activo: false,
+    externo: false,
   },
 ]
 
 export default async function VeranoDifertidoPage() {
   await requerirSesion()
+
+  const inscritos = await contarInscripcionesVerano()
 
   return (
     <div className="space-y-6">
@@ -85,12 +92,27 @@ export default async function VeranoDifertidoPage() {
         </div>
       </div>
 
-      {/* Métricas (placeholder hasta conectar la base de datos) */}
+      {/* Métricas */}
       <section>
         <h2 className="mb-3 text-sm font-semibold text-foreground">Resumen del curso</h2>
         <div className="grid gap-4 sm:grid-cols-3">
+          <Link href="/eventos/verano-difertido/inscripciones" className="group">
+            <Card className="transition-shadow hover:shadow-md">
+              <CardContent className="flex items-center gap-4 p-5">
+                <div className="flex size-12 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
+                  <Users className="size-6" />
+                </div>
+                <div>
+                  <p className="text-3xl font-bold text-foreground">{inscritos}</p>
+                  <p className="flex items-center gap-1 text-sm text-muted-foreground">
+                    Niños inscritos
+                    <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
           {[
-            { icono: Users, valor: "—", etiqueta: "Niños inscritos", color: "bg-rose-50 text-rose-600" },
             { icono: GraduationCap, valor: "—", etiqueta: "Clases configuradas", color: "bg-purple-50 text-purple-600" },
             { icono: UserPlus, valor: "—", etiqueta: "Staff y maestros", color: "bg-gobierno-50 text-gobierno" },
           ].map((m, i) => {
@@ -110,9 +132,6 @@ export default async function VeranoDifertidoPage() {
             )
           })}
         </div>
-        <p className="mt-2 text-xs text-muted-foreground">
-          Los números se activarán al conectar la base de datos del curso.
-        </p>
       </section>
 
       {/* Grupos */}
@@ -195,12 +214,21 @@ export default async function VeranoDifertidoPage() {
                 )}
               </div>
             )
-            return s.activo ? (
+            if (!s.activo) return <div key={s.titulo}>{contenido}</div>
+            return s.externo ? (
+              <a
+                key={s.titulo}
+                href={s.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group"
+              >
+                {contenido}
+              </a>
+            ) : (
               <Link key={s.titulo} href={s.href} className="group">
                 {contenido}
               </Link>
-            ) : (
-              <div key={s.titulo}>{contenido}</div>
             )
           })}
         </div>

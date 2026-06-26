@@ -13,6 +13,10 @@ export const authConfig = {
       const estaLogueado = !!auth?.user
       const enLogin = nextUrl.pathname.startsWith("/login")
 
+      // Rutas públicas (sin sesión): inscripción al curso de verano.
+      const esPublica = nextUrl.pathname.startsWith("/verano")
+      if (esPublica) return true
+
       if (enLogin) {
         if (estaLogueado) {
           return Response.redirect(new URL("/dashboard", nextUrl))

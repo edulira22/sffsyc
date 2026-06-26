@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useForm, Controller } from "react-hook-form"
-import { Rocket, ShieldAlert, Info, Loader2, Hash } from "lucide-react"
+import { Rocket, ShieldAlert, Loader2, CheckCircle2, Hash, Plus } from "lucide-react"
 import { toast } from "sonner"
 
 import { Input } from "@/components/ui/input"
@@ -18,26 +18,9 @@ import {
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { EVENTO_VERANO, TALLAS_VERANO } from "@/lib/eventos/verano"
-import { fechaDesCurp } from "@/lib/fechas"
-
-// ---- Folio provisional (se reemplazará por folio secuencial de la BD) -------
-
-function generarFolio(): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
-  let s = ""
-  for (let i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)]
-  return `VD26-${s}`
-}
-
-function calcularEdad(fechaNac: string): number | null {
-  const nac = new Date(`${fechaNac}T12:00:00`)
-  if (isNaN(nac.getTime())) return null
-  const hoy = new Date()
-  const edad = Math.floor(
-    (hoy.getTime() - nac.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
-  )
-  return edad >= 0 && edad <= 17 ? edad : null
-}
+import { fechaDesCurp, edadDeISO, hoyISO } from "@/lib/fechas"
+import { ReglamentoDialog } from "@/components/eventos/reglamento-dialog"
+import { crearInscripcionVerano } from "@/app/verano/actions"
 
 // ---- Tipo del formulario ----------------------------------------------------
 
@@ -68,10 +51,6 @@ type InscripcionForm = {
   telefonoMedico: string
   aceptaReglamento: boolean
   nombreFirma: string
-}
-
-function hoyISO() {
-  return new Date().toISOString().slice(0, 10)
 }
 
 const valoresIniciales: InscripcionForm = {
@@ -141,27 +120,124 @@ function Campo({
   )
 }
 
+// ---- Pantalla de confirmación ----------------------------------------------
+
+function Confirmacion({
+  folio,
+  nombre,
+  onOtro,
+}: {
+  folio: string
+  nombre: string
+  onOtro: () => void
+}) {
+  return (
+    <div className="mx-auto max-w-md text-center">
+      <div className="overflow-hidden rounded-2xl border bg-white shadow-sm">
+        <div className="bg-gobierno px-6 py-8 text-white">
+          <div className="mx-auto mb-3 flex size-16 items-center justify-center rounded-full bg-white/15">
+            <CheckCircle2 className="size-9" />
+          </div>
+          <h2 className="text-xl font-bold">¡Inscripción registrada!</h2>
+          <p className="mt-1 text-sm text-white/75">
+            {nombre} quedó inscrito(a) en {EVENTO_VERANO.nombre}.
+          </p>
+        </div>
+        <div className="px-6 py-6">
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">
+            Folio de tu inscripción
+          </p>
+          <p className="mt-1 flex items-center justify-center gap-1.5 font-mono text-2xl font-bold tracking-wider text-gobierno">
+            <Hash className="size-5 text-gobierno/50" />
+            {folio}
+          </p>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Guarda tu folio. El personal del DIF se pondrá en contacto por el grupo
+            de WhatsApp con los detalles del curso.
+          </p>
+          <Button
+            onClick={onOtro}
+            className="mt-6 w-full gap-2 bg-gobierno hover:bg-gobierno/90"
+          >
+            <Plus className="size-4" />
+            Inscribir a otro niño/a
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ---- Formulario -------------------------------------------------------------
 
 export function InscripcionForm() {
-  const [folio] = useState(generarFolio)
-  const { register, control, handleSubmit, reset, setValue } =
-    useForm<InscripcionForm>({ defaultValues: valoresIniciales })
+  const {
+    register,
+    control,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors },
+  } = useForm<InscripcionForm>({ defaultValues: valoresIniciales })
   const [enviando, setEnviando] = useState(false)
+  const [confirmacion, setConfirmacion] = useState<{
+    folio: string
+    nombre: string
+  } | null>(null)
 
   async function onSubmit(data: InscripcionForm) {
     setEnviando(true)
     try {
-      // eslint-disable-next-line no-console
-      console.log("Inscripción capturada (preview):", { folio, ...data })
-      await new Promise((r) => setTimeout(r, 500))
-      toast.success("Formato capturado correctamente (vista previa)", {
-        description:
-          "Aún no se guarda en base de datos — falta tu validación del formato.",
+      const r = await crearInscripcionVerano({
+        nombre: data.nombre,
+        curp: data.curp,
+        fechaNacimiento: data.fechaNacimiento,
+        talla: data.talla,
+        fechaInscripcion: data.fechaInscripcion || undefined,
+        padre: data.padre,
+        celularPadre: data.celularPadre,
+        madre: data.madre,
+        celularMadre: data.celularMadre,
+        telefonoCasa: data.telefonoCasa,
+        celularWhatsapp: data.celularWhatsapp,
+        domicilio: data.domicilio,
+        autorizados: data.autorizados,
+        enfermedades: data.enfermedades,
+        impideActividad: data.impideActividad,
+        medicamentos: data.medicamentos,
+        alergias: data.alergias,
+        nombreServicioMedico: data.nombreServicioMedico,
+        numeroServicioMedico: data.numeroServicioMedico,
+        nombreMedico: data.nombreMedico,
+        telefonoMedico: data.telefonoMedico,
+        nombreFirma: data.nombreFirma,
+        aceptaReglamento: data.aceptaReglamento,
       })
+
+      if (r.ok) {
+        setConfirmacion({ folio: r.folio, nombre: data.nombre })
+        window.scrollTo({ top: 0, behavior: "smooth" })
+      } else {
+        toast.error(r.error)
+      }
     } finally {
       setEnviando(false)
     }
+  }
+
+  function inscribirOtro() {
+    reset(valoresIniciales)
+    setConfirmacion(null)
+  }
+
+  if (confirmacion) {
+    return (
+      <Confirmacion
+        folio={confirmacion.folio}
+        nombre={confirmacion.nombre}
+        onOtro={inscribirOtro}
+      />
+    )
   }
 
   const inputSm = "h-9"
@@ -171,38 +247,25 @@ export function InscripcionForm() {
       <div className="overflow-hidden rounded-2xl border border-rose-200 bg-white shadow-sm">
         {/* Encabezado institucional */}
         <div className="bg-gobierno px-6 py-5 text-white">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-white/15">
-                <Rocket className="size-6" />
-              </div>
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-widest text-white/60">
-                  {EVENTO_VERANO.sede}
-                </p>
-                <h2 className="text-lg font-bold leading-tight">
-                  Inscripción — {EVENTO_VERANO.nombre}
-                </h2>
-                <p className="text-xs text-white/70">
-                  Información general del niño, niña y/o adolescente (NNA)
-                </p>
-              </div>
+          <div className="flex items-center gap-3">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-white/15">
+              <Rocket className="size-6" />
             </div>
-            {/* Folio provisional */}
-            <div className="shrink-0 rounded-lg border border-white/25 bg-white/10 px-3 py-2 text-right">
-              <p className="flex items-center justify-end gap-1 text-[10px] uppercase tracking-wider text-white/60">
-                <Hash className="size-3" />
-                Folio
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-white/60">
+                {EVENTO_VERANO.sede}
               </p>
-              <p className="font-mono text-sm font-bold tracking-wider text-white">
-                {folio}
+              <h2 className="text-lg font-bold leading-tight">
+                Inscripción — {EVENTO_VERANO.nombre}
+              </h2>
+              <p className="text-xs text-white/70">
+                Información general del niño, niña y/o adolescente (NNA)
               </p>
-              <p className="text-[9px] text-white/40">provisional</p>
             </div>
           </div>
         </div>
 
-        {/* Tira de Talla + aviso de equipo automático */}
+        {/* Talla */}
         <div className="flex flex-wrap items-end gap-6 border-b border-rose-100 bg-rose-50/60 px-6 py-4">
           <div className="max-w-[180px]">
             <Campo etiqueta="Talla de playera">
@@ -226,10 +289,6 @@ export function InscripcionForm() {
               />
             </Campo>
           </div>
-          <p className="flex items-center gap-1.5 pb-1 text-xs text-muted-foreground">
-            <Info className="size-3.5 shrink-0 text-blue-400" />
-            El equipo (grupo) se asigna automáticamente por el sistema según la edad del NNA.
-          </p>
         </div>
 
         {/* Cuerpo */}
@@ -242,8 +301,8 @@ export function InscripcionForm() {
               className="sm:col-span-8"
             >
               <Input
-                className={inputSm}
-                {...register("nombre")}
+                className={cn(inputSm, errors.nombre && "border-rose-400")}
+                {...register("nombre", { required: true })}
                 placeholder="Apellidos y nombre(s)"
               />
             </Campo>
@@ -252,7 +311,7 @@ export function InscripcionForm() {
             </Campo>
 
             {/* CURP con auto-llenado */}
-            <Campo etiqueta="CURP del NNA" requerido className="sm:col-span-12">
+            <Campo etiqueta="CURP del NNA" className="sm:col-span-12">
               <Controller
                 control={control}
                 name="curp"
@@ -268,7 +327,7 @@ export function InscripcionForm() {
                         const fecha = fechaDesCurp(val)
                         if (fecha) {
                           setValue("fechaNacimiento", fecha)
-                          const edad = calcularEdad(fecha)
+                          const edad = edadDeISO(fecha)
                           if (edad !== null) setValue("edad", String(edad))
                         }
                       }
@@ -279,10 +338,14 @@ export function InscripcionForm() {
               />
             </Campo>
 
-            <Campo etiqueta="Fecha de nacimiento" className="sm:col-span-5">
-              <Input className={inputSm} type="date" {...register("fechaNacimiento")} />
+            <Campo etiqueta="Fecha de nacimiento" requerido className="sm:col-span-5">
+              <Input
+                className={cn(inputSm, errors.fechaNacimiento && "border-rose-400")}
+                type="date"
+                {...register("fechaNacimiento", { required: true })}
+              />
             </Campo>
-            <Campo etiqueta="Edad (años)" requerido className="sm:col-span-2">
+            <Campo etiqueta="Edad (años)" className="sm:col-span-2">
               <Input
                 className={inputSm}
                 type="number"
@@ -293,8 +356,8 @@ export function InscripcionForm() {
             </Campo>
             <div className="flex items-end pb-1 sm:col-span-5">
               <p className="text-[11px] leading-snug text-muted-foreground">
-                La CURP completa estos campos automáticamente.
-                Puedes corregirlos manualmente si es necesario.
+                La CURP completa estos campos automáticamente. Puedes corregirlos
+                manualmente si es necesario.
               </p>
             </div>
           </div>
@@ -304,9 +367,8 @@ export function InscripcionForm() {
             <ShieldAlert className="mt-0.5 size-4 shrink-0" />
             <p>
               Si existe demanda en curso o resolución judicial a su favor (guarda y
-              custodia),{" "}
-              <strong>no escriba</strong> el nombre del padre/madre demandada en la
-              siguiente sección.
+              custodia), <strong>no escriba</strong> el nombre del padre/madre
+              demandada en la siguiente sección.
             </p>
           </div>
 
@@ -402,22 +464,21 @@ export function InscripcionForm() {
             </Campo>
           </div>
 
-          {/* Reglamento */}
+          {/* Reglamento — solo aceptación + link a la ventana */}
           <BarraSeccion>Reglamento</BarraSeccion>
-          <div className="rounded-lg border border-rose-100 bg-rose-50/40 p-3">
-            <div className="flex items-start gap-2 text-xs text-muted-foreground">
-              <Info className="mt-0.5 size-4 shrink-0 text-rose-400" />
-              <p>
-                Entrada a las {EVENTO_VERANO.horaEntrada}. Salida escalonada por equipo:
-                Botzitos 1:30 pm · Robotines, Botix y TurboBots 2:15 pm · Megatronix
-                2:30 pm. El padre/tutor se compromete a cumplir el reglamento completo
-                del curso.
-              </p>
-            </div>
-            <label className="mt-3 flex cursor-pointer items-center gap-2 text-sm font-medium text-foreground">
+          <div
+            className={cn(
+              "rounded-lg border px-4 py-3 transition-colors",
+              errors.aceptaReglamento
+                ? "border-rose-300 bg-rose-50"
+                : "border-rose-100 bg-rose-50/40"
+            )}
+          >
+            <label className="flex cursor-pointer items-center gap-3 text-sm font-medium text-foreground">
               <Controller
                 control={control}
                 name="aceptaReglamento"
+                rules={{ required: true }}
                 render={({ field }) => (
                   <Checkbox
                     checked={field.value}
@@ -425,38 +486,45 @@ export function InscripcionForm() {
                   />
                 )}
               />
-              He leído y acepto el reglamento del curso.
+              <span>
+                He leído y acepto el reglamento del curso.{" "}
+                <span className="font-normal text-muted-foreground">
+                  (<ReglamentoDialog />)
+                </span>
+              </span>
             </label>
+            {errors.aceptaReglamento && (
+              <p className="mt-1.5 pl-8 text-xs text-rose-600">
+                Debes aceptar el reglamento para continuar.
+              </p>
+            )}
           </div>
 
           <Campo etiqueta="Nombre del padre / tutor que inscribe" requerido>
-            <Input className={inputSm} {...register("nombreFirma")} />
+            <Input
+              className={cn(inputSm, errors.nombreFirma && "border-rose-400")}
+              {...register("nombreFirma", { required: true })}
+            />
           </Campo>
         </div>
 
         {/* Pie */}
-        <div className="flex items-center justify-between gap-3 border-t border-rose-100 bg-rose-50/60 px-6 py-4">
-          <p className="text-xs text-muted-foreground">
-            <span className="font-semibold text-rose-600">Vista previa de validación.</span>{" "}
-            Aún no se guarda en base de datos.
-          </p>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => reset(valoresIniciales)}
-            >
-              Limpiar
-            </Button>
-            <Button
-              type="submit"
-              disabled={enviando}
-              className="bg-gobierno hover:bg-gobierno/90"
-            >
-              {enviando && <Loader2 className="mr-1 size-4 animate-spin" />}
-              Capturar inscripción
-            </Button>
-          </div>
+        <div className="flex items-center justify-end gap-2 border-t border-rose-100 bg-rose-50/60 px-6 py-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => reset(valoresIniciales)}
+          >
+            Limpiar
+          </Button>
+          <Button
+            type="submit"
+            disabled={enviando}
+            className="bg-gobierno hover:bg-gobierno/90"
+          >
+            {enviando && <Loader2 className="mr-1 size-4 animate-spin" />}
+            Guardar inscripción
+          </Button>
         </div>
       </div>
     </form>

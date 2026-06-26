@@ -282,6 +282,49 @@ model Inscripcion {
   @@map("inscripciones")
 }
 
+/// Inscripción al evento "Verano DIFertido 2026". Se captura en la URL pública
+/// /verano (autoservicio de las familias o personal que apoya). Es el
+/// expediente del NNA: se consulta e imprime. Nunca se elimina: cambia estatus.
+model InscripcionVerano {
+  id                   Int      @id @default(autoincrement())
+  // --- NNA ---
+  nombre               String
+  curp                 String?
+  fechaNacimiento      DateTime @map("fecha_nacimiento") @db.Date
+  talla                String?
+  /// id del grupo/equipo sugerido por edad al momento de inscribir.
+  grupo                String?
+  fechaInscripcion     DateTime @default(now()) @map("fecha_inscripcion") @db.Date
+  // --- Padres / tutores ---
+  padre                String?
+  celularPadre         String?  @map("celular_padre")
+  madre                String?
+  celularMadre         String?  @map("celular_madre")
+  telefonoCasa         String?  @map("telefono_casa")
+  celularWhatsapp      String?  @map("celular_whatsapp")
+  domicilio            String?
+  /// Hasta 3 autorizados para recoger: [{ nombre, celular, parentesco }].
+  autorizados          Json     @default("[]")
+  // --- Salud ---
+  enfermedades         String?
+  impideActividad      String?  @map("impide_actividad")
+  medicamentos         String?
+  alergias             String?
+  nombreServicioMedico String?  @map("nombre_servicio_medico")
+  numeroServicioMedico String?  @map("numero_servicio_medico")
+  nombreMedico         String?  @map("nombre_medico")
+  telefonoMedico       String?  @map("telefono_medico")
+  // --- Firma / control ---
+  nombreFirma          String   @map("nombre_firma")
+  aceptaReglamento     Boolean  @default(false) @map("acepta_reglamento")
+  estatus              String   @default("activa")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  @@index([estatus])
+  @@map("inscripciones_verano")
+}
+
 model UsuarioSistema {
   id               Int            @id @default(autoincrement())
   nombre           String
