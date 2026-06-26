@@ -159,12 +159,12 @@ export function UsuarioFormDialog({
             )}
 
             <div className="border-t pt-4">
-              <FormLabel className="text-sm font-semibold">Acceso a secciones</FormLabel>
-              <FormDescription className="mt-0.5">
+              <p className="text-sm font-semibold leading-none">Acceso a secciones</p>
+              <p className="mt-1 text-sm text-muted-foreground">
                 {todasMarcadas
                   ? "Tiene acceso a todas las secciones."
                   : "Solo verá las secciones marcadas."}
-              </FormDescription>
+              </p>
               <div className="mt-2 space-y-2">
                 {NAV_AREAS.map((area) => {
                   const Icono = area.icono
