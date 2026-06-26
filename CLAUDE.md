@@ -18,6 +18,8 @@ npm run db:migrate   # Create and apply a migration (uses DIRECT_URL)
 
 **Critical**: Run `npm run build` locally before every `git push`. Vercel will reject the deploy on TypeScript errors. ESLint is intentionally disabled in builds (`eslint.ignoreDuringBuilds: true` in `next.config.mjs`) so only TypeScript errors block deploys.
 
+**Applying schema changes**: the Vercel build runs `prisma generate` (not `migrate`), so new tables/columns must be created in the DB separately. For additive, non-destructive changes the safe pattern is a SQL file in `prisma/sql/` applied with `npx prisma db execute --file <f>.sql --schema prisma/schema.prisma` (uses `CREATE ... IF NOT EXISTS`), then `npx prisma generate` to refresh the client types. Avoid `prisma migrate dev` against Supabase (shadow-DB/drift risk).
+
 ## Stack
 
 - **Next.js 14** App Router (no Pages Router anywhere)
@@ -114,9 +116,15 @@ Coordinadoras are assigned to zonas and centros but are separate from system use
 
 `lib/excel/` handles beneficiary data. `exceljs` is used. The export route is at `app/api/datos/exportar/route.ts`. Import is a Server Action in `app/(app)/datos/actions.ts`.
 
-### Events module
+### Events module — Verano DIFertido 2026
 
-`lib/eventos/verano.ts` is the single source of truth for Verano DIFertido 2026: dates, groups (Botzitos → Megatronix), age ranges, shirt sizes. The inscription form at `/eventos/verano-difertido/inscripcion` is public-facing (no auth required within the app shell).
+`lib/eventos/verano.ts` is the single source of truth: dates, groups (Botzitos → Megatronix), age ranges, shirt sizes, the full **reglamento** text, and `folioVerano(id)` (folios are derived from the row id, `VD26-0001` — not stored).
+
+**Public inscription** lives at `/verano` (top-level route, **outside** `(app)`, no login). It is allowed without a session via an explicit check in `auth.config.ts` (`authorized` returns true for paths starting with `/verano`). The same form serves both families self-registering on their phones and staff capturing on laptops. Submitting calls the public Server Action `app/verano/actions.ts` → writes to `inscripciones_verano` → shows a folio confirmation screen. The group/equipo is derived from age server-side at submit.
+
+**Expedientes** (authenticated): `/eventos/verano-difertido/inscripciones` lists inscriptions; `/eventos/verano-difertido/inscripciones/[id]` shows the printable file. Printing relies on `print:hidden` on the sidebar/header in `app-shell.tsx` so only the `ExpedienteVerano` document prints — it replicates the physical form **without** the reglamento. The old `/eventos/verano-difertido/inscripcion` route now redirects to `/verano`.
+
+`autorizados` (up to 3 pickup contacts) is stored as a `Json`/`jsonb` column, typed as `AutorizadoVerano[]` in `lib/data/verano.ts`.
 
 ## Key constraints (do not change without reason)
 
