@@ -12,6 +12,10 @@ export const EVENTO_VERANO = {
   inicio: "2026-07-20",
   fin: "2026-08-07",
   horaEntrada: "8:00 am",
+  // Temporada de inscripciones (lunes a viernes). Abre el lunes 08:00 y
+  // cierra al final del viernes; después el aviso se oculta solo.
+  inscripcionInicio: "2026-06-29",
+  inscripcionFin: "2026-07-03",
 } as const
 
 // --- Grupos -----------------------------------------------------------------

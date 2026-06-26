@@ -15,6 +15,7 @@ import { EVENTO_VERANO, GRUPOS_VERANO } from "@/lib/eventos/verano"
 import { contarInscripcionesVerano } from "@/lib/data/verano"
 import { Card, CardContent } from "@/components/ui/card"
 import { CuentaRegresiva } from "@/components/eventos/cuenta-regresiva"
+import { PeriodoInscripcion } from "@/components/eventos/periodo-inscripcion"
 import { cn } from "@/lib/utils"
 
 export const metadata = { title: "Verano DIFertido 2026" }
@@ -91,6 +92,12 @@ export default async function VeranoDifertidoPage() {
           </div>
         </div>
       </div>
+
+      {/* Aviso de la temporada de inscripciones (se oculta al cerrar) */}
+      <PeriodoInscripcion
+        inicioISO={EVENTO_VERANO.inscripcionInicio}
+        finISO={EVENTO_VERANO.inscripcionFin}
+      />
 
       {/* Métricas */}
       <section>
