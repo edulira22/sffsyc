@@ -292,6 +292,8 @@ model InscripcionVerano {
   curp                 String?
   fechaNacimiento      DateTime @map("fecha_nacimiento") @db.Date
   talla                String?
+  /// ¿Es la primera vez del NNA en el curso?
+  primeraVez           Boolean  @default(false) @map("primera_vez")
   /// id del grupo/equipo sugerido por edad al momento de inscribir.
   grupo                String?
   fechaInscripcion     DateTime @default(now()) @map("fecha_inscripcion") @db.Date

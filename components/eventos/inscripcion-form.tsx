@@ -18,7 +18,8 @@ import {
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { EVENTO_VERANO, TALLAS_VERANO } from "@/lib/eventos/verano"
-import { fechaDesCurp, edadDeISO, hoyISO } from "@/lib/fechas"
+import { fechaDesCurp, edadAniosMesesDeISO, hoyISO } from "@/lib/fechas"
+import { aTitulo, soloDigitos } from "@/lib/texto"
 import { ReglamentoDialog } from "@/components/eventos/reglamento-dialog"
 import { crearInscripcionVerano } from "@/app/verano/actions"
 
@@ -29,7 +30,7 @@ type Autorizado = { nombre: string; celular: string; parentesco: string }
 type InscripcionForm = {
   talla: string
   nombre: string
-  edad: string
+  primeraVez: boolean | null
   fechaNacimiento: string
   fechaInscripcion: string
   curp: string
@@ -56,7 +57,7 @@ type InscripcionForm = {
 const valoresIniciales: InscripcionForm = {
   talla: "",
   nombre: "",
-  edad: "",
+  primeraVez: null,
   fechaNacimiento: "",
   fechaInscripcion: hoyISO(),
   curp: "",
@@ -182,6 +183,7 @@ export function InscripcionForm() {
     handleSubmit,
     reset,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<InscripcionForm>({ defaultValues: valoresIniciales })
   const [enviando, setEnviando] = useState(false)
@@ -189,6 +191,9 @@ export function InscripcionForm() {
     folio: string
     nombre: string
   } | null>(null)
+
+  const fechaNac = watch("fechaNacimiento")
+  const edadTexto = fechaNac ? edadAniosMesesDeISO(fechaNac) : null
 
   async function onSubmit(data: InscripcionForm) {
     setEnviando(true)
@@ -198,15 +203,19 @@ export function InscripcionForm() {
         curp: data.curp,
         fechaNacimiento: data.fechaNacimiento,
         talla: data.talla,
+        primeraVez: data.primeraVez === true,
         fechaInscripcion: data.fechaInscripcion || undefined,
         padre: data.padre,
-        celularPadre: data.celularPadre,
+        celularPadre: soloDigitos(data.celularPadre),
         madre: data.madre,
-        celularMadre: data.celularMadre,
-        telefonoCasa: data.telefonoCasa,
-        celularWhatsapp: data.celularWhatsapp,
+        celularMadre: soloDigitos(data.celularMadre),
+        telefonoCasa: soloDigitos(data.telefonoCasa),
+        celularWhatsapp: soloDigitos(data.celularWhatsapp),
         domicilio: data.domicilio,
-        autorizados: data.autorizados,
+        autorizados: data.autorizados.map((a) => ({
+          ...a,
+          celular: soloDigitos(a.celular),
+        })),
         enfermedades: data.enfermedades,
         impideActividad: data.impideActividad,
         medicamentos: data.medicamentos,
@@ -214,13 +223,13 @@ export function InscripcionForm() {
         nombreServicioMedico: data.nombreServicioMedico,
         numeroServicioMedico: data.numeroServicioMedico,
         nombreMedico: data.nombreMedico,
-        telefonoMedico: data.telefonoMedico,
+        telefonoMedico: soloDigitos(data.telefonoMedico),
         nombreFirma: data.nombreFirma,
         aceptaReglamento: data.aceptaReglamento,
       })
 
       if (r.ok) {
-        setConfirmacion({ folio: r.folio, nombre: data.nombre })
+        setConfirmacion({ folio: r.folio, nombre: aTitulo(data.nombre) })
         window.scrollTo({ top: 0, behavior: "smooth" })
       } else {
         toast.error(r.error)
@@ -239,6 +248,16 @@ export function InscripcionForm() {
   const errClase = (k: keyof InscripcionForm) =>
     errors[k] ? "border-rose-400" : ""
 
+  // Auto-corrige a formato Título al salir del campo (nombres).
+  const blurTitulo = (name: keyof InscripcionForm) => (
+    e: React.FocusEvent<HTMLInputElement>
+  ) => setValue(name, aTitulo(e.target.value) as never)
+
+  // Deja solo dígitos (máximo 10) al salir de un teléfono.
+  const blurTelefono = (name: keyof InscripcionForm) => (
+    e: React.FocusEvent<HTMLInputElement>
+  ) => setValue(name, soloDigitos(e.target.value).slice(0, 10) as never)
+
   if (confirmacion) {
     return (
       <Confirmacion
@@ -250,6 +269,7 @@ export function InscripcionForm() {
   }
 
   const inputSm = "h-9"
+  const propsTel = { inputMode: "numeric" as const, maxLength: 10, type: "tel" }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="mx-auto max-w-4xl">
@@ -274,9 +294,9 @@ export function InscripcionForm() {
           </div>
         </div>
 
-        {/* Talla */}
-        <div className="flex flex-wrap items-end gap-6 border-b border-rose-100 bg-rose-50/60 px-6 py-4">
-          <div className="max-w-[180px]">
+        {/* Talla + primera vez */}
+        <div className="flex flex-wrap items-start gap-x-8 gap-y-4 border-b border-rose-100 bg-rose-50/60 px-6 py-4">
+          <div className="max-w-[160px]">
             <Campo etiqueta="Talla de playera" requerido>
               <Controller
                 control={control}
@@ -299,6 +319,37 @@ export function InscripcionForm() {
               />
             </Campo>
           </div>
+
+          <Campo etiqueta="¿Es su primera vez en el curso?" requerido>
+            <Controller
+              control={control}
+              name="primeraVez"
+              rules={{ validate: (v) => v === true || v === false }}
+              render={({ field }) => (
+                <div className="flex gap-2">
+                  {[
+                    { v: true, l: "Sí" },
+                    { v: false, l: "No" },
+                  ].map((o) => (
+                    <button
+                      key={o.l}
+                      type="button"
+                      onClick={() => field.onChange(o.v)}
+                      className={cn(
+                        "rounded-lg border px-5 py-1.5 text-sm font-medium transition-colors",
+                        field.value === o.v
+                          ? "border-gobierno bg-gobierno text-white"
+                          : "border-input hover:bg-muted/40",
+                        errors.primeraVez && field.value === null && "border-rose-400"
+                      )}
+                    >
+                      {o.l}
+                    </button>
+                  ))}
+                </div>
+              )}
+            />
+          </Campo>
         </div>
 
         {/* Cuerpo */}
@@ -311,8 +362,8 @@ export function InscripcionForm() {
               className="sm:col-span-8"
             >
               <Input
-                className={cn(inputSm, errors.nombre && "border-rose-400")}
-                {...register("nombre", { required: true })}
+                className={cn(inputSm, errClase("nombre"))}
+                {...register("nombre", { required: true, onBlur: blurTitulo("nombre") })}
                 placeholder="Apellidos y nombre(s)"
               />
             </Campo>
@@ -344,14 +395,10 @@ export function InscripcionForm() {
                       field.onChange(val)
                       if (val.length >= 10) {
                         const fecha = fechaDesCurp(val)
-                        if (fecha) {
-                          setValue("fechaNacimiento", fecha)
-                          const edad = edadDeISO(fecha)
-                          if (edad !== null) setValue("edad", String(edad))
-                        }
+                        if (fecha) setValue("fechaNacimiento", fecha)
                       }
                     }}
-                    placeholder="18 caracteres — completa fecha de nacimiento y edad automáticamente"
+                    placeholder="18 caracteres — completa la fecha de nacimiento automáticamente"
                   />
                 )}
               />
@@ -359,25 +406,22 @@ export function InscripcionForm() {
 
             <Campo etiqueta="Fecha de nacimiento" requerido className="sm:col-span-5">
               <Input
-                className={cn(inputSm, errors.fechaNacimiento && "border-rose-400")}
+                className={cn(inputSm, errClase("fechaNacimiento"))}
                 type="date"
                 {...register("fechaNacimiento", { required: true })}
               />
             </Campo>
-            <Campo etiqueta="Edad (años)" requerido className="sm:col-span-2">
-              <Input
-                className={cn(inputSm, errClase("edad"))}
-                type="number"
-                min={4}
-                max={17}
-                {...register("edad", { required: true })}
-              />
-            </Campo>
-            <div className="flex items-end pb-1 sm:col-span-5">
-              <p className="text-[11px] leading-snug text-muted-foreground">
-                La CURP completa estos campos automáticamente. Puedes corregirlos
-                manualmente si es necesario.
-              </p>
+            <div className="sm:col-span-7">
+              <span className="mb-1 block text-xs font-medium text-foreground">
+                Edad
+              </span>
+              <div className="flex h-9 items-center rounded-md border border-input bg-muted/30 px-3 text-sm text-foreground">
+                {edadTexto ?? (
+                  <span className="text-muted-foreground">
+                    Se calcula con la fecha de nacimiento
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
@@ -399,22 +443,40 @@ export function InscripcionForm() {
           </p>
           <div className="grid gap-4 sm:grid-cols-12">
             <Campo etiqueta="Padre" className="sm:col-span-8">
-              <Input className={inputSm} {...register("padre")} />
+              <Input
+                className={inputSm}
+                {...register("padre", { onBlur: blurTitulo("padre") })}
+              />
             </Campo>
             <Campo etiqueta="Celular" className="sm:col-span-4">
-              <Input className={inputSm} type="tel" {...register("celularPadre")} />
+              <Input
+                className={inputSm}
+                {...propsTel}
+                {...register("celularPadre", { onBlur: blurTelefono("celularPadre") })}
+              />
             </Campo>
             <Campo etiqueta="Madre" className="sm:col-span-8">
-              <Input className={inputSm} {...register("madre")} />
+              <Input
+                className={inputSm}
+                {...register("madre", { onBlur: blurTitulo("madre") })}
+              />
             </Campo>
             <Campo etiqueta="Celular" className="sm:col-span-4">
-              <Input className={inputSm} type="tel" {...register("celularMadre")} />
+              <Input
+                className={inputSm}
+                {...propsTel}
+                {...register("celularMadre", { onBlur: blurTelefono("celularMadre") })}
+              />
             </Campo>
             <Campo etiqueta="Teléfono de casa" requerido className="sm:col-span-4">
               <Input
                 className={cn(inputSm, errClase("telefonoCasa"))}
-                type="tel"
-                {...register("telefonoCasa", { required: true })}
+                {...propsTel}
+                {...register("telefonoCasa", {
+                  required: true,
+                  pattern: /^\d{10}$/,
+                  onBlur: blurTelefono("telefonoCasa"),
+                })}
               />
             </Campo>
             <Campo
@@ -424,8 +486,12 @@ export function InscripcionForm() {
             >
               <Input
                 className={cn(inputSm, errClase("celularWhatsapp"))}
-                type="tel"
-                {...register("celularWhatsapp", { required: true })}
+                {...propsTel}
+                {...register("celularWhatsapp", {
+                  required: true,
+                  pattern: /^\d{10}$/,
+                  onBlur: blurTelefono("celularWhatsapp"),
+                })}
               />
             </Campo>
             <Campo etiqueta="Domicilio" requerido className="sm:col-span-12">
@@ -438,9 +504,7 @@ export function InscripcionForm() {
           </div>
 
           {/* Autorizados para recoger */}
-          <BarraSeccion>
-            Autorizados para recoger al NNA · opcional
-          </BarraSeccion>
+          <BarraSeccion>Autorizados para recoger al NNA · opcional</BarraSeccion>
           <p className="-mt-1 text-center text-xs text-muted-foreground">
             Personas que pueden recoger al NNA si los padres/tutores no pueden.
             Puedes dejarlo en blanco.
@@ -451,20 +515,38 @@ export function InscripcionForm() {
                 <Campo etiqueta={`Nombre ${i + 1}`} className="sm:col-span-5">
                   <Input
                     className={inputSm}
-                    {...register(`autorizados.${i}.nombre` as const)}
+                    {...register(`autorizados.${i}.nombre` as const, {
+                      onBlur: (e) =>
+                        setValue(
+                          `autorizados.${i}.nombre` as const,
+                          aTitulo(e.target.value)
+                        ),
+                    })}
                   />
                 </Campo>
                 <Campo etiqueta="Celular" className="sm:col-span-4">
                   <Input
                     className={inputSm}
-                    type="tel"
-                    {...register(`autorizados.${i}.celular` as const)}
+                    {...propsTel}
+                    {...register(`autorizados.${i}.celular` as const, {
+                      onBlur: (e) =>
+                        setValue(
+                          `autorizados.${i}.celular` as const,
+                          soloDigitos(e.target.value).slice(0, 10)
+                        ),
+                    })}
                   />
                 </Campo>
                 <Campo etiqueta="Parentesco" className="sm:col-span-3">
                   <Input
                     className={inputSm}
-                    {...register(`autorizados.${i}.parentesco` as const)}
+                    {...register(`autorizados.${i}.parentesco` as const, {
+                      onBlur: (e) =>
+                        setValue(
+                          `autorizados.${i}.parentesco` as const,
+                          aTitulo(e.target.value)
+                        ),
+                    })}
                   />
                 </Campo>
               </div>
@@ -491,16 +573,28 @@ export function InscripcionForm() {
               <Textarea rows={2} {...register("alergias")} />
             </Campo>
             <Campo etiqueta="Nombre del servicio médico">
-              <Input className={inputSm} {...register("nombreServicioMedico")} />
+              <Input
+                className={inputSm}
+                {...register("nombreServicioMedico", {
+                  onBlur: blurTitulo("nombreServicioMedico"),
+                })}
+              />
             </Campo>
             <Campo etiqueta="Número de servicio médico">
               <Input className={inputSm} {...register("numeroServicioMedico")} />
             </Campo>
             <Campo etiqueta="Nombre del médico tratante">
-              <Input className={inputSm} {...register("nombreMedico")} />
+              <Input
+                className={inputSm}
+                {...register("nombreMedico", { onBlur: blurTitulo("nombreMedico") })}
+              />
             </Campo>
             <Campo etiqueta="Teléfono del médico">
-              <Input className={inputSm} type="tel" {...register("telefonoMedico")} />
+              <Input
+                className={inputSm}
+                {...propsTel}
+                {...register("telefonoMedico", { onBlur: blurTelefono("telefonoMedico") })}
+              />
             </Campo>
           </div>
 
@@ -542,8 +636,11 @@ export function InscripcionForm() {
 
           <Campo etiqueta="Nombre del padre / tutor que inscribe" requerido>
             <Input
-              className={cn(inputSm, errors.nombreFirma && "border-rose-400")}
-              {...register("nombreFirma", { required: true })}
+              className={cn(inputSm, errClase("nombreFirma"))}
+              {...register("nombreFirma", {
+                required: true,
+                onBlur: blurTitulo("nombreFirma"),
+              })}
             />
           </Campo>
         </div>

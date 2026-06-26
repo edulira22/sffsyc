@@ -61,6 +61,41 @@ export function edadDeISO(fechaISO: string): number | null {
   return edad >= 0 ? edad : null
 }
 
+/** Edad en años y meses a partir de una fecha DATE (usa partes UTC). */
+export function edadAniosMeses(fechaNacimiento: Date): { anios: number; meses: number } {
+  const hoy = new Date()
+  let anios = hoy.getUTCFullYear() - fechaNacimiento.getUTCFullYear()
+  let meses = hoy.getUTCMonth() - fechaNacimiento.getUTCMonth()
+  if (hoy.getUTCDate() < fechaNacimiento.getUTCDate()) meses--
+  if (meses < 0) {
+    anios--
+    meses += 12
+  }
+  return { anios: Math.max(0, anios), meses: Math.max(0, meses) }
+}
+
+/** Texto legible de edad: "6 años 11 meses". */
+export function edadAniosMesesTexto(fechaNacimiento: Date): string {
+  const { anios, meses } = edadAniosMeses(fechaNacimiento)
+  return `${anios} ${anios === 1 ? "año" : "años"} ${meses} ${meses === 1 ? "mes" : "meses"}`
+}
+
+/** Igual que el anterior pero desde "YYYY-MM-DD" (útil en formularios). */
+export function edadAniosMesesDeISO(fechaISO: string): string | null {
+  if (!fechaISO || !/^\d{4}-\d{2}-\d{2}$/.test(fechaISO)) return null
+  const [y, m, d] = fechaISO.split("-").map(Number)
+  const hoy = new Date()
+  let anios = hoy.getFullYear() - y
+  let meses = hoy.getMonth() + 1 - m
+  if (hoy.getDate() < d) meses--
+  if (meses < 0) {
+    anios--
+    meses += 12
+  }
+  if (anios < 0) return null
+  return `${anios} ${anios === 1 ? "año" : "años"} ${meses} ${meses === 1 ? "mes" : "meses"}`
+}
+
 /** Antigüedad legible desde una fecha (ej. "2 años", "3 meses"). */
 export function antiguedad(desde: Date): string {
   const meses =

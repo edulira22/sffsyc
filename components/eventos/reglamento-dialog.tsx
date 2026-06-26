@@ -29,8 +29,8 @@ export function ReglamentoDialog() {
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[85vh] gap-0 overflow-hidden p-0 sm:max-w-2xl">
-          <DialogHeader className="border-b bg-gobierno px-6 py-4 text-left">
+        <DialogContent className="flex max-h-[85vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
+          <DialogHeader className="shrink-0 border-b bg-gobierno px-6 py-4 text-left">
             <DialogTitle className="flex items-center gap-2 text-white">
               <ScrollText className="size-5" />
               Reglamento — {EVENTO_VERANO.nombre}
@@ -40,7 +40,7 @@ export function ReglamentoDialog() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-5 overflow-y-auto px-6 py-5 text-sm text-foreground">
+          <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-6 py-5 text-sm text-foreground">
             <ol className="list-decimal space-y-2.5 pl-5 marker:font-semibold marker:text-gobierno">
               {REGLAMENTO_VERANO.reglas.map((r, i) => (
                 <li key={i} className="leading-relaxed">

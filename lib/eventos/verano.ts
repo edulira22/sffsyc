@@ -122,21 +122,24 @@ export function grupoPorId(id: string): GrupoVerano | undefined {
 
 // --- Tallas de playera -------------------------------------------------------
 
-export const TALLAS_VERANO = [
-  "4",
-  "6",
-  "8",
-  "10",
-  "12",
-  "14",
-  "16",
-  "Ch",
-  "M",
-  "G",
-  "XG",
-] as const
+export const TALLAS_VERANO = ["4", "6", "8", "10", "12", "14", "16"] as const
 
 export type TallaVerano = (typeof TALLAS_VERANO)[number]
+
+// --- Documentos requeridos (checklist del expediente) ------------------------
+//  Se imprimen como lista para marcar físicamente al armar el expediente.
+
+export const DOCUMENTOS_VERANO = [
+  "Acta de nacimiento",
+  "CURP",
+  "2 fotografías recientes, tamaño infantil a color",
+  "Certificado médico reciente",
+  "Cartilla de vacunación vigente",
+  "Comprobante de domicilio reciente",
+  "Servicio médico",
+  "INE de padres o tutores (quienes tengan bajo su cuidado al menor)",
+  "INE de personas autorizadas para recoger al menor (si los padres/tutores no pueden hacerlo)",
+] as const
 
 // --- Folio -------------------------------------------------------------------
 

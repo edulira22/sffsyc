@@ -1,17 +1,18 @@
 import type { InscripcionVerano } from "@prisma/client"
-import { Rocket } from "lucide-react"
 
 import {
   EVENTO_VERANO,
   folioVerano,
   grupoPorId,
+  DOCUMENTOS_VERANO,
 } from "@/lib/eventos/verano"
-import { calcularEdad, formatoFecha } from "@/lib/fechas"
+import { edadAniosMesesTexto, formatoFecha } from "@/lib/fechas"
+import { aTitulo } from "@/lib/texto"
 import type { AutorizadoVerano } from "@/lib/data/verano"
 
-// Documento del expediente: réplica del formato físico (SIN reglamento).
-// Pensado para verse en pantalla y para imprimirse tal cual y anexarse al
-// expediente físico del NNA.
+// Documento del expediente: réplica del formato físico (rosa), SIN reglamento.
+// Pensado para imprimirse y anexarse al expediente físico del NNA. Lleva un
+// recuadro para pegar la foto infantil de forma física.
 
 function Dato({
   etiqueta,
@@ -24,11 +25,11 @@ function Dato({
 }) {
   return (
     <div className={className}>
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-rose-700/70">
         {etiqueta}
       </p>
-      <p className="min-h-[1.25rem] border-b border-dashed border-muted-foreground/30 pb-0.5 text-sm text-foreground">
-        {valor && valor.trim() ? valor : "—"}
+      <p className="min-h-[1.25rem] border-b border-dotted border-rose-300 pb-0.5 text-sm text-foreground">
+        {valor && valor.trim() ? valor : " "}
       </p>
     </div>
   )
@@ -36,91 +37,102 @@ function Dato({
 
 function Encabezado({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mt-4 border-y border-gobierno/20 bg-gobierno-50 px-3 py-1 text-center text-[11px] font-bold uppercase tracking-wider text-gobierno">
+    <div className="mt-4 bg-rose-100 px-3 py-1 text-center text-[11px] font-bold uppercase tracking-wider text-rose-800">
       {children}
     </div>
   )
 }
 
 export function ExpedienteVerano({ insc }: { insc: InscripcionVerano }) {
-  const edad = calcularEdad(insc.fechaNacimiento)
   const grupo = insc.grupo ? grupoPorId(insc.grupo) : undefined
   const autorizados = (insc.autorizados as unknown as AutorizadoVerano[]) ?? []
+  const nom = (s?: string | null) => (s ? aTitulo(s) : "")
 
   return (
-    <div className="mx-auto max-w-3xl bg-white p-6 text-foreground print:max-w-none print:p-0 print:shadow-none">
-      {/* Encabezado institucional */}
-      <div className="flex items-start justify-between gap-4 border-b-2 border-gobierno pb-3">
-        <div className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-lg bg-gobierno text-white">
-            <Rocket className="size-5" />
-          </div>
+    <div className="mx-auto max-w-3xl bg-white p-6 text-foreground print:max-w-none print:p-3">
+      {/* Encabezado: foto + título + folio/equipo/talla */}
+      <div className="flex items-stretch gap-4 border-b-2 border-rose-400 pb-3">
+        {/* Recuadro para foto infantil (se pega físicamente) */}
+        <div className="flex w-24 shrink-0 flex-col items-center justify-center rounded border-2 border-dashed border-rose-300 bg-rose-50 p-1 text-center">
+          <span className="text-[9px] font-medium leading-tight text-rose-400">
+            Foto infantil
+            <br />
+            (pegar aquí)
+          </span>
+        </div>
+
+        <div className="flex flex-1 flex-col justify-center">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-rose-500">
+            {EVENTO_VERANO.sede}
+          </p>
+          <h1 className="text-lg font-bold leading-tight text-rose-700">
+            Inscripción — {EVENTO_VERANO.nombre}
+          </h1>
+          <p className="text-[11px] text-muted-foreground">
+            Información general del niño, niña y/o adolescente (NNA)
+          </p>
+        </div>
+
+        <div className="flex shrink-0 flex-col gap-1 text-right">
           <div>
-            <h1 className="text-base font-bold leading-tight text-gobierno">
-              Inscripción — {EVENTO_VERANO.nombre}
-            </h1>
-            <p className="text-[11px] text-muted-foreground">
-              {EVENTO_VERANO.sede} · Información general del NNA
+            <p className="text-[9px] uppercase tracking-wide text-rose-500">Folio</p>
+            <p className="font-mono text-sm font-bold text-rose-700">
+              {folioVerano(insc.id)}
             </p>
           </div>
-        </div>
-        <div className="text-right">
-          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
-            Folio
-          </p>
-          <p className="font-mono text-sm font-bold text-gobierno">
-            {folioVerano(insc.id)}
-          </p>
-        </div>
-      </div>
-
-      {/* Equipo + Talla */}
-      <div className="mt-3 grid grid-cols-2 gap-3">
-        <div className="rounded-lg border border-gobierno/20 bg-gobierno-50 px-3 py-2">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-gobierno/70">
-            Equipo
-          </p>
-          <p className="flex items-center gap-2 text-sm font-bold text-gobierno">
-            {grupo && (
-              <span
-                className="inline-block size-3 rounded-full ring-1 ring-white"
-                style={{ backgroundColor: grupo.hex }}
-              />
-            )}
-            {grupo ? grupo.nombre : "Por asignar"}
-          </p>
-        </div>
-        <div className="rounded-lg border border-gobierno/20 bg-gobierno-50 px-3 py-2">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-gobierno/70">
-            Talla
-          </p>
-          <p className="text-sm font-bold text-gobierno">{insc.talla || "—"}</p>
+          <div className="flex gap-2">
+            <div className="rounded border border-rose-300 px-2 py-0.5 text-center">
+              <p className="text-[8px] uppercase tracking-wide text-rose-500">Equipo</p>
+              <p className="flex items-center gap-1 text-xs font-bold text-rose-700">
+                {grupo && (
+                  <span
+                    className="inline-block size-2 rounded-full"
+                    style={{ backgroundColor: grupo.hex }}
+                  />
+                )}
+                {grupo ? grupo.nombre : "—"}
+              </p>
+            </div>
+            <div className="rounded border border-rose-300 px-2 py-0.5 text-center">
+              <p className="text-[8px] uppercase tracking-wide text-rose-500">Talla</p>
+              <p className="text-xs font-bold text-rose-700">{insc.talla || "—"}</p>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Información general */}
       <div className="mt-3 grid grid-cols-12 gap-x-4 gap-y-2">
-        <Dato etiqueta="Nombre del NNA" valor={insc.nombre} className="col-span-8" />
+        <Dato etiqueta="Nombre del NNA" valor={nom(insc.nombre)} className="col-span-7" />
         <Dato
           etiqueta="Fecha de inscripción"
           valor={formatoFecha(insc.fechaInscripcion)}
-          className="col-span-4"
+          className="col-span-3"
         />
-        <Dato etiqueta="CURP del NNA" valor={insc.curp} className="col-span-8" />
+        <Dato
+          etiqueta="¿Primera vez?"
+          valor={insc.primeraVez ? "Sí" : "No"}
+          className="col-span-2"
+        />
+        <Dato etiqueta="CURP del NNA" valor={insc.curp} className="col-span-7" />
         <Dato
           etiqueta="Fecha de nacimiento"
           valor={formatoFecha(insc.fechaNacimiento)}
+          className="col-span-3"
+        />
+        <Dato
+          etiqueta="Edad"
+          valor={edadAniosMesesTexto(insc.fechaNacimiento)}
           className="col-span-2"
         />
-        <Dato etiqueta="Edad" valor={`${edad} años`} className="col-span-2" />
       </div>
 
       {/* Padres / tutores */}
       <Encabezado>Padres / Tutores — encargados legales del NNA</Encabezado>
       <div className="mt-2 grid grid-cols-12 gap-x-4 gap-y-2">
-        <Dato etiqueta="Padre" valor={insc.padre} className="col-span-8" />
+        <Dato etiqueta="Padre" valor={nom(insc.padre)} className="col-span-8" />
         <Dato etiqueta="Celular" valor={insc.celularPadre} className="col-span-4" />
-        <Dato etiqueta="Madre" valor={insc.madre} className="col-span-8" />
+        <Dato etiqueta="Madre" valor={nom(insc.madre)} className="col-span-8" />
         <Dato etiqueta="Celular" valor={insc.celularMadre} className="col-span-4" />
         <Dato etiqueta="Teléfono de casa" valor={insc.telefonoCasa} className="col-span-4" />
         <Dato
@@ -138,9 +150,9 @@ export function ExpedienteVerano({ insc }: { insc: InscripcionVerano }) {
           const a = autorizados[i]
           return (
             <div key={i} className="grid grid-cols-12 gap-x-4">
-              <Dato etiqueta={`Nombre ${i + 1}`} valor={a?.nombre} className="col-span-5" />
+              <Dato etiqueta={`Nombre ${i + 1}`} valor={nom(a?.nombre)} className="col-span-5" />
               <Dato etiqueta="Celular" valor={a?.celular} className="col-span-4" />
-              <Dato etiqueta="Parentesco" valor={a?.parentesco} className="col-span-3" />
+              <Dato etiqueta="Parentesco" valor={nom(a?.parentesco)} className="col-span-3" />
             </div>
           )
         })}
@@ -153,16 +165,27 @@ export function ExpedienteVerano({ insc }: { insc: InscripcionVerano }) {
         <Dato etiqueta="¿Le impide alguna actividad?" valor={insc.impideActividad} />
         <Dato etiqueta="Medicamentos (nombre, dosis, horario)" valor={insc.medicamentos} />
         <Dato etiqueta="Alergias" valor={insc.alergias} />
-        <Dato etiqueta="Nombre del servicio médico" valor={insc.nombreServicioMedico} />
+        <Dato etiqueta="Nombre del servicio médico" valor={nom(insc.nombreServicioMedico)} />
         <Dato etiqueta="Número de servicio médico" valor={insc.numeroServicioMedico} />
-        <Dato etiqueta="Médico tratante" valor={insc.nombreMedico} />
+        <Dato etiqueta="Médico tratante" valor={nom(insc.nombreMedico)} />
         <Dato etiqueta="Teléfono del médico" valor={insc.telefonoMedico} />
+      </div>
+
+      {/* Checklist de documentos (se marca físicamente) */}
+      <Encabezado>Documentos entregados — marque lo recibido</Encabezado>
+      <div className="mt-2 grid grid-cols-2 gap-x-6 gap-y-1.5">
+        {DOCUMENTOS_VERANO.map((doc) => (
+          <div key={doc} className="flex items-start gap-2 text-[11px] text-foreground">
+            <span className="mt-px inline-block size-3 shrink-0 border border-rose-400" />
+            <span className="leading-snug">{doc}</span>
+          </div>
+        ))}
       </div>
 
       {/* Firma */}
       <div className="mt-10 flex flex-col items-center">
         <div className="w-72 border-t border-foreground pt-1 text-center">
-          <p className="text-sm font-medium text-foreground">{insc.nombreFirma}</p>
+          <p className="text-sm font-medium text-foreground">{nom(insc.nombreFirma)}</p>
           <p className="text-[11px] text-muted-foreground">Nombre y firma del padre/tutor</p>
         </div>
       </div>
