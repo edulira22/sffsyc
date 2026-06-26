@@ -20,6 +20,7 @@ export async function listarInscripcionesVerano() {
       grupo: true,
       talla: true,
       celularWhatsapp: true,
+      documentos: true,
       createdAt: true,
     },
   })

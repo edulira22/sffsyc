@@ -75,3 +75,31 @@
     text-wrap: balance;
   }
 }
+
+/* =============================================================================
+   Impresión — el expediente de verano debe caber en una hoja Carta con
+   márgenes correctos. El shell (barra lateral, encabezado) se oculta con
+   print:hidden; aquí fijamos página, colores y evitamos cortes feos.
+   ========================================================================== */
+@media print {
+  @page {
+    size: letter;
+    margin: 12mm;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+  }
+
+  /* Respetar los colores (fondos rosas, viñetas de equipo) al imprimir. */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Evitar que una sección se parta entre dos hojas. */
+  .evitar-corte {
+    break-inside: avoid;
+  }
+}

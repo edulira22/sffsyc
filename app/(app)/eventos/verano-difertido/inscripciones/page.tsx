@@ -3,7 +3,7 @@ import { ArrowLeft, ArrowRight, ExternalLink, Users, FileText } from "lucide-rea
 
 import { requerirSesion } from "@/lib/session"
 import { listarInscripcionesVerano } from "@/lib/data/verano"
-import { folioVerano, grupoPorId } from "@/lib/eventos/verano"
+import { folioVerano, grupoPorId, TOTAL_DOCUMENTOS } from "@/lib/eventos/verano"
 import { calcularEdad, formatoFecha } from "@/lib/fechas"
 import { PageHeader } from "@/components/ui-patterns/page-header"
 import { Button } from "@/components/ui/button"
@@ -68,6 +68,7 @@ export default async function InscripcionesVeranoPage() {
                 <TableHead>Edad</TableHead>
                 <TableHead>Equipo</TableHead>
                 <TableHead>Talla</TableHead>
+                <TableHead>Documentos</TableHead>
                 <TableHead>Inscrito</TableHead>
                 <TableHead className="w-12" />
               </TableRow>
@@ -75,6 +76,8 @@ export default async function InscripcionesVeranoPage() {
             <TableBody>
               {inscripciones.map((i) => {
                 const grupo = i.grupo ? grupoPorId(i.grupo) : undefined
+                const docs = ((i.documentos as unknown as string[]) ?? []).length
+                const docsCompletos = docs === TOTAL_DOCUMENTOS
                 return (
                   <TableRow key={i.id}>
                     <TableCell className="font-mono text-xs text-muted-foreground">
@@ -99,6 +102,17 @@ export default async function InscripcionesVeranoPage() {
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {i.talla || "—"}
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${
+                          docsCompletos
+                            ? "bg-agua-50 text-agua-700"
+                            : "bg-amber-50 text-amber-700"
+                        }`}
+                      >
+                        {docs}/{TOTAL_DOCUMENTOS}
+                      </span>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {formatoFecha(i.createdAt)}

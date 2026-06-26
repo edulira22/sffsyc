@@ -7,7 +7,11 @@ import {
   inscripcionVeranoSchema,
   type InscripcionVeranoInput,
 } from "@/lib/schemas/inscripcion-verano"
-import { grupoSugeridoPorEdad, folioVerano } from "@/lib/eventos/verano"
+import {
+  grupoSugeridoPorEdad,
+  folioVerano,
+  DOCUMENTOS_VERANO,
+} from "@/lib/eventos/verano"
 import { edadDeISO } from "@/lib/fechas"
 import { aTitulo, aOracion, soloDigitos } from "@/lib/texto"
 
@@ -40,6 +44,11 @@ export async function crearInscripcionVerano(
       parentesco: aTitulo(a.parentesco),
     }))
 
+  // Solo ids de documentos válidos.
+  const documentos = d.documentos.filter((id) =>
+    DOCUMENTOS_VERANO.some((doc) => doc.id === id)
+  )
+
   try {
     const insc = await prisma.inscripcionVerano.create({
       data: {
@@ -60,6 +69,7 @@ export async function crearInscripcionVerano(
         celularWhatsapp: soloDigitos(d.celularWhatsapp) || null,
         domicilio: aOracion(d.domicilio) || null,
         autorizados,
+        documentos,
         enfermedades: aOracion(d.enfermedades) || null,
         impideActividad: aOracion(d.impideActividad) || null,
         medicamentos: aOracion(d.medicamentos) || null,

@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-import { EVENTO_VERANO, TALLAS_VERANO } from "@/lib/eventos/verano"
+import { EVENTO_VERANO, TALLAS_VERANO, DOCUMENTOS_VERANO } from "@/lib/eventos/verano"
 import { fechaDesCurp, edadAniosMesesDeISO, hoyISO } from "@/lib/fechas"
 import { aTitulo, soloDigitos } from "@/lib/texto"
 import { ReglamentoDialog } from "@/components/eventos/reglamento-dialog"
@@ -42,6 +42,7 @@ type InscripcionForm = {
   celularWhatsapp: string
   domicilio: string
   autorizados: Autorizado[]
+  documentos: string[]
   enfermedades: string
   impideActividad: string
   medicamentos: string
@@ -73,6 +74,7 @@ const valoresIniciales: InscripcionForm = {
     { nombre: "", celular: "", parentesco: "" },
     { nombre: "", celular: "", parentesco: "" },
   ],
+  documentos: [],
   enfermedades: "",
   impideActividad: "",
   medicamentos: "",
@@ -216,6 +218,7 @@ export function InscripcionForm() {
           ...a,
           celular: soloDigitos(a.celular),
         })),
+        documentos: data.documentos,
         enfermedades: data.enfermedades,
         impideActividad: data.impideActividad,
         medicamentos: data.medicamentos,
@@ -597,6 +600,48 @@ export function InscripcionForm() {
               />
             </Campo>
           </div>
+
+          {/* Documentos entregados (checklist con status) */}
+          <BarraSeccion>Documentos entregados · opcional</BarraSeccion>
+          <p className="-mt-1 text-center text-xs text-muted-foreground">
+            Marca lo que la familia entrega hoy. Lo que falte se puede registrar
+            después desde el expediente.
+          </p>
+          <Controller
+            control={control}
+            name="documentos"
+            render={({ field }) => (
+              <div className="grid gap-1.5 sm:grid-cols-2">
+                {DOCUMENTOS_VERANO.map((doc) => {
+                  const activo = field.value.includes(doc.id)
+                  return (
+                    <label
+                      key={doc.id}
+                      className={cn(
+                        "flex cursor-pointer items-start gap-2.5 rounded-lg border px-3 py-2 text-sm transition-colors",
+                        activo
+                          ? "border-gobierno/40 bg-gobierno-50"
+                          : "border-input hover:bg-muted/40"
+                      )}
+                    >
+                      <Checkbox
+                        checked={activo}
+                        onCheckedChange={(v) =>
+                          field.onChange(
+                            v === true
+                              ? [...field.value, doc.id]
+                              : field.value.filter((d) => d !== doc.id)
+                          )
+                        }
+                        className="mt-0.5"
+                      />
+                      <span className="leading-snug text-foreground">{doc.label}</span>
+                    </label>
+                  )
+                })}
+              </div>
+            )}
+          />
 
           {/* Reglamento — solo aceptación + link a la ventana */}
           <BarraSeccion>Reglamento</BarraSeccion>

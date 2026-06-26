@@ -6,6 +6,7 @@ import { requerirSesion } from "@/lib/session"
 import { obtenerInscripcionVerano } from "@/lib/data/verano"
 import { ExpedienteVerano } from "@/components/eventos/expediente-verano"
 import { BotonImprimir } from "@/components/eventos/boton-imprimir"
+import { StatusDocumentos } from "@/components/eventos/status-documentos"
 
 export const metadata = { title: "Expediente — Verano DIFertido" }
 
@@ -35,6 +36,12 @@ export default async function ExpedienteVeranoPage({
         </Link>
         <BotonImprimir />
       </div>
+
+      {/* Status de documentos (editable, no se imprime) */}
+      <StatusDocumentos
+        id={insc.id}
+        inicial={(insc.documentos as unknown as string[]) ?? []}
+      />
 
       {/* Documento del expediente */}
       <div className="rounded-xl border bg-white shadow-sm print:border-0 print:shadow-none">

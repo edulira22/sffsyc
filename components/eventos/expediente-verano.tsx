@@ -46,10 +46,11 @@ function Encabezado({ children }: { children: React.ReactNode }) {
 export function ExpedienteVerano({ insc }: { insc: InscripcionVerano }) {
   const grupo = insc.grupo ? grupoPorId(insc.grupo) : undefined
   const autorizados = (insc.autorizados as unknown as AutorizadoVerano[]) ?? []
+  const documentos = (insc.documentos as unknown as string[]) ?? []
   const nom = (s?: string | null) => (s ? aTitulo(s) : "")
 
   return (
-    <div className="mx-auto max-w-3xl bg-white p-6 text-foreground print:max-w-none print:p-3">
+    <div className="mx-auto max-w-3xl bg-white p-6 text-foreground print:max-w-none print:p-0">
       {/* Encabezado: foto + título + folio/equipo/talla */}
       <div className="flex items-stretch gap-4 border-b-2 border-rose-400 pb-3">
         {/* Recuadro para foto infantil (se pega físicamente) */}
@@ -171,19 +172,32 @@ export function ExpedienteVerano({ insc }: { insc: InscripcionVerano }) {
         <Dato etiqueta="Teléfono del médico" valor={insc.telefonoMedico} />
       </div>
 
-      {/* Checklist de documentos (se marca físicamente) */}
-      <Encabezado>Documentos entregados — marque lo recibido</Encabezado>
-      <div className="mt-2 grid grid-cols-2 gap-x-6 gap-y-1.5">
-        {DOCUMENTOS_VERANO.map((doc) => (
-          <div key={doc} className="flex items-start gap-2 text-[11px] text-foreground">
-            <span className="mt-px inline-block size-3 shrink-0 border border-rose-400" />
-            <span className="leading-snug">{doc}</span>
-          </div>
-        ))}
+      {/* Checklist de documentos — refleja el status guardado */}
+      <Encabezado>Documentos entregados</Encabezado>
+      <div className="mt-2 grid grid-cols-2 gap-x-6 gap-y-1.5 evitar-corte">
+        {DOCUMENTOS_VERANO.map((doc) => {
+          const entregado = documentos.includes(doc.id)
+          return (
+            <div key={doc.id} className="flex items-start gap-2 text-[11px] text-foreground">
+              <span
+                className={`mt-px flex size-3 shrink-0 items-center justify-center border ${
+                  entregado ? "border-rose-500 bg-rose-500 text-white" : "border-rose-400"
+                }`}
+              >
+                {entregado && (
+                  <svg viewBox="0 0 10 10" className="size-2.5" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M1.5 5.5L4 8l4.5-5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+              </span>
+              <span className="leading-snug">{doc.label}</span>
+            </div>
+          )
+        })}
       </div>
 
       {/* Firma */}
-      <div className="mt-10 flex flex-col items-center">
+      <div className="mt-10 flex flex-col items-center evitar-corte print:mt-6">
         <div className="w-72 border-t border-foreground pt-1 text-center">
           <p className="text-sm font-medium text-foreground">{nom(insc.nombreFirma)}</p>
           <p className="text-[11px] text-muted-foreground">Nombre y firma del padre/tutor</p>

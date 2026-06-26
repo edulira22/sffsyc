@@ -50,6 +50,9 @@ export const inscripcionVeranoSchema = z.object({
   // --- Opcional: autorizados para recoger ---
   autorizados: z.array(autorizadoSchema).max(3).default([]),
 
+  // --- Status de documentos entregados (ids) ---
+  documentos: z.array(z.string()).default([]),
+
   // --- Salud (opcional) ---
   enfermedades: z.string().trim().default(""),
   impideActividad: z.string().trim().default(""),

@@ -126,20 +126,33 @@ export const TALLAS_VERANO = ["4", "6", "8", "10", "12", "14", "16"] as const
 
 export type TallaVerano = (typeof TALLAS_VERANO)[number]
 
-// --- Documentos requeridos (checklist del expediente) ------------------------
-//  Se imprimen como lista para marcar físicamente al armar el expediente.
+// --- Documentos requeridos (status por NNA) ----------------------------------
+//  Cada documento tiene un id estable (se guarda en BD) y su etiqueta legible.
+//  Sirve para el checklist del formulario, el expediente impreso y el tablero
+//  de status de documentos de cada niño.
 
-export const DOCUMENTOS_VERANO = [
-  "Acta de nacimiento",
-  "CURP",
-  "2 fotografías recientes, tamaño infantil a color",
-  "Certificado médico reciente",
-  "Cartilla de vacunación vigente",
-  "Comprobante de domicilio reciente",
-  "Servicio médico",
-  "INE de padres o tutores (quienes tengan bajo su cuidado al menor)",
-  "INE de personas autorizadas para recoger al menor (si los padres/tutores no pueden hacerlo)",
-] as const
+export type DocumentoVerano = { id: string; label: string }
+
+export const DOCUMENTOS_VERANO: DocumentoVerano[] = [
+  { id: "acta", label: "Acta de nacimiento" },
+  { id: "curp", label: "CURP" },
+  { id: "fotos", label: "2 fotografías recientes, tamaño infantil a color" },
+  { id: "certificado_medico", label: "Certificado médico reciente" },
+  { id: "cartilla", label: "Cartilla de vacunación vigente" },
+  { id: "comprobante_domicilio", label: "Comprobante de domicilio reciente" },
+  { id: "servicio_medico", label: "Servicio médico" },
+  {
+    id: "ine_tutores",
+    label: "INE de padres o tutores (quienes tengan bajo su cuidado al menor)",
+  },
+  {
+    id: "ine_autorizados",
+    label:
+      "INE de personas autorizadas para recoger al menor (si los padres/tutores no pueden hacerlo)",
+  },
+]
+
+export const TOTAL_DOCUMENTOS = DOCUMENTOS_VERANO.length
 
 // --- Folio -------------------------------------------------------------------
 

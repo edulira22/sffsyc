@@ -307,6 +307,8 @@ model InscripcionVerano {
   domicilio            String?
   /// Hasta 3 autorizados para recoger: [{ nombre, celular, parentesco }].
   autorizados          Json     @default("[]")
+  /// Ids de los documentos entregados (status). Ver DOCUMENTOS_VERANO.
+  documentos           Json     @default("[]")
   // --- Salud ---
   enfermedades         String?
   impideActividad      String?  @map("impide_actividad")
