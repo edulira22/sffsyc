@@ -157,21 +157,22 @@ export function ExpedienteVerano({ insc }: { insc: InscripcionVerano }) {
           <Dato etiqueta="Teléfono del médico" valor={insc.telefonoMedico} />
         </div>
 
-        {/* Recibo de pago */}
-        <div className="mt-3 flex items-end gap-2 evitar-corte">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-rose-400">
-            No. de recibo de pago:
-          </span>
-          <span className="min-w-[140px] flex-1 border-b border-rose-200 pb-0.5 text-sm font-medium text-slate-800">
-            {insc.reciboPago?.trim() ? insc.reciboPago : " "}
-          </span>
-        </div>
+        {/* Recibo de pago + Firma — bloque único: nunca se cortan entre páginas */}
+        <div className="evitar-corte mt-3">
+          <div className="flex items-end gap-2">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-rose-400">
+              No. de recibo de pago:
+            </span>
+            <span className="min-w-[140px] flex-1 border-b border-rose-200 pb-0.5 text-sm font-medium text-slate-800">
+              {insc.reciboPago?.trim() ? insc.reciboPago : " "}
+            </span>
+          </div>
 
-        {/* Firma */}
-        <div className="mt-10 flex flex-col items-center evitar-corte print:mt-8">
-          <div className="w-72 border-t border-slate-400 pt-1.5 text-center">
-            <p className="text-sm font-semibold text-slate-800">{nom(insc.nombreFirma)}</p>
-            <p className="text-[11px] text-slate-500">Nombre y firma del padre/tutor</p>
+          <div className="mt-8 flex flex-col items-center print:mt-5">
+            <div className="w-72 border-t border-slate-400 pt-1.5 text-center">
+              <p className="text-sm font-semibold text-slate-800">{nom(insc.nombreFirma)}</p>
+              <p className="text-[11px] text-slate-500">Nombre y firma del padre/tutor</p>
+            </div>
           </div>
         </div>
       </div>
