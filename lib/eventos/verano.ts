@@ -122,7 +122,19 @@ export function grupoPorId(id: string): GrupoVerano | undefined {
 
 // --- Tallas de playera -------------------------------------------------------
 
-export const TALLAS_VERANO = ["4", "6", "8", "10", "12", "14", "16"] as const
+// Tallas infantiles (4–16) y tallas teen (la T indica "teens": T-CH, T-M, T-G).
+export const TALLAS_VERANO = [
+  "4",
+  "6",
+  "8",
+  "10",
+  "12",
+  "14",
+  "16",
+  "T-CH",
+  "T-M",
+  "T-G",
+] as const
 
 export type TallaVerano = (typeof TALLAS_VERANO)[number]
 
