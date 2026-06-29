@@ -60,11 +60,33 @@ const SECCIONES = [
 export default async function VeranoDifertidoPage() {
   await requerirSesion()
 
-  const [inscritos, clasesCount, staffCount] = await Promise.all([
-    contarInscripcionesVerano(),
-    prisma.claseVerano.count({ where: { estatus: "activa" } }),
-    prisma.personalVerano.count({ where: { estatus: "activo" } }),
-  ])
+  const [inscritos, clasesCount, staffCount, activosPorGrupo, totalPorGrupo] =
+    await Promise.all([
+      contarInscripcionesVerano(),
+      prisma.claseVerano.count({ where: { estatus: "activa" } }),
+      prisma.personalVerano.count({ where: { estatus: "activo" } }),
+      prisma.inscripcionVerano.groupBy({
+        by: ["grupo"],
+        _count: { id: true },
+        where: { estatus: "activa" },
+      }),
+      prisma.inscripcionVerano.groupBy({
+        by: ["grupo"],
+        _count: { id: true },
+      }),
+    ])
+
+  // Mapa grupoId → { activos, total } para las tarjetas de equipos.
+  const cuentasPorGrupo = new Map<string, { activos: number; total: number }>()
+  for (const row of totalPorGrupo) {
+    if (row.grupo) cuentasPorGrupo.set(row.grupo, { activos: 0, total: row._count.id })
+  }
+  for (const row of activosPorGrupo) {
+    if (row.grupo) {
+      const prev = cuentasPorGrupo.get(row.grupo) ?? { activos: 0, total: 0 }
+      cuentasPorGrupo.set(row.grupo, { ...prev, activos: row._count.id })
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -154,30 +176,53 @@ export default async function VeranoDifertidoPage() {
           Equipos del curso
         </h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          {GRUPOS_VERANO.map((g) => (
-            <div
-              key={g.id}
-              className={cn("rounded-xl border p-4", g.claseCard)}
-            >
-              <div className="mb-2 flex items-center gap-2">
-                <span
-                  className="inline-block size-3.5 rounded-full ring-2 ring-white"
-                  style={{ backgroundColor: g.hex }}
-                />
-                <p className="font-bold text-foreground">{g.nombre}</p>
+          {GRUPOS_VERANO.map((g) => {
+            const cuentas = cuentasPorGrupo.get(g.id) ?? { activos: 0, total: 0 }
+            return (
+              <div
+                key={g.id}
+                className={cn("rounded-xl border p-4", g.claseCard)}
+              >
+                {/* Nombre */}
+                <div className="mb-2 flex items-center gap-2">
+                  <span
+                    className="inline-block size-3 shrink-0 rounded-full ring-2 ring-white"
+                    style={{ backgroundColor: g.hex }}
+                  />
+                  <p className="font-bold text-foreground">{g.nombre}</p>
+                </div>
+
+                {/* Edad */}
+                <p className="text-xs text-muted-foreground">
+                  {g.edadMin === g.edadMax
+                    ? `${g.edadMin} años`
+                    : `${g.edadMin}–${g.edadMax} años`}
+                </p>
+
+                {/* Conteos */}
+                <div className="mt-2.5 grid grid-cols-2 gap-1.5">
+                  <div className="rounded-lg bg-white/70 px-1.5 py-1.5 text-center">
+                    <p className="text-xl font-bold leading-none text-foreground">
+                      {cuentas.activos}
+                    </p>
+                    <p className="mt-0.5 text-[10px] text-muted-foreground">activos</p>
+                  </div>
+                  <div className="rounded-lg bg-white/35 px-1.5 py-1.5 text-center">
+                    <p className="text-xl font-bold leading-none text-foreground/50">
+                      {cuentas.total}
+                    </p>
+                    <p className="mt-0.5 text-[10px] text-muted-foreground">inscritos</p>
+                  </div>
+                </div>
+
+                {/* Salida */}
+                <p className="mt-2.5 flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <Clock className="size-3" />
+                  Salida {g.salida}
+                </p>
               </div>
-              <p className="text-xs font-medium text-foreground/70">{g.color}</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {g.edadMin === g.edadMax
-                  ? `${g.edadMin} años`
-                  : `${g.edadMin}–${g.edadMax} años`}
-              </p>
-              <p className="mt-2 flex items-center gap-1 text-[11px] text-muted-foreground">
-                <Clock className="size-3" />
-                Salida {g.salida}
-              </p>
-            </div>
-          ))}
+            )
+          })}
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
           TurboBots y Megatronix (edades 10–13) se nivelarán automáticamente: mismo
