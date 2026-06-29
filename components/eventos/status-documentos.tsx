@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { FileCheck2, Loader2, Receipt } from "lucide-react"
+import Link from "next/link"
+import { FileCheck2, Loader2, Receipt, Printer, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
 
 import { cn } from "@/lib/utils"
@@ -115,6 +116,25 @@ export function StatusDocumentos({
           />
         </label>
       </div>
+
+      {/* Al completar todo: abrir el expediente listo para imprimir */}
+      {todo && (
+        <div className="mt-3 flex flex-col items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 sm:flex-row">
+          <p className="flex items-center gap-2 text-sm font-medium text-emerald-800">
+            <CheckCircle2 className="size-5" />
+            Documentación completa. Ya puedes imprimir el expediente.
+          </p>
+          <Link
+            href={`/imprimir-expediente/${id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
+          >
+            <Printer className="size-4" />
+            Abrir listo para imprimir
+          </Link>
+        </div>
+      )}
     </div>
   )
 }

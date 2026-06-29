@@ -1,6 +1,6 @@
 import type { InscripcionVerano } from "@prisma/client"
 
-import { EVENTO_VERANO, folioVerano, DOCUMENTOS_VERANO } from "@/lib/eventos/verano"
+import { EVENTO_VERANO, folioVerano } from "@/lib/eventos/verano"
 import { edadAniosMesesTexto, formatoFecha } from "@/lib/fechas"
 import { aTitulo } from "@/lib/texto"
 import type { AutorizadoVerano } from "@/lib/data/verano"
@@ -40,7 +40,6 @@ function Seccion({ children }: { children: React.ReactNode }) {
 
 export function ExpedienteVerano({ insc }: { insc: InscripcionVerano }) {
   const autorizados = (insc.autorizados as unknown as AutorizadoVerano[]) ?? []
-  const documentos = (insc.documentos as unknown as string[]) ?? []
   const nom = (s?: string | null) => (s ? aTitulo(s) : "")
 
   return (
@@ -156,30 +155,6 @@ export function ExpedienteVerano({ insc }: { insc: InscripcionVerano }) {
           <Dato etiqueta="Número de servicio médico" valor={insc.numeroServicioMedico} />
           <Dato etiqueta="Médico tratante" valor={nom(insc.nombreMedico)} />
           <Dato etiqueta="Teléfono del médico" valor={insc.telefonoMedico} />
-        </div>
-
-        {/* Checklist de documentos — refleja el status guardado */}
-        <Seccion>Documentos entregados</Seccion>
-        <div className="mt-2.5 grid grid-cols-2 gap-x-6 gap-y-2 evitar-corte">
-          {DOCUMENTOS_VERANO.map((doc) => {
-            const entregado = documentos.includes(doc.id)
-            return (
-              <div key={doc.id} className="flex items-start gap-2 text-[11px] text-slate-700">
-                <span
-                  className={`mt-px flex size-3.5 shrink-0 items-center justify-center rounded-[3px] border ${
-                    entregado ? "border-rose-500 bg-rose-500 text-white" : "border-rose-300"
-                  }`}
-                >
-                  {entregado && (
-                    <svg viewBox="0 0 10 10" className="size-2.5" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M1.5 5.5L4 8l4.5-5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  )}
-                </span>
-                <span className="leading-snug">{doc.label}</span>
-              </div>
-            )
-          })}
         </div>
 
         {/* Recibo de pago */}
