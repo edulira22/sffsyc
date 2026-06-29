@@ -10,8 +10,10 @@ import {
   FileText,
 } from "lucide-react"
 
+import { Prisma } from "@prisma/client"
+
 import { requerirSesion } from "@/lib/session"
-import { EVENTO_VERANO, GRUPOS_VERANO } from "@/lib/eventos/verano"
+import { EVENTO_VERANO, GRUPOS_VERANO, TOTAL_DOCUMENTOS } from "@/lib/eventos/verano"
 import { contarInscripcionesVerano } from "@/lib/data/verano"
 import { prisma } from "@/lib/prisma"
 import { Card, CardContent } from "@/components/ui/card"
@@ -60,32 +62,39 @@ const SECCIONES = [
 export default async function VeranoDifertidoPage() {
   await requerirSesion()
 
-  const [inscritos, clasesCount, staffCount, activosPorGrupo, totalPorGrupo] =
+  const [inscritos, clasesCount, staffCount, activosPorGrupo, completosPorGrupo] =
     await Promise.all([
       contarInscripcionesVerano(),
       prisma.claseVerano.count({ where: { estatus: "activa" } }),
       prisma.personalVerano.count({ where: { estatus: "activo" } }),
+      // Activos: estatus = activa (sin importar si tienen docs completos).
       prisma.inscripcionVerano.groupBy({
         by: ["grupo"],
         _count: { id: true },
         where: { estatus: "activa" },
       }),
-      prisma.inscripcionVerano.groupBy({
-        by: ["grupo"],
-        _count: { id: true },
-      }),
+      // Inscritos oficialmente: activos con documentación completa (todos los
+      // documentos entregados + número de recibo capturado).
+      prisma.$queryRaw<{ grupo: string; count: bigint }[]>(Prisma.sql`
+        SELECT grupo, COUNT(*)::int AS count
+        FROM inscripciones_verano
+        WHERE estatus = 'activa'
+          AND grupo IS NOT NULL
+          AND jsonb_array_length(COALESCE(documentos, '[]'::jsonb)) >= ${TOTAL_DOCUMENTOS}
+          AND recibo_pago IS NOT NULL
+          AND recibo_pago != ''
+        GROUP BY grupo
+      `),
     ])
 
-  // Mapa grupoId → { activos, total } para las tarjetas de equipos.
-  const cuentasPorGrupo = new Map<string, { activos: number; total: number }>()
-  for (const row of totalPorGrupo) {
-    if (row.grupo) cuentasPorGrupo.set(row.grupo, { activos: 0, total: row._count.id })
-  }
+  // Mapa grupoId → { activos, inscritos } para las tarjetas de equipos.
+  const cuentasPorGrupo = new Map<string, { activos: number; inscritos: number }>()
   for (const row of activosPorGrupo) {
-    if (row.grupo) {
-      const prev = cuentasPorGrupo.get(row.grupo) ?? { activos: 0, total: 0 }
-      cuentasPorGrupo.set(row.grupo, { ...prev, activos: row._count.id })
-    }
+    if (row.grupo) cuentasPorGrupo.set(row.grupo, { activos: row._count.id, inscritos: 0 })
+  }
+  for (const row of completosPorGrupo) {
+    const prev = cuentasPorGrupo.get(row.grupo) ?? { activos: 0, inscritos: 0 }
+    cuentasPorGrupo.set(row.grupo, { ...prev, inscritos: Number(row.count) })
   }
 
   return (
@@ -177,7 +186,7 @@ export default async function VeranoDifertidoPage() {
         </h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {GRUPOS_VERANO.map((g) => {
-            const cuentas = cuentasPorGrupo.get(g.id) ?? { activos: 0, total: 0 }
+            const cuentas = cuentasPorGrupo.get(g.id) ?? { activos: 0, inscritos: 0 }
             return (
               <div
                 key={g.id}
@@ -209,7 +218,7 @@ export default async function VeranoDifertidoPage() {
                   </div>
                   <div className="rounded-lg bg-white/35 px-1.5 py-1.5 text-center">
                     <p className="text-xl font-bold leading-none text-foreground/50">
-                      {cuentas.total}
+                      {cuentas.inscritos}
                     </p>
                     <p className="mt-0.5 text-[10px] text-muted-foreground">inscritos</p>
                   </div>
