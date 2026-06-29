@@ -21,6 +21,7 @@ export async function listarInscripcionesVerano() {
       talla: true,
       celularWhatsapp: true,
       documentos: true,
+      reciboPago: true,
       createdAt: true,
     },
   })

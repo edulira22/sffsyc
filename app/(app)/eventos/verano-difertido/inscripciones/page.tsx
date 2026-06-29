@@ -3,7 +3,7 @@ import { ArrowLeft, ArrowRight, ExternalLink, Users, FileText } from "lucide-rea
 
 import { requerirSesion } from "@/lib/session"
 import { listarInscripcionesVerano } from "@/lib/data/verano"
-import { folioVerano, grupoPorId, TOTAL_DOCUMENTOS } from "@/lib/eventos/verano"
+import { folioVerano, grupoPorId, TOTAL_REQUISITOS } from "@/lib/eventos/verano"
 import { calcularEdad, formatoFecha } from "@/lib/fechas"
 import { PageHeader } from "@/components/ui-patterns/page-header"
 import { Button } from "@/components/ui/button"
@@ -76,8 +76,10 @@ export default async function InscripcionesVeranoPage() {
             <TableBody>
               {inscripciones.map((i) => {
                 const grupo = i.grupo ? grupoPorId(i.grupo) : undefined
-                const docs = ((i.documentos as unknown as string[]) ?? []).length
-                const docsCompletos = docs === TOTAL_DOCUMENTOS
+                const docs =
+                  ((i.documentos as unknown as string[]) ?? []).length +
+                  (i.reciboPago?.trim() ? 1 : 0)
+                const docsCompletos = docs === TOTAL_REQUISITOS
                 return (
                   <TableRow key={i.id}>
                     <TableCell className="font-mono text-xs text-muted-foreground">
@@ -111,7 +113,7 @@ export default async function InscripcionesVeranoPage() {
                             : "bg-amber-50 text-amber-700"
                         }`}
                       >
-                        {docs}/{TOTAL_DOCUMENTOS}
+                        {docs}/{TOTAL_REQUISITOS}
                       </span>
                     </TableCell>
                     <TableCell className="text-muted-foreground">

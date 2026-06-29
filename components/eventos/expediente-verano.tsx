@@ -196,6 +196,16 @@ export function ExpedienteVerano({ insc }: { insc: InscripcionVerano }) {
         })}
       </div>
 
+      {/* Recibo de pago */}
+      <div className="mt-2 flex items-end gap-2 evitar-corte">
+        <span className="text-[11px] font-semibold uppercase tracking-wide text-rose-700/70">
+          No. de recibo de pago:
+        </span>
+        <span className="min-w-[140px] flex-1 border-b border-dotted border-rose-300 pb-0.5 text-sm font-medium text-foreground">
+          {insc.reciboPago?.trim() ? insc.reciboPago : " "}
+        </span>
+      </div>
+
       {/* Firma */}
       <div className="mt-10 flex flex-col items-center evitar-corte print:mt-6">
         <div className="w-72 border-t border-foreground pt-1 text-center">

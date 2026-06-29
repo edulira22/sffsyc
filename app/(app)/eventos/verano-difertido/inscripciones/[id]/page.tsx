@@ -37,10 +37,11 @@ export default async function ExpedienteVeranoPage({
         <BotonImprimir />
       </div>
 
-      {/* Status de documentos (editable, no se imprime) */}
+      {/* Status de requisitos (editable, no se imprime) */}
       <StatusDocumentos
         id={insc.id}
-        inicial={(insc.documentos as unknown as string[]) ?? []}
+        documentosIniciales={(insc.documentos as unknown as string[]) ?? []}
+        reciboInicial={insc.reciboPago ?? ""}
       />
 
       {/* Documento del expediente */}

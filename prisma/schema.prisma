@@ -309,6 +309,8 @@ model InscripcionVerano {
   autorizados          Json     @default("[]")
   /// Ids de los documentos entregados (status). Ver DOCUMENTOS_VERANO.
   documentos           Json     @default("[]")
+  /// No. de recibo de pago (se captura después, en el expediente).
+  reciboPago           String?  @map("recibo_pago")
   // --- Salud ---
   enfermedades         String?
   impideActividad      String?  @map("impide_actividad")

@@ -1,61 +1,76 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { FileCheck2, Loader2 } from "lucide-react"
+import { FileCheck2, Loader2, Receipt } from "lucide-react"
 import { toast } from "sonner"
 
 import { cn } from "@/lib/utils"
+import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
-import { DOCUMENTOS_VERANO, TOTAL_DOCUMENTOS } from "@/lib/eventos/verano"
-import { actualizarDocumentosVerano } from "@/app/(app)/eventos/verano-difertido/inscripciones/actions"
+import {
+  DOCUMENTOS_VERANO,
+  TOTAL_REQUISITOS,
+} from "@/lib/eventos/verano"
+import { actualizarStatusVerano } from "@/app/(app)/eventos/verano-difertido/inscripciones/actions"
 
-// Panel de status de documentos (solo pantalla, no se imprime). Marca lo que
-// el NNA ya entregó y lo guarda en la base de datos al instante.
+// Panel de status de requisitos (solo pantalla, no se imprime). Marca los
+// documentos entregados y captura el número de recibo de pago; guarda en BD
+// al instante.
 export function StatusDocumentos({
   id,
-  inicial,
+  documentosIniciales,
+  reciboInicial,
 }: {
   id: number
-  inicial: string[]
+  documentosIniciales: string[]
+  reciboInicial: string
 }) {
-  const [marcados, setMarcados] = useState<string[]>(inicial)
+  const [marcados, setMarcados] = useState<string[]>(documentosIniciales)
+  const [recibo, setRecibo] = useState(reciboInicial)
   const [guardando, startTransition] = useTransition()
+
+  function guardar(docs: string[], rec: string, previo: string[]) {
+    startTransition(async () => {
+      const r = await actualizarStatusVerano(id, docs, rec)
+      if (!r.ok) {
+        toast.error(r.error)
+        setMarcados(previo) // revertir documentos
+      }
+    })
+  }
 
   function toggle(docId: string) {
     const nuevos = marcados.includes(docId)
       ? marcados.filter((d) => d !== docId)
       : [...marcados, docId]
+    const previo = marcados
     setMarcados(nuevos)
-    startTransition(async () => {
-      const r = await actualizarDocumentosVerano(id, nuevos)
-      if (!r.ok) {
-        toast.error(r.error)
-        setMarcados(marcados) // revertir
-      }
-    })
+    guardar(nuevos, recibo, previo)
   }
 
-  const completos = marcados.length
-  const todo = completos === TOTAL_DOCUMENTOS
+  function guardarRecibo() {
+    guardar(marcados, recibo, marcados)
+  }
+
+  const completos = marcados.length + (recibo.trim() ? 1 : 0)
+  const todo = completos === TOTAL_REQUISITOS
 
   return (
     <div className="rounded-xl border bg-white p-5 print:hidden">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
           <FileCheck2 className="size-4 text-gobierno" />
-          Status de documentos
+          Status de requisitos
         </h2>
         <span className="flex items-center gap-2">
           {guardando && <Loader2 className="size-3.5 animate-spin text-muted-foreground" />}
           <span
             className={cn(
               "rounded-full px-2.5 py-0.5 text-xs font-semibold",
-              todo
-                ? "bg-agua-50 text-agua-700"
-                : "bg-amber-50 text-amber-700"
+              todo ? "bg-agua-50 text-agua-700" : "bg-amber-50 text-amber-700"
             )}
           >
-            {completos}/{TOTAL_DOCUMENTOS} entregados
+            {completos}/{TOTAL_REQUISITOS} completos
           </span>
         </span>
       </div>
@@ -82,6 +97,23 @@ export function StatusDocumentos({
             </label>
           )
         })}
+      </div>
+
+      {/* Recibo de pago — requisito especial con número */}
+      <div className="mt-3 rounded-lg border border-gobierno/20 bg-gobierno-50/50 px-3 py-2.5">
+        <label className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
+          <span className="flex items-center gap-2 text-sm font-medium text-foreground">
+            <Receipt className="size-4 text-gobierno" />
+            No. de recibo de pago
+          </span>
+          <Input
+            value={recibo}
+            onChange={(e) => setRecibo(e.target.value)}
+            onBlur={guardarRecibo}
+            placeholder="Captura el número de recibo"
+            className="h-9 sm:max-w-xs"
+          />
+        </label>
       </div>
     </div>
   )

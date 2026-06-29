@@ -150,9 +150,23 @@ export const DOCUMENTOS_VERANO: DocumentoVerano[] = [
     label:
       "INE de personas autorizadas para recoger al menor (si los padres/tutores no pueden hacerlo)",
   },
+  { id: "reglamento", label: "Reglamento" },
+  {
+    id: "carta_cancha",
+    label: "Carta de autorización para salir a cancha de futbol EFCEMAC",
+  },
+  { id: "carta_imagen", label: "Carta de autorización de uso de imagen" },
+  {
+    id: "avisos_privacidad",
+    label:
+      "Avisos de privacidad simplificado e integral (Inscripción Verano DIFertido 2026)",
+  },
 ]
 
 export const TOTAL_DOCUMENTOS = DOCUMENTOS_VERANO.length
+
+// El recibo de pago cuenta también como requisito (se captura su número).
+export const TOTAL_REQUISITOS = TOTAL_DOCUMENTOS + 1
 
 // --- Folio -------------------------------------------------------------------
 
