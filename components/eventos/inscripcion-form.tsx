@@ -510,7 +510,7 @@ export function InscripcionForm({
             escribir a alguno de los padres, deja ese par de campos en blanco.
           </p>
           <div className="grid gap-4 sm:grid-cols-12">
-            <Campo etiqueta="Padre" className="sm:col-span-8">
+            <Campo etiqueta="Padre / Tutor legal" className="sm:col-span-8">
               <Input
                 className={inputSm}
                 {...register("padre", { onBlur: blurTitulo("padre") })}
@@ -523,7 +523,7 @@ export function InscripcionForm({
                 {...register("celularPadre", { onBlur: blurTelefono("celularPadre") })}
               />
             </Campo>
-            <Campo etiqueta="Madre" className="sm:col-span-8">
+            <Campo etiqueta="Madre / Tutora legal" className="sm:col-span-8">
               <Input
                 className={inputSm}
                 {...register("madre", { onBlur: blurTitulo("madre") })}
