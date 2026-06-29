@@ -1,8 +1,9 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { useForm, Controller } from "react-hook-form"
-import { Rocket, ShieldAlert, Loader2, CheckCircle2, Hash, Plus } from "lucide-react"
+import { Rocket, ShieldAlert, Loader2, CheckCircle2, Hash, Plus, Users } from "lucide-react"
 import { toast } from "sonner"
 
 import { Input } from "@/components/ui/input"
@@ -17,20 +18,27 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-import { EVENTO_VERANO, TALLAS_VERANO, DOCUMENTOS_VERANO } from "@/lib/eventos/verano"
+import {
+  EVENTO_VERANO,
+  TALLAS_VERANO,
+  DOCUMENTOS_VERANO,
+  GRUPOS_VERANO,
+} from "@/lib/eventos/verano"
 import { fechaDesCurp, edadAniosMesesDeISO, hoyISO } from "@/lib/fechas"
 import { aTitulo, soloDigitos } from "@/lib/texto"
 import { ReglamentoDialog } from "@/components/eventos/reglamento-dialog"
 import { crearInscripcionVerano } from "@/app/verano/actions"
+import { editarInscripcionVerano } from "@/app/(app)/eventos/verano-difertido/inscripciones/actions"
 
 // ---- Tipo del formulario ----------------------------------------------------
 
 type Autorizado = { nombre: string; celular: string; parentesco: string }
 
-type InscripcionForm = {
+export type InscripcionFormValues = {
   talla: string
   nombre: string
   primeraVez: boolean | null
+  grupo: string
   fechaNacimiento: string
   fechaInscripcion: string
   curp: string
@@ -55,10 +63,11 @@ type InscripcionForm = {
   nombreFirma: string
 }
 
-const valoresIniciales: InscripcionForm = {
+const valoresIniciales: InscripcionFormValues = {
   talla: "",
   nombre: "",
   primeraVez: null,
+  grupo: "",
   fechaNacimiento: "",
   fechaInscripcion: hoyISO(),
   curp: "",
@@ -178,7 +187,18 @@ function Confirmacion({
 
 // ---- Formulario -------------------------------------------------------------
 
-export function InscripcionForm() {
+export function InscripcionForm({
+  modo = "crear",
+  id,
+  inicial,
+}: {
+  modo?: "crear" | "editar"
+  id?: number
+  inicial?: InscripcionFormValues
+} = {}) {
+  const router = useRouter()
+  const esEdicion = modo === "editar"
+
   const {
     register,
     control,
@@ -187,7 +207,7 @@ export function InscripcionForm() {
     setValue,
     watch,
     formState: { errors },
-  } = useForm<InscripcionForm>({ defaultValues: valoresIniciales })
+  } = useForm<InscripcionFormValues>({ defaultValues: inicial ?? valoresIniciales })
   const [enviando, setEnviando] = useState(false)
   const [confirmacion, setConfirmacion] = useState<{
     folio: string
@@ -197,15 +217,16 @@ export function InscripcionForm() {
   const fechaNac = watch("fechaNacimiento")
   const edadTexto = fechaNac ? edadAniosMesesDeISO(fechaNac) : null
 
-  async function onSubmit(data: InscripcionForm) {
+  async function onSubmit(data: InscripcionFormValues) {
     setEnviando(true)
     try {
-      const r = await crearInscripcionVerano({
+      const payload = {
         nombre: data.nombre,
         curp: data.curp,
         fechaNacimiento: data.fechaNacimiento,
         talla: data.talla,
         primeraVez: data.primeraVez === true,
+        grupo: data.grupo,
         fechaInscripcion: data.fechaInscripcion || undefined,
         padre: data.padre,
         celularPadre: soloDigitos(data.celularPadre),
@@ -229,13 +250,25 @@ export function InscripcionForm() {
         telefonoMedico: soloDigitos(data.telefonoMedico),
         nombreFirma: data.nombreFirma,
         aceptaReglamento: data.aceptaReglamento,
-      })
+      }
 
-      if (r.ok) {
-        setConfirmacion({ folio: r.folio, nombre: aTitulo(data.nombre) })
-        window.scrollTo({ top: 0, behavior: "smooth" })
+      if (esEdicion && id != null) {
+        const r = await editarInscripcionVerano(id, payload)
+        if (r.ok) {
+          toast.success(r.mensaje ?? "Datos actualizados")
+          router.push(`/eventos/verano-difertido/inscripciones/${id}`)
+          router.refresh()
+        } else {
+          toast.error(r.error)
+        }
       } else {
-        toast.error(r.error)
+        const r = await crearInscripcionVerano(payload)
+        if (r.ok) {
+          setConfirmacion({ folio: r.folio, nombre: aTitulo(data.nombre) })
+          window.scrollTo({ top: 0, behavior: "smooth" })
+        } else {
+          toast.error(r.error)
+        }
       }
     } finally {
       setEnviando(false)
@@ -248,16 +281,16 @@ export function InscripcionForm() {
   }
 
   // Borde rojo en los campos obligatorios sin llenar.
-  const errClase = (k: keyof InscripcionForm) =>
+  const errClase = (k: keyof InscripcionFormValues) =>
     errors[k] ? "border-rose-400" : ""
 
   // Auto-corrige a formato Título al salir del campo (nombres).
-  const blurTitulo = (name: keyof InscripcionForm) => (
+  const blurTitulo = (name: keyof InscripcionFormValues) => (
     e: React.FocusEvent<HTMLInputElement>
   ) => setValue(name, aTitulo(e.target.value) as never)
 
   // Deja solo dígitos (máximo 10) al salir de un teléfono.
-  const blurTelefono = (name: keyof InscripcionForm) => (
+  const blurTelefono = (name: keyof InscripcionFormValues) => (
     e: React.FocusEvent<HTMLInputElement>
   ) => setValue(name, soloDigitos(e.target.value).slice(0, 10) as never)
 
@@ -288,7 +321,7 @@ export function InscripcionForm() {
                 {EVENTO_VERANO.sede}
               </p>
               <h2 className="text-lg font-bold leading-tight">
-                Inscripción — {EVENTO_VERANO.nombre}
+                {esEdicion ? "Editar datos" : "Inscripción"} — {EVENTO_VERANO.nombre}
               </h2>
               <p className="text-xs text-white/70">
                 Información general del niño, niña y/o adolescente (NNA)
@@ -353,6 +386,38 @@ export function InscripcionForm() {
               )}
             />
           </Campo>
+
+          {esEdicion && (
+            <div className="min-w-[200px]">
+              <Campo etiqueta="Equipo (asignación manual)">
+                <Controller
+                  control={control}
+                  name="grupo"
+                  render={({ field }) => (
+                    <Select
+                      value={field.value || undefined}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger className={inputSm}>
+                        <Users className="size-4 text-muted-foreground" />
+                        <SelectValue placeholder="Por edad (automático)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {GRUPOS_VERANO.map((g) => (
+                          <SelectItem key={g.id} value={g.id}>
+                            {g.nombre} ({g.edadMin === g.edadMax
+                              ? `${g.edadMin}`
+                              : `${g.edadMin}–${g.edadMax}`}{" "}
+                            años)
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </Campo>
+            </div>
+          )}
         </div>
 
         {/* Cuerpo */}
@@ -601,7 +666,10 @@ export function InscripcionForm() {
             </Campo>
           </div>
 
-          {/* Documentos entregados (checklist con status) */}
+          {/* Documentos entregados (solo al inscribir; en edición se manejan
+              desde el panel de status del expediente). */}
+          {!esEdicion && (
+            <>
           <BarraSeccion>Documentos entregados · opcional</BarraSeccion>
           <p className="-mt-1 text-center text-xs text-muted-foreground">
             Marca lo que la familia entrega hoy. Lo que falte se puede registrar
@@ -678,6 +746,8 @@ export function InscripcionForm() {
               </p>
             )}
           </div>
+            </>
+          )}
 
           <Campo etiqueta="Nombre del padre / tutor que inscribe" requerido>
             <Input
@@ -692,20 +762,32 @@ export function InscripcionForm() {
 
         {/* Pie */}
         <div className="flex items-center justify-end gap-2 border-t border-rose-100 bg-rose-50/60 px-6 py-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => reset(valoresIniciales)}
-          >
-            Limpiar
-          </Button>
+          {esEdicion ? (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() =>
+                router.push(`/eventos/verano-difertido/inscripciones/${id}`)
+              }
+            >
+              Cancelar
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => reset(valoresIniciales)}
+            >
+              Limpiar
+            </Button>
+          )}
           <Button
             type="submit"
             disabled={enviando}
             className="bg-gobierno hover:bg-gobierno/90"
           >
             {enviando && <Loader2 className="mr-1 size-4 animate-spin" />}
-            Guardar inscripción
+            {esEdicion ? "Guardar cambios" : "Guardar inscripción"}
           </Button>
         </div>
       </div>

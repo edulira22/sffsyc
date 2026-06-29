@@ -32,6 +32,8 @@ export const inscripcionVeranoSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Captura la fecha de nacimiento"),
   talla: z.string().trim().min(1, "Selecciona la talla"),
   primeraVez: z.boolean(),
+  // Equipo: solo se usa al editar (override manual del algoritmo por edad).
+  grupo: z.string().trim().optional().default(""),
   fechaInscripcion: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/)

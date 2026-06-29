@@ -1,9 +1,10 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Pencil } from "lucide-react"
 
 import { requerirSesion } from "@/lib/session"
 import { obtenerInscripcionVerano } from "@/lib/data/verano"
+import { Button } from "@/components/ui/button"
 import { ExpedienteVerano } from "@/components/eventos/expediente-verano"
 import { BotonImprimir } from "@/components/eventos/boton-imprimir"
 import { StatusDocumentos } from "@/components/eventos/status-documentos"
@@ -34,7 +35,15 @@ export default async function ExpedienteVeranoPage({
           <ArrowLeft className="size-4" />
           Inscripciones
         </Link>
-        <BotonImprimir />
+        <div className="flex items-center gap-2">
+          <Button asChild variant="outline" className="gap-2">
+            <Link href={`/eventos/verano-difertido/inscripciones/${id}/editar`}>
+              <Pencil className="size-4" />
+              Editar datos
+            </Link>
+          </Button>
+          <BotonImprimir />
+        </div>
       </div>
 
       {/* Status de requisitos (editable, no se imprime) */}
