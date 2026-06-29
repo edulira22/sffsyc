@@ -44,6 +44,60 @@ export async function actualizarStatusVerano(
   }
 }
 
+// Da de baja al NNA (no se borra): cambia estatus y guarda el motivo. En la
+// lista aparece en gris/tachado y se puede reactivar.
+export async function darDeBajaVerano(
+  id: number,
+  motivo: string
+): Promise<ResultadoAccion> {
+  await requerirSesion()
+  const m = motivo.trim()
+  if (!m) return fallo("Indica el motivo de la baja.")
+
+  try {
+    await prisma.inscripcionVerano.update({
+      where: { id },
+      data: { estatus: "baja", motivoBaja: m },
+    })
+    revalidatePath("/eventos/verano-difertido/inscripciones")
+    revalidatePath(`/eventos/verano-difertido/inscripciones/${id}`)
+    return exito("Inscripción dada de baja")
+  } catch {
+    return fallo("No se pudo dar de baja.")
+  }
+}
+
+// Reactiva una inscripción dada de baja.
+export async function reactivarVerano(id: number): Promise<ResultadoAccion> {
+  await requerirSesion()
+  try {
+    await prisma.inscripcionVerano.update({
+      where: { id },
+      data: { estatus: "activa", motivoBaja: null },
+    })
+    revalidatePath("/eventos/verano-difertido/inscripciones")
+    revalidatePath(`/eventos/verano-difertido/inscripciones/${id}`)
+    return exito("Inscripción reactivada")
+  } catch {
+    return fallo("No se pudo reactivar.")
+  }
+}
+
+// Elimina DEFINITIVAMENTE el registro (solo para errores de captura). A
+// diferencia de la baja, esto sí borra el dato de la base de datos.
+export async function eliminarInscripcionVerano(
+  id: number
+): Promise<ResultadoAccion> {
+  await requerirSesion()
+  try {
+    await prisma.inscripcionVerano.delete({ where: { id } })
+    revalidatePath("/eventos/verano-difertido/inscripciones")
+    return exito("Inscripción eliminada")
+  } catch {
+    return fallo("No se pudo eliminar.")
+  }
+}
+
 // Edita los datos finales del NNA (uso interno). No toca documentos ni recibo
 // (esos se manejan en el panel de status). El equipo se puede sobrescribir
 // manualmente; si se deja vacío, se vuelve a sugerir por la edad.

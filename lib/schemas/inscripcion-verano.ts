@@ -70,6 +70,9 @@ export const inscripcionVeranoSchema = z.object({
   aceptaReglamento: z
     .boolean()
     .refine((v) => v === true, "Debes aceptar el reglamento para continuar"),
+}).refine((d) => d.padre.trim() !== "" || d.madre.trim() !== "", {
+  message: "Captura al menos un padre/tutor o una madre/tutora",
+  path: ["padre"],
 })
 
 export type InscripcionVeranoInput = z.infer<typeof inscripcionVeranoSchema>

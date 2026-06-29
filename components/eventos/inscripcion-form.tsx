@@ -206,6 +206,7 @@ export function InscripcionForm({
     reset,
     setValue,
     watch,
+    getValues,
     formState: { errors },
   } = useForm<InscripcionFormValues>({ defaultValues: inicial ?? valoresIniciales })
   const [enviando, setEnviando] = useState(false)
@@ -506,14 +507,26 @@ export function InscripcionForm({
           {/* Padres / Tutores */}
           <BarraSeccion>Padres / Tutores — encargados legales del NNA</BarraSeccion>
           <p className="-mt-1 text-xs text-muted-foreground">
-            Captura al menos a un tutor. Si por una situación de custodia no debes
-            escribir a alguno de los padres, deja ese par de campos en blanco.
+            Captura al menos a un tutor (padre/tutor o madre/tutora). Si por una
+            situación de custodia no debes escribir a alguno, deja ese par de
+            campos en blanco.
           </p>
+          {errors.padre && (
+            <p className="-mt-1 text-xs font-medium text-rose-600">
+              {errors.padre.message as string}
+            </p>
+          )}
           <div className="grid gap-4 sm:grid-cols-12">
             <Campo etiqueta="Padre / Tutor legal" className="sm:col-span-8">
               <Input
-                className={inputSm}
-                {...register("padre", { onBlur: blurTitulo("padre") })}
+                className={cn(inputSm, errClase("padre"))}
+                {...register("padre", {
+                  onBlur: blurTitulo("padre"),
+                  validate: (v) =>
+                    !!v?.trim() ||
+                    !!getValues("madre")?.trim() ||
+                    "Captura al menos un padre/tutor o una madre/tutora",
+                })}
               />
             </Campo>
             <Campo etiqueta="Celular" className="sm:col-span-4">

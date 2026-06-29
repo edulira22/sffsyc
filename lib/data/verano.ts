@@ -8,10 +8,9 @@ export type AutorizadoVerano = {
   parentesco: string
 }
 
-/** Lista de inscritos (más recientes primero) para el tablero del evento. */
+/** Lista de inscritos (activos y bajas) para el tablero del evento. */
 export async function listarInscripcionesVerano() {
   return prisma.inscripcionVerano.findMany({
-    where: { estatus: "activa" },
     orderBy: { createdAt: "desc" },
     select: {
       id: true,
@@ -22,6 +21,8 @@ export async function listarInscripcionesVerano() {
       celularWhatsapp: true,
       documentos: true,
       reciboPago: true,
+      estatus: true,
+      motivoBaja: true,
       createdAt: true,
     },
   })
