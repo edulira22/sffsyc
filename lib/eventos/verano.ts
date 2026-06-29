@@ -168,6 +168,31 @@ export const TOTAL_DOCUMENTOS = DOCUMENTOS_VERANO.length
 // El recibo de pago cuenta también como requisito (se captura su número).
 export const TOTAL_REQUISITOS = TOTAL_DOCUMENTOS + 1
 
+// --- Clases y staff ----------------------------------------------------------
+
+export const DIAS_VERANO = [
+  { id: "lunes", label: "Lunes" },
+  { id: "martes", label: "Martes" },
+  { id: "miercoles", label: "Miércoles" },
+  { id: "jueves", label: "Jueves" },
+  { id: "viernes", label: "Viernes" },
+] as const
+
+export type DiaVerano = (typeof DIAS_VERANO)[number]["id"]
+
+export function nombreDia(id: string): string {
+  return DIAS_VERANO.find((d) => d.id === id)?.label ?? id
+}
+
+export const TIPOS_PERSONAL = [
+  { id: "maestro", label: "Maestro(a)" },
+  { id: "staff", label: "Staff / Apoyo" },
+] as const
+
+export function nombreTipoPersonal(id: string): string {
+  return TIPOS_PERSONAL.find((t) => t.id === id)?.label ?? id
+}
+
 // --- Folio -------------------------------------------------------------------
 
 /** Folio legible y estable derivado del id del expediente: VD26-0001. */

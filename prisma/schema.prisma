@@ -333,6 +333,57 @@ model InscripcionVerano {
   @@map("inscripciones_verano")
 }
 
+/// Personal del curso de verano: maestros (dan clases) y staff/apoyo.
+model PersonalVerano {
+  id        Int      @id @default(autoincrement())
+  nombre    String
+  tipo      String   @default("maestro") // "maestro" | "staff"
+  rol       String?  // puesto/área: "Coordinación", "Apoyo", "Karate", etc.
+  telefono  String?
+  estatus   String   @default("activo")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  clases ClaseVerano[]
+
+  @@map("personal_verano")
+}
+
+/// Clase/taller del curso (general). Tiene un maestro asignado opcional.
+model ClaseVerano {
+  id          Int      @id @default(autoincrement())
+  nombre      String
+  descripcion String?
+  maestroId   Int?     @map("maestro_id")
+  color       String?
+  estatus     String   @default("activa")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  maestro PersonalVerano? @relation(fields: [maestroId], references: [id], onDelete: SetNull)
+  bloques HorarioVerano[]
+
+  @@index([maestroId])
+  @@map("clases_verano")
+}
+
+/// Bloque del horario escolar: a un equipo le toca una clase en un día y hora.
+model HorarioVerano {
+  id         Int      @id @default(autoincrement())
+  grupo      String // id del equipo: botzitos…megatronix
+  dia        String // "lunes".."viernes"
+  horaInicio String   @map("hora_inicio") // "HH:mm"
+  horaFin    String   @map("hora_fin") // "HH:mm"
+  claseId    Int      @map("clase_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  clase ClaseVerano @relation(fields: [claseId], references: [id], onDelete: Cascade)
+
+  @@index([grupo])
+  @@index([claseId])
+  @@map("horario_verano")
+}
+
 model UsuarioSistema {
   id               Int            @id @default(autoincrement())
   nombre           String

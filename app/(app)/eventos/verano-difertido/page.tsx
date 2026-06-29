@@ -13,6 +13,7 @@ import {
 import { requerirSesion } from "@/lib/session"
 import { EVENTO_VERANO, GRUPOS_VERANO } from "@/lib/eventos/verano"
 import { contarInscripcionesVerano } from "@/lib/data/verano"
+import { prisma } from "@/lib/prisma"
 import { Card, CardContent } from "@/components/ui/card"
 import { CuentaRegresiva } from "@/components/eventos/cuenta-regresiva"
 import { PeriodoInscripcion } from "@/components/eventos/periodo-inscripcion"
@@ -47,11 +48,11 @@ const SECCIONES = [
     externo: false,
   },
   {
-    href: "#",
+    href: "/eventos/verano-difertido/clases",
     titulo: "Clases y staff",
     descripcion: "Configura clases, maestros y horarios del curso.",
     icono: GraduationCap,
-    activo: false,
+    activo: true,
     externo: false,
   },
 ]
@@ -59,7 +60,11 @@ const SECCIONES = [
 export default async function VeranoDifertidoPage() {
   await requerirSesion()
 
-  const inscritos = await contarInscripcionesVerano()
+  const [inscritos, clasesCount, staffCount] = await Promise.all([
+    contarInscripcionesVerano(),
+    prisma.claseVerano.count({ where: { estatus: "activa" } }),
+    prisma.personalVerano.count({ where: { estatus: "activo" } }),
+  ])
 
   return (
     <div className="space-y-6">
@@ -120,12 +125,13 @@ export default async function VeranoDifertidoPage() {
             </Card>
           </Link>
           {[
-            { icono: GraduationCap, valor: "—", etiqueta: "Clases configuradas", color: "bg-purple-50 text-purple-600" },
-            { icono: UserPlus, valor: "—", etiqueta: "Staff y maestros", color: "bg-gobierno-50 text-gobierno" },
+            { icono: GraduationCap, valor: clasesCount, etiqueta: "Clases configuradas", color: "bg-purple-50 text-purple-600" },
+            { icono: UserPlus, valor: staffCount, etiqueta: "Staff y maestros", color: "bg-gobierno-50 text-gobierno" },
           ].map((m, i) => {
             const Icono = m.icono
             return (
-              <Card key={i}>
+              <Link key={i} href="/eventos/verano-difertido/clases" className="group">
+              <Card className="transition-shadow hover:shadow-md">
                 <CardContent className="flex items-center gap-4 p-5">
                   <div className={cn("flex size-12 items-center justify-center rounded-xl", m.color)}>
                     <Icono className="size-6" />
@@ -136,6 +142,7 @@ export default async function VeranoDifertidoPage() {
                   </div>
                 </CardContent>
               </Card>
+              </Link>
             )
           })}
         </div>
