@@ -14,9 +14,9 @@ export const metadata: Metadata = {
 // el personal que apoya en la captura presencial.
 export default function VeranoPublicoPage() {
   return (
-    <div className="min-h-screen bg-superficie">
+    <div className="min-h-screen bg-superficie print:min-h-0 print:bg-white">
       {/* Encabezado público */}
-      <header className="bg-gobierno">
+      <header className="bg-gobierno print:hidden">
         <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-5 sm:px-6">
           <div className="flex size-10 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20">
             <Rocket className="size-5 text-white" />
@@ -28,8 +28,8 @@ export default function VeranoPublicoPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-8">
-        <div className="mb-5 text-center">
+      <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-8 print:max-w-none print:p-0">
+        <div className="mb-5 text-center print:hidden">
           <h1 className="text-xl font-bold text-foreground sm:text-2xl">
             Inscripción al curso de verano
           </h1>
@@ -41,7 +41,7 @@ export default function VeranoPublicoPage() {
 
         <InscripcionForm />
 
-        <p className="mx-auto mt-6 max-w-md text-center text-xs text-muted-foreground">
+        <p className="mx-auto mt-6 max-w-md text-center text-xs text-muted-foreground print:hidden">
           Tus datos se usan únicamente para la organización del curso. DIF Municipal
           de Chihuahua.
         </p>

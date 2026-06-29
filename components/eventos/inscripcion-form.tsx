@@ -3,8 +3,10 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useForm, Controller } from "react-hook-form"
-import { Rocket, ShieldAlert, Loader2, CheckCircle2, Hash, Plus, Users } from "lucide-react"
+import { Rocket, ShieldAlert, Loader2, CheckCircle2, Hash, Plus, Users, Printer } from "lucide-react"
 import { toast } from "sonner"
+
+import type { InscripcionVerano } from "@prisma/client"
 
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -27,6 +29,7 @@ import {
 import { fechaDesCurp, edadAniosMesesDeISO, hoyISO } from "@/lib/fechas"
 import { aTitulo, soloDigitos } from "@/lib/texto"
 import { ReglamentoDialog } from "@/components/eventos/reglamento-dialog"
+import { ExpedienteVerano } from "@/components/eventos/expediente-verano"
 import { crearInscripcionVerano } from "@/app/verano/actions"
 import { editarInscripcionVerano } from "@/app/(app)/eventos/verano-difertido/inscripciones/actions"
 
@@ -142,45 +145,65 @@ function Campo({
 function Confirmacion({
   folio,
   nombre,
+  inscripcion,
   onOtro,
 }: {
   folio: string
   nombre: string
+  inscripcion: InscripcionVerano
   onOtro: () => void
 }) {
   return (
-    <div className="mx-auto max-w-md text-center">
-      <div className="overflow-hidden rounded-2xl border bg-white shadow-sm">
-        <div className="bg-gobierno px-6 py-8 text-white">
-          <div className="mx-auto mb-3 flex size-16 items-center justify-center rounded-full bg-white/15">
-            <CheckCircle2 className="size-9" />
+    <div className="mx-auto max-w-3xl">
+      {/* Barra de éxito + acciones — NO se imprime */}
+      <div className="mb-5 overflow-hidden rounded-2xl border bg-white shadow-sm print:hidden">
+        <div className="flex flex-col gap-3 bg-gobierno px-6 py-5 text-white sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-white/15">
+              <CheckCircle2 className="size-7" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold">¡Inscripción registrada!</h2>
+              <p className="text-sm text-white/75">
+                {nombre} quedó inscrito(a) en {EVENTO_VERANO.nombre}.
+              </p>
+            </div>
           </div>
-          <h2 className="text-xl font-bold">¡Inscripción registrada!</h2>
-          <p className="mt-1 text-sm text-white/75">
-            {nombre} quedó inscrito(a) en {EVENTO_VERANO.nombre}.
-          </p>
+          <div className="rounded-xl bg-white/10 px-4 py-2 text-center">
+            <p className="text-[10px] uppercase tracking-wider text-white/70">Folio</p>
+            <p className="flex items-center justify-center gap-1 font-mono text-lg font-bold tracking-wider">
+              <Hash className="size-4 text-white/60" />
+              {folio}
+            </p>
+          </div>
         </div>
-        <div className="px-6 py-6">
-          <p className="text-xs uppercase tracking-wider text-muted-foreground">
-            Folio de tu inscripción
+        <div className="flex flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted-foreground">
+            El expediente de abajo ya está listo. Imprímelo o guarda el folio; el
+            personal del DIF se pondrá en contacto por el grupo de WhatsApp.
           </p>
-          <p className="mt-1 flex items-center justify-center gap-1.5 font-mono text-2xl font-bold tracking-wider text-gobierno">
-            <Hash className="size-5 text-gobierno/50" />
-            {folio}
-          </p>
-          <p className="mt-3 text-sm text-muted-foreground">
-            Guarda tu folio. El personal del DIF se pondrá en contacto por el grupo
-            de WhatsApp con los detalles del curso.
-          </p>
-          <Button
-            onClick={onOtro}
-            className="mt-6 w-full gap-2 bg-gobierno hover:bg-gobierno/90"
-          >
-            <Plus className="size-4" />
-            Inscribir a otro niño/a
-          </Button>
+          <div className="flex shrink-0 gap-2">
+            <Button
+              onClick={() => window.print()}
+              className="gap-2 bg-agua hover:bg-agua-600"
+            >
+              <Printer className="size-4" />
+              Imprimir expediente
+            </Button>
+            <Button
+              variant="outline"
+              onClick={onOtro}
+              className="gap-2"
+            >
+              <Plus className="size-4" />
+              Inscribir a otro
+            </Button>
+          </div>
         </div>
       </div>
+
+      {/* Documento listo para imprimir (lo único que se imprime) */}
+      <ExpedienteVerano insc={inscripcion} />
     </div>
   )
 }
@@ -213,6 +236,7 @@ export function InscripcionForm({
   const [confirmacion, setConfirmacion] = useState<{
     folio: string
     nombre: string
+    inscripcion: InscripcionVerano
   } | null>(null)
 
   const fechaNac = watch("fechaNacimiento")
@@ -265,7 +289,11 @@ export function InscripcionForm({
       } else {
         const r = await crearInscripcionVerano(payload)
         if (r.ok) {
-          setConfirmacion({ folio: r.folio, nombre: aTitulo(data.nombre) })
+          setConfirmacion({
+            folio: r.folio,
+            nombre: aTitulo(data.nombre),
+            inscripcion: r.inscripcion,
+          })
           window.scrollTo({ top: 0, behavior: "smooth" })
         } else {
           toast.error(r.error)
@@ -300,6 +328,7 @@ export function InscripcionForm({
       <Confirmacion
         folio={confirmacion.folio}
         nombre={confirmacion.nombre}
+        inscripcion={confirmacion.inscripcion}
         onOtro={inscribirOtro}
       />
     )

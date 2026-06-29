@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache"
 
+import type { InscripcionVerano } from "@prisma/client"
+
 import { prisma } from "@/lib/prisma"
 import {
   inscripcionVeranoSchema,
@@ -16,7 +18,7 @@ import { edadDeISO } from "@/lib/fechas"
 import { aTitulo, aOracion, soloDigitos } from "@/lib/texto"
 
 export type ResultadoInscripcion =
-  | { ok: true; id: number; folio: string }
+  | { ok: true; id: number; folio: string; inscripcion: InscripcionVerano }
   | { ok: false; error: string }
 
 // Guarda una inscripción del curso de verano. Ruta PÚBLICA: cualquiera puede
@@ -81,11 +83,10 @@ export async function crearInscripcionVerano(
         nombreFirma: aTitulo(d.nombreFirma),
         aceptaReglamento: d.aceptaReglamento,
       },
-      select: { id: true },
     })
 
     revalidatePath("/eventos/verano-difertido/inscripciones")
-    return { ok: true, id: insc.id, folio: folioVerano(insc.id) }
+    return { ok: true, id: insc.id, folio: folioVerano(insc.id), inscripcion: insc }
   } catch (e) {
     // Mensaje claro si la tabla aún no existe en la base de datos.
     const msg = e instanceof Error ? e.message : "Error desconocido"
