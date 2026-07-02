@@ -1,5 +1,7 @@
 import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Download } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
 
 import { requerirSesion } from "@/lib/session"
 import {
@@ -36,6 +38,14 @@ export default async function ClasesStaffPage() {
       <PageHeader
         titulo="Clases y staff"
         descripcion="Personal del curso, clases con su maestro y horario por equipo."
+        acciones={
+          <Button asChild variant="outline" className="gap-2">
+            <a href="/api/datos/exportar?entidad=personal-verano" download>
+              <Download className="size-4" />
+              Exportar personal
+            </a>
+          </Button>
+        }
       />
 
       <ClasesStaff

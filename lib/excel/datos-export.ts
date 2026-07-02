@@ -1,7 +1,9 @@
 import { prisma } from "@/lib/prisma"
-import { formatoFecha } from "@/lib/fechas"
+import { formatoFecha, calcularEdad } from "@/lib/fechas"
 import { TIPO_CENTRO_LABEL } from "@/lib/schemas/centro"
 import { ESCOLARIDAD_LABEL } from "@/lib/schemas/beneficiario"
+import { folioVerano, grupoPorId, TOTAL_DOCUMENTOS } from "@/lib/eventos/verano"
+import type { AutorizadoVerano } from "@/lib/data/verano"
 
 // Convierte los registros de la base de datos al formato legible de las columnas
 // de exportación (nombres en vez de IDs, fechas dd/mm/aaaa, etiquetas, etc.).
@@ -102,6 +104,55 @@ export async function obtenerFilasExport(
         centro: i.claseCentro.centro.nombre,
         clase: i.claseCentro.clase.nombreOficial,
         fechaInscripcion: formatoFecha(i.fechaInscripcion),
+      }))
+    }
+    case "inscripciones-verano": {
+      const ins = await prisma.inscripcionVerano.findMany({
+        orderBy: [{ estatus: "asc" }, { fechaInscripcion: "desc" }],
+      })
+      return ins.map((i) => {
+        const auths = (i.autorizados as unknown as AutorizadoVerano[]) ?? []
+        const fmtAuth = (a?: AutorizadoVerano) =>
+          a?.nombre ? `${a.nombre}${a.parentesco ? ` (${a.parentesco})` : ""}${a.celular ? ` — ${a.celular}` : ""}` : ""
+        const docs = (i.documentos as unknown as string[]) ?? []
+        return {
+          folio:            folioVerano(i.id),
+          nombre:           i.nombre,
+          curp:             i.curp ?? "",
+          fechaNacimiento:  formatoFecha(i.fechaNacimiento),
+          edad:             calcularEdad(i.fechaNacimiento),
+          talla:            i.talla ?? "",
+          equipo:           grupoPorId(i.grupo ?? "")?.nombre ?? i.grupo ?? "",
+          primeraVez:       i.primeraVez ? "Sí" : "No",
+          fechaInscripcion: formatoFecha(i.fechaInscripcion),
+          estatus:          i.estatus === "activa" ? "Activa" : "Baja",
+          docsEntregados:   `${docs.length}/${TOTAL_DOCUMENTOS}`,
+          reciboPago:       i.reciboPago ?? "",
+          padre:            i.padre ?? "",
+          celularPadre:     i.celularPadre ?? "",
+          madre:            i.madre ?? "",
+          celularMadre:     i.celularMadre ?? "",
+          telefonoCasa:     i.telefonoCasa ?? "",
+          celularWhatsapp:  i.celularWhatsapp ?? "",
+          domicilio:        i.domicilio ?? "",
+          autorizado1:      fmtAuth(auths[0]),
+          autorizado2:      fmtAuth(auths[1]),
+          autorizado3:      fmtAuth(auths[2]),
+          motivoBaja:       i.motivoBaja ?? "",
+        }
+      })
+    }
+    case "personal-verano": {
+      const ps = await prisma.personalVerano.findMany({
+        where: { estatus: "activo" },
+        orderBy: [{ tipo: "asc" }, { nombre: "asc" }],
+      })
+      return ps.map((p) => ({
+        nombre:   p.nombre,
+        tipo:     p.tipo === "maestro" ? "Maestro" : "Staff / Apoyo",
+        rol:      p.rol ?? "",
+        telefono: p.telefono ?? "",
+        estatus:  p.estatus,
       }))
     }
     default:

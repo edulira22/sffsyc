@@ -119,6 +119,52 @@ export const ENTIDADES_EXCEL: Record<string, EntidadExcel> = {
       { clave: "fechaInscripcion", encabezado: "Fecha de inscripción", ancho: 18, ejemplo: "14/06/2026", nota: "dd/mm/aaaa (si se omite, se usa hoy)" },
     ],
   },
+
+  // ── Verano DIFertido ──────────────────────────────────────────────────────
+  "inscripciones-verano": {
+    id: "inscripciones-verano",
+    titulo: "Inscripciones Verano DIFertido",
+    hoja: "Inscripciones Verano",
+    descripcion: "Padrón completo de NNA inscritos al curso de verano.",
+    columnas: [
+      { clave: "folio",            encabezado: "Folio",                  ancho: 12 },
+      { clave: "nombre",           encabezado: "Nombre del NNA",          ancho: 30 },
+      { clave: "curp",             encabezado: "CURP",                   ancho: 20 },
+      { clave: "fechaNacimiento",  encabezado: "Fecha de nacimiento",    ancho: 18 },
+      { clave: "edad",             encabezado: "Edad",                   ancho: 8  },
+      { clave: "talla",            encabezado: "Talla",                  ancho: 8  },
+      { clave: "equipo",           encabezado: "Equipo",                 ancho: 14 },
+      { clave: "primeraVez",       encabezado: "Primera vez",            ancho: 12 },
+      { clave: "fechaInscripcion", encabezado: "Fecha de inscripción",   ancho: 18 },
+      { clave: "estatus",          encabezado: "Estatus",                ancho: 10 },
+      { clave: "docsEntregados",   encabezado: "Docs. entregados",       ancho: 14 },
+      { clave: "reciboPago",       encabezado: "No. de recibo",          ancho: 16 },
+      { clave: "padre",            encabezado: "Padre / Tutor legal",    ancho: 28 },
+      { clave: "celularPadre",     encabezado: "Cel. padre/tutor",       ancho: 14 },
+      { clave: "madre",            encabezado: "Madre / Tutora legal",   ancho: 28 },
+      { clave: "celularMadre",     encabezado: "Cel. madre/tutora",      ancho: 14 },
+      { clave: "telefonoCasa",     encabezado: "Tel. de casa",           ancho: 14 },
+      { clave: "celularWhatsapp",  encabezado: "Cel. WhatsApp",          ancho: 14 },
+      { clave: "domicilio",        encabezado: "Domicilio",              ancho: 32 },
+      { clave: "autorizado1",      encabezado: "Autorizado 1",           ancho: 36 },
+      { clave: "autorizado2",      encabezado: "Autorizado 2",           ancho: 36 },
+      { clave: "autorizado3",      encabezado: "Autorizado 3",           ancho: 36 },
+      { clave: "motivoBaja",       encabezado: "Motivo de baja",         ancho: 30 },
+    ],
+  },
+  "personal-verano": {
+    id: "personal-verano",
+    titulo: "Personal Verano DIFertido",
+    hoja: "Personal Verano",
+    descripcion: "Maestros y staff del curso de verano.",
+    columnas: [
+      { clave: "nombre",   encabezado: "Nombre",       ancho: 28 },
+      { clave: "tipo",     encabezado: "Tipo",          ancho: 12, nota: "Maestro | Staff / Apoyo" },
+      { clave: "rol",      encabezado: "Rol / Puesto",  ancho: 22 },
+      { clave: "telefono", encabezado: "Teléfono",     ancho: 14 },
+      { clave: "estatus",  encabezado: "Estatus",      ancho: 10 },
+    ],
+  },
 }
 
 export const ORDEN_ENTIDADES = [

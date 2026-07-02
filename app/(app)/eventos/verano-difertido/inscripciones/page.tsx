@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ArrowLeft, ExternalLink, Users } from "lucide-react"
+import { ArrowLeft, Download, ExternalLink, Users } from "lucide-react"
 
 import { requerirSesion } from "@/lib/session"
 import { listarInscripcionesVerano } from "@/lib/data/verano"
@@ -28,12 +28,20 @@ export default async function InscripcionesVeranoPage() {
         titulo="Inscripciones"
         descripcion="Consulta, filtra y administra a los niños inscritos."
         acciones={
-          <Button asChild className="gap-2 bg-agua hover:bg-agua-600">
-            <a href="/verano" target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="size-4" />
-              Abrir formulario público
-            </a>
-          </Button>
+          <div className="flex gap-2">
+            <Button asChild variant="outline" className="gap-2">
+              <a href="/api/datos/exportar?entidad=inscripciones-verano" download>
+                <Download className="size-4" />
+                Exportar Excel
+              </a>
+            </Button>
+            <Button asChild className="gap-2 bg-agua hover:bg-agua-600">
+              <a href="/verano" target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="size-4" />
+                Abrir formulario público
+              </a>
+            </Button>
+          </div>
         }
       />
 
