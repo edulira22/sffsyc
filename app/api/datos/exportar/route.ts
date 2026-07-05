@@ -9,17 +9,21 @@ const TIPO_XLSX =
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 export async function GET(req: NextRequest) {
-  // /api no pasa por el middleware: verificamos sesión y rol aquí.
+  // /api no pasa por el middleware: verificamos sesión aquí.
   const session = await auth()
   if (!session?.user) {
     return new Response("No autorizado", { status: 401 })
   }
-  if (session.user.rol !== "admin" && session.user.rol !== "coordinacion_general") {
-    return new Response("Acceso restringido", { status: 403 })
-  }
 
   const { searchParams } = new URL(req.url)
   const entidad = searchParams.get("entidad") ?? ""
+
+  // Las entidades de Verano DIFertido están disponibles para cualquier usuario
+  // con sesión. Las entidades del sistema principal requieren rol admin.
+  const esVerano = entidad.endsWith("-verano")
+  if (!esVerano && session.user.rol !== "admin" && session.user.rol !== "coordinacion_general") {
+    return new Response("Acceso restringido", { status: 403 })
+  }
   const esPlantilla = searchParams.get("plantilla") === "1"
 
   if (!ENTIDADES_EXCEL[entidad]) {
