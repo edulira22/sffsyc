@@ -2,7 +2,6 @@ import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 
 import { requerirSesion } from "@/lib/session"
-import { prisma } from "@/lib/prisma"
 import { EVENTO_VERANO, GRUPOS_VERANO } from "@/lib/eventos/verano"
 import { BotonImprimir } from "@/components/eventos/boton-imprimir"
 
@@ -15,14 +14,17 @@ function fechaMes(iso: string) {
   })
 }
 
+const CLASES_ENCUESTA = [
+  { id: "robotica",  nombre: "Robótica",  sub: "STEM" },
+  { id: "danza",     nombre: "Danza",     sub: null },
+  { id: "capoeira",  nombre: "Capoeira",  sub: null },
+  { id: "arte",      nombre: "Arte",      sub: null },
+  { id: "futbol",    nombre: "Fútbol",    sub: null },
+  { id: "natacion",  nombre: "Natación",  sub: null },
+]
+
 export default async function EncuestaVeranoPage() {
   await requerirSesion()
-
-  const clases = await prisma.claseVerano.findMany({
-    where: { estatus: "activa" },
-    orderBy: { nombre: "asc" },
-    select: { id: true, nombre: true },
-  })
 
   return (
     <>
@@ -57,7 +59,7 @@ export default async function EncuestaVeranoPage() {
       {/* ── Documento imprimible ─────────────────────────────────────────── */}
       <div className="mx-auto max-w-[620px] overflow-hidden rounded-xl border bg-white shadow-md print:max-w-none print:rounded-none print:border-0 print:shadow-none">
 
-        {/* Encabezado — sin fondo, solo borde inferior grueso */}
+        {/* Encabezado */}
         <div className="flex items-start justify-between gap-3 border-b-[3px] border-gray-900 px-7 py-4">
           <div>
             <p className="text-[18px] font-black tracking-tight text-gray-900">
@@ -73,88 +75,78 @@ export default async function EncuestaVeranoPage() {
           </div>
         </div>
 
-        <div className="px-7 py-5">
+        <div className="px-7 py-6">
 
           {/* Equipo */}
           <div>
-            <p className="mb-1.5 text-[9.5px] font-extrabold uppercase tracking-[0.12em] text-gray-400">
+            <p className="mb-2 text-[9.5px] font-extrabold uppercase tracking-[0.12em] text-gray-400">
               Mi equipo es
             </p>
-            <div className="flex flex-wrap gap-x-5 gap-y-2">
+            <div className="flex flex-wrap gap-x-6 gap-y-2.5">
               {GRUPOS_VERANO.map((g) => (
-                <div key={g.id} className="flex items-center gap-1.5">
-                  <span className="inline-block size-4 shrink-0 rounded-full border-2 border-gray-500" />
-                  <span className="text-[12.5px] font-semibold text-gray-800">{g.nombre}</span>
+                <div key={g.id} className="flex items-center gap-2">
+                  <span className="inline-block size-5 shrink-0 rounded-full border-2 border-gray-500" />
+                  <span className="text-sm font-semibold text-gray-800">{g.nombre}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <hr className="my-4 border-gray-200" />
+          <hr className="my-5 border-gray-200" />
 
           {/* ── Pregunta 1 ─────────────────────────────────────────────────── */}
-          <div className="mb-4">
-            {/* Borde izquierdo grueso como señal visual, sin fondo */}
-            <div className="mb-3 border-l-4 border-gray-900 pl-3">
-              <p className="text-[13px] font-extrabold leading-snug text-gray-900">
+          <div className="mb-7">
+            <div className="mb-4 border-l-4 border-gray-900 pl-3">
+              <p className="text-[14px] font-extrabold leading-snug text-gray-900">
                 1. ⭐ ¿Qué fue lo que más te gustó de la veraneada?
               </p>
             </div>
-            <div className="flex flex-col gap-4 px-0.5">
+            <div className="flex flex-col gap-6 px-1">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-5 border-b-2 border-dashed border-gray-300" />
+                <div key={i} className="h-6 border-b-2 border-dashed border-gray-300" />
               ))}
             </div>
           </div>
 
           {/* ── Pregunta 2 ─────────────────────────────────────────────────── */}
-          <div className="mb-4">
-            <div className="mb-3 border-l-4 border-gray-900 pl-3">
-              <p className="text-[13px] font-extrabold leading-snug text-gray-900">
+          <div className="mb-7">
+            <div className="mb-4 border-l-4 border-gray-900 pl-3">
+              <p className="text-[14px] font-extrabold leading-snug text-gray-900">
                 2. 🎨 ¿Cuál fue tu clase favorita?
               </p>
-              <p className="mt-0.5 text-[10px] text-gray-400">
+              <p className="mt-1 text-[11px] text-gray-400">
                 Pon una palomita ✓ en el recuadrito de tu clase favorita
               </p>
             </div>
-
-            {clases.length > 0 ? (
-              <div className="grid grid-cols-3 gap-x-5 gap-y-2.5 px-0.5">
-                {clases.map((c) => (
-                  <div key={c.id} className="flex items-center gap-2">
-                    <span className="inline-flex size-4 shrink-0 rounded-[3px] border-2 border-gray-500" />
-                    <span className="text-[12.5px] font-semibold text-gray-800">{c.nombre}</span>
+            <div className="grid grid-cols-2 gap-x-8 gap-y-4 px-1">
+              {CLASES_ENCUESTA.map((c) => (
+                <div key={c.id} className="flex items-center gap-3">
+                  <span className="inline-flex size-6 shrink-0 rounded border-2 border-gray-500" />
+                  <div>
+                    <p className="text-[14px] font-semibold text-gray-800">{c.nombre}</p>
+                    {c.sub && <p className="text-[11px] text-gray-400">{c.sub}</p>}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-3 gap-x-5 gap-y-2.5 px-0.5">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <span className="inline-flex size-4 shrink-0 rounded-[3px] border-2 border-gray-500" />
-                    <div className="h-4 flex-1 border-b border-dashed border-gray-300" />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* ── Pregunta 3 ─────────────────────────────────────────────────── */}
-          <div className="mb-4">
-            <div className="mb-3 border-l-4 border-gray-900 pl-3">
-              <p className="text-[13px] font-extrabold leading-snug text-gray-900">
-                3. 💡 ¿Qué clase te gustaría aprender el próximo verano?
-              </p>
-            </div>
-            <div className="flex flex-col gap-4 px-0.5">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-5 border-b-2 border-dashed border-gray-300" />
+                </div>
               ))}
             </div>
           </div>
 
-          {/* Cierre — borde delgado, sin fondo */}
-          <div className="mt-1 rounded-lg border border-gray-400 px-4 py-3 text-center">
+          {/* ── Pregunta 3 ─────────────────────────────────────────────────── */}
+          <div className="mb-6">
+            <div className="mb-4 border-l-4 border-gray-900 pl-3">
+              <p className="text-[14px] font-extrabold leading-snug text-gray-900">
+                3. 💡 ¿Qué clase te gustaría aprender el próximo verano?
+              </p>
+            </div>
+            <div className="flex flex-col gap-6 px-1">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="h-6 border-b-2 border-dashed border-gray-300" />
+              ))}
+            </div>
+          </div>
+
+          {/* Cierre */}
+          <div className="rounded-lg border border-gray-400 px-4 py-3 text-center">
             <p className="text-[13px] font-extrabold text-gray-900">
               ¡Gracias por ser parte del Verano DIFertido 2026! 🌟
             </p>
