@@ -186,6 +186,7 @@ function Textos({ resultado }: { resultado: ResultadoPregunta }) {
               {t.texto}
             </p>
             <p className="mt-1 text-[11px] text-muted-foreground">
+              {t.nombre ? `${t.nombre} · ` : "Anónima · "}
               {fechaCorta(t.fecha)}
             </p>
           </div>
@@ -227,8 +228,15 @@ function FilaRespuesta({ respuesta }: { respuesta: RespuestaEncuestaListada }) {
         className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-muted/40"
       >
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-foreground">{satisfaccion}</p>
-          <p className="text-xs text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <p className="text-sm font-medium text-foreground">
+              {respuesta.nombre ?? "Respuesta anónima"}
+            </p>
+            <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+              {satisfaccion}
+            </span>
+          </div>
+          <p className="mt-0.5 text-xs text-muted-foreground">
             {fechaCorta(respuesta.fecha)} · Recomendaría: {recomienda}
           </p>
         </div>

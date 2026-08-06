@@ -390,6 +390,8 @@ model HorarioVerano {
 /// Ver lib/eventos/encuesta-padres.ts.
 model EncuestaPadresVerano {
   id         Int      @id @default(autoincrement())
+  /// Nombre de quien responde. Opcional: si va vacío, la respuesta es anónima.
+  nombre     String?
   respuestas Json     @default("{}")
   createdAt  DateTime @default(now()) @map("created_at")
 

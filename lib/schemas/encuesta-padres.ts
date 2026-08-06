@@ -44,6 +44,14 @@ for (const p of PREGUNTAS_ENCUESTA) {
 
 export const encuestaPadresSchema = z.object(shape)
 
+/** Nombre de quien contesta. Opcional: vacío = respuesta anónima. */
+export const nombreEncuestaSchema = z
+  .string()
+  .trim()
+  .max(80, "El nombre es demasiado largo")
+  .optional()
+  .default("")
+
 /** Mapa preguntaId → respuesta. El tipo depende del tipo de pregunta. */
 export type EncuestaPadresInput = Record<string, string | number | string[]>
 

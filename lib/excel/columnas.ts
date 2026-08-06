@@ -176,6 +176,7 @@ export const ENTIDADES_EXCEL: Record<string, EntidadExcel> = {
       "Respuestas de la encuesta de satisfacción de padres y tutores (anónima).",
     columnas: [
       { clave: "fecha", encabezado: "Fecha de respuesta", ancho: 20 },
+      { clave: "nombre", encabezado: "Nombre", ancho: 26, nota: "Vacío = respuesta anónima" },
       ...PREGUNTAS_ENCUESTA.map((p) => ({
         clave: p.id,
         encabezado: `${p.numero}. ${p.texto}`,

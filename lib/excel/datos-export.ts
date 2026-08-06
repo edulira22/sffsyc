@@ -157,6 +157,7 @@ export async function obtenerFilasExport(
             hour: "2-digit",
             minute: "2-digit",
           }),
+          nombre: f.nombre ?? "",
         }
         for (const p of PREGUNTAS_ENCUESTA) {
           const v = r[p.id]

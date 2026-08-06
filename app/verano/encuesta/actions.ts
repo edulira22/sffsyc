@@ -5,19 +5,22 @@ import { revalidatePath } from "next/cache"
 import { Prisma } from "@prisma/client"
 
 import { prisma } from "@/lib/prisma"
+import { aTitulo } from "@/lib/texto"
 import {
   encuestaPadresSchema,
+  nombreEncuestaSchema,
   type EncuestaPadresInput,
 } from "@/lib/schemas/encuesta-padres"
 
 export type ResultadoEncuesta = { ok: true } | { ok: false; error: string }
 
 // Ruta PÚBLICA: cualquier padre/tutor puede responder sin sesión.
-// No se guarda ningún dato identificable: la encuesta es anónima.
-export async function enviarEncuestaPadres(
-  input: EncuestaPadresInput
-): Promise<ResultadoEncuesta> {
-  const parsed = encuestaPadresSchema.safeParse(input)
+// El nombre es opcional: si va vacío, la respuesta queda anónima.
+export async function enviarEncuestaPadres(input: {
+  nombre?: string
+  respuestas: EncuestaPadresInput
+}): Promise<ResultadoEncuesta> {
+  const parsed = encuestaPadresSchema.safeParse(input.respuestas)
   if (!parsed.success) {
     return {
       ok: false,
@@ -25,9 +28,21 @@ export async function enviarEncuestaPadres(
     }
   }
 
+  const nombreParsed = nombreEncuestaSchema.safeParse(input.nombre ?? "")
+  if (!nombreParsed.success) {
+    return {
+      ok: false,
+      error: nombreParsed.error.issues[0]?.message ?? "Nombre inválido",
+    }
+  }
+  const nombre = aTitulo(nombreParsed.data) || null
+
   try {
     await prisma.encuestaPadresVerano.create({
-      data: { respuestas: parsed.data as Prisma.InputJsonValue },
+      data: {
+        nombre,
+        respuestas: parsed.data as Prisma.InputJsonValue,
+      },
     })
 
     revalidatePath("/eventos/verano-difertido/encuesta-padres")

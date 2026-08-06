@@ -1,10 +1,11 @@
 "use client"
 
 import { useMemo, useState, useTransition } from "react"
-import { CheckCircle2, Loader2, Star, Send } from "lucide-react"
+import { CheckCircle2, Loader2, Star, Send, UserRound } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import {
@@ -23,6 +24,7 @@ export function EncuestaPadresForm() {
   const [valores, setValores] = useState<EncuestaPadresInput>(
     valoresInicialesEncuesta
   )
+  const [nombre, setNombre] = useState("")
   const [enviada, setEnviada] = useState(false)
   const [intentado, setIntentado] = useState(false)
   const [pendiente, iniciar] = useTransition()
@@ -59,7 +61,7 @@ export function EncuestaPadresForm() {
     }
 
     iniciar(async () => {
-      const r = await enviarEncuestaPadres(valores)
+      const r = await enviarEncuestaPadres({ nombre, respuestas: valores })
       if (r.ok) {
         setEnviada(true)
         window.scrollTo({ top: 0, behavior: "smooth" })
@@ -69,23 +71,30 @@ export function EncuestaPadresForm() {
     })
   }
 
-  if (enviada) return <Gracias />
+  if (enviada) return <Gracias nombre={nombre.trim()} />
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
-      {/* Introducción */}
-      <div className="rounded-2xl border-l-4 border-l-agua bg-white p-5 shadow-sm">
-        <p className="text-sm leading-relaxed text-muted-foreground">
-          {ENCUESTA_PADRES.intro}
-        </p>
+      {/* Bienvenida */}
+      <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
+        <div className="h-1.5 bg-gradient-to-r from-agua via-amber-400 to-orange-400" />
+        <div className="p-5">
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {ENCUESTA_PADRES.intro}
+          </p>
+        </div>
       </div>
 
-      {SECCIONES_ENCUESTA.map((seccion) => (
-        <div key={seccion.id} className="space-y-4">
+      {SECCIONES_ENCUESTA.map((seccion, i) => (
+        <div key={seccion.id} className="space-y-3">
           {seccion.titulo && (
-            <h2 className="px-1 pt-3 text-sm font-bold uppercase tracking-wide text-gobierno">
-              {seccion.titulo}
-            </h2>
+            <div className="flex items-center gap-2.5 px-1 pt-4">
+              <span className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-gobierno text-[11px] font-bold text-white">
+                {i}
+              </span>
+              <h2 className="text-sm font-bold text-gobierno">{seccion.titulo}</h2>
+              <span className="h-px flex-1 bg-gradient-to-r from-gobierno/20 to-transparent" />
+            </div>
           )}
           {seccion.preguntas.map((p) => (
             <Pregunta
@@ -99,6 +108,28 @@ export function EncuestaPadresForm() {
         </div>
       ))}
 
+      {/* Nombre opcional — una sola línea, sin robar protagonismo */}
+      <div className="rounded-2xl border bg-white p-4 shadow-sm">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+          <label
+            htmlFor="nombre-encuesta"
+            className="flex shrink-0 items-center gap-1.5 text-sm font-medium text-foreground"
+          >
+            <UserRound className="size-4 text-muted-foreground" />
+            Tu nombre
+            <span className="font-normal text-muted-foreground">(opcional)</span>
+          </label>
+          <Input
+            id="nombre-encuesta"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            maxLength={80}
+            placeholder="Déjalo vacío para responder de forma anónima"
+            className="flex-1"
+          />
+        </div>
+      </div>
+
       {/* Barra de envío */}
       <div className="sticky bottom-0 -mx-4 border-t bg-white/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-2xl sm:border">
         <div className="mb-2.5 flex items-center justify-between text-xs">
@@ -109,7 +140,7 @@ export function EncuestaPadresForm() {
         </div>
         <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-muted">
           <div
-            className="h-full rounded-full bg-agua transition-all duration-300"
+            className="h-full rounded-full bg-gradient-to-r from-agua to-emerald-400 transition-all duration-300"
             style={{ width: `${progreso}%` }}
           />
         </div>
@@ -299,22 +330,27 @@ function Estrellas({
 
 // --- Confirmación ------------------------------------------------------------
 
-function Gracias() {
+function Gracias({ nombre }: { nombre: string }) {
   return (
-    <div className="overflow-hidden rounded-2xl border bg-white shadow-sm">
-      <div className="bg-agua px-6 py-10 text-center">
-        <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-white/20">
+    <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
+      <div className="bg-gradient-to-br from-agua via-agua-600 to-gobierno px-6 py-12 text-center">
+        <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-white/20 ring-4 ring-white/10">
           <CheckCircle2 className="size-9 text-white" />
         </div>
-        <p className="text-xl font-bold text-white">¡Encuesta enviada!</p>
-        <p className="mx-auto mt-1.5 max-w-sm text-sm text-white/80">
+        <p className="text-2xl font-bold text-white">
+          {nombre ? `¡Gracias, ${nombre.split(" ")[0]}!` : "¡Gracias!"}
+        </p>
+        <p className="mx-auto mt-2 max-w-sm text-sm text-white/85">
           {ENCUESTA_PADRES.cierre}
         </p>
       </div>
-      <div className="px-6 py-5 text-center">
+      <div className="px-6 py-6 text-center">
         <p className="text-sm text-muted-foreground">
           Tus comentarios nos ayudan a mejorar el Verano DIFertido para el próximo
           año. Ya puedes cerrar esta página.
+        </p>
+        <p className="mt-4 text-xs font-medium text-gobierno">
+          DIF Municipal de Chihuahua
         </p>
       </div>
     </div>
