@@ -8,6 +8,7 @@ import {
   ArrowRight,
   Clock,
   FileText,
+  ClipboardList,
 } from "lucide-react"
 
 import { Prisma } from "@prisma/client"
@@ -54,6 +55,14 @@ const SECCIONES = [
     titulo: "Clases y staff",
     descripcion: "Configura clases, maestros y horarios del curso.",
     icono: GraduationCap,
+    activo: true,
+    externo: false,
+  },
+  {
+    href: "/eventos/verano-difertido/encuesta",
+    titulo: "Encuesta de cierre",
+    descripcion: "Formato imprimible para que los participantes evalúen el curso.",
+    icono: ClipboardList,
     activo: true,
     externo: false,
   },
