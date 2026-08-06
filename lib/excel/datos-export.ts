@@ -3,6 +3,7 @@ import { formatoFecha, calcularEdad } from "@/lib/fechas"
 import { TIPO_CENTRO_LABEL } from "@/lib/schemas/centro"
 import { ESCOLARIDAD_LABEL } from "@/lib/schemas/beneficiario"
 import { folioVerano, grupoPorId, TOTAL_DOCUMENTOS } from "@/lib/eventos/verano"
+import { PREGUNTAS_ENCUESTA, labelDeValor } from "@/lib/eventos/encuesta-padres"
 import type { AutorizadoVerano } from "@/lib/data/verano"
 
 // Convierte los registros de la base de datos al formato legible de las columnas
@@ -140,6 +141,37 @@ export async function obtenerFilasExport(
           autorizado3:      fmtAuth(auths[2]),
           motivoBaja:       i.motivoBaja ?? "",
         }
+      })
+    }
+    case "encuesta-padres-verano": {
+      const filas = await prisma.encuestaPadresVerano.findMany({
+        orderBy: { createdAt: "desc" },
+      })
+      return filas.map((f) => {
+        const r = (f.respuestas ?? {}) as Record<string, unknown>
+        const fila: Record<string, unknown> = {
+          fecha: f.createdAt.toLocaleString("es-MX", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        }
+        for (const p of PREGUNTAS_ENCUESTA) {
+          const v = r[p.id]
+          if (Array.isArray(v)) {
+            // Opción múltiple: etiquetas legibles separadas por coma.
+            fila[p.id] = v.map((x) => labelDeValor(p.id, String(x))).join(", ")
+          } else if (typeof v === "number") {
+            fila[p.id] = v
+          } else if (typeof v === "string" && v) {
+            fila[p.id] = p.tipo === "texto" ? v : labelDeValor(p.id, v)
+          } else {
+            fila[p.id] = ""
+          }
+        }
+        return fila
       })
     }
     case "personal-verano": {

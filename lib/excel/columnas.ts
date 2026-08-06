@@ -9,6 +9,8 @@
 //  CURP), nunca con IDs internos. La importación los resuelve a llaves foráneas.
 // =============================================================================
 
+import { PREGUNTAS_ENCUESTA } from "@/lib/eventos/encuesta-padres"
+
 export type ColumnaExcel = {
   clave: string
   encabezado: string
@@ -163,6 +165,22 @@ export const ENTIDADES_EXCEL: Record<string, EntidadExcel> = {
       { clave: "rol",      encabezado: "Rol / Puesto",  ancho: 22 },
       { clave: "telefono", encabezado: "Teléfono",     ancho: 14 },
       { clave: "estatus",  encabezado: "Estatus",      ancho: 10 },
+    ],
+  },
+  // Las columnas se derivan de las preguntas: una por pregunta, en orden.
+  "encuesta-padres-verano": {
+    id: "encuesta-padres-verano",
+    titulo: "Encuesta de padres — Verano DIFertido",
+    hoja: "Encuesta padres",
+    descripcion:
+      "Respuestas de la encuesta de satisfacción de padres y tutores (anónima).",
+    columnas: [
+      { clave: "fecha", encabezado: "Fecha de respuesta", ancho: 20 },
+      ...PREGUNTAS_ENCUESTA.map((p) => ({
+        clave: p.id,
+        encabezado: `${p.numero}. ${p.texto}`,
+        ancho: p.tipo === "texto" ? 48 : p.tipo === "estrellas" ? 10 : 24,
+      })),
     ],
   },
 }

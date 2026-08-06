@@ -384,6 +384,19 @@ model HorarioVerano {
   @@map("horario_verano")
 }
 
+/// Respuesta de un padre/tutor a la encuesta de satisfacción del curso.
+/// Las respuestas viven en un JSON (preguntaId → valor) para que agregar o
+/// quitar preguntas de un año a otro no requiera migrar la base.
+/// Ver lib/eventos/encuesta-padres.ts.
+model EncuestaPadresVerano {
+  id         Int      @id @default(autoincrement())
+  respuestas Json     @default("{}")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@map("encuestas_padres_verano")
+}
+
 model UsuarioSistema {
   id               Int            @id @default(autoincrement())
   nombre           String

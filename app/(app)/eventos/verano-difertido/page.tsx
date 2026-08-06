@@ -9,6 +9,7 @@ import {
   Clock,
   FileText,
   ClipboardList,
+  MessagesSquare,
 } from "lucide-react"
 
 import { Prisma } from "@prisma/client"
@@ -60,9 +61,17 @@ const SECCIONES = [
   },
   {
     href: "/eventos/verano-difertido/encuesta",
-    titulo: "Encuesta de cierre",
+    titulo: "Encuesta de cierre (niños)",
     descripcion: "Formato imprimible para que los participantes evalúen el curso.",
     icono: ClipboardList,
+    activo: true,
+    externo: false,
+  },
+  {
+    href: "/eventos/verano-difertido/encuesta-padres",
+    titulo: "Encuesta de padres",
+    descripcion: "Liga pública, resultados y KPIs de satisfacción de las familias.",
+    icono: MessagesSquare,
     activo: true,
     externo: false,
   },
