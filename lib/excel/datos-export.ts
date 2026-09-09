@@ -4,6 +4,7 @@ import { TIPO_CENTRO_LABEL } from "@/lib/schemas/centro"
 import { ESCOLARIDAD_LABEL } from "@/lib/schemas/beneficiario"
 import { folioVerano, grupoPorId, TOTAL_DOCUMENTOS } from "@/lib/eventos/verano"
 import { PREGUNTAS_ENCUESTA, labelDeValor } from "@/lib/eventos/encuesta-padres"
+import { labelParentesco } from "@/lib/eventos/informe"
 import type { AutorizadoVerano } from "@/lib/data/verano"
 
 // Convierte los registros de la base de datos al formato legible de las columnas
@@ -142,6 +143,25 @@ export async function obtenerFilasExport(
           motivoBaja:       i.motivoBaja ?? "",
         }
       })
+    }
+    case "registros-informe": {
+      const filas = await prisma.registroInforme.findMany({
+        where: { estatus: "activo" },
+        orderBy: { createdAt: "desc" },
+      })
+      return filas.map((r) => ({
+        colaborador: r.colaborador,
+        area: r.area,
+        invitado: r.invitado,
+        parentesco: labelParentesco(r.parentesco),
+        fecha: r.createdAt.toLocaleString("es-MX", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      }))
     }
     case "encuesta-padres-verano": {
       const filas = await prisma.encuestaPadresVerano.findMany({

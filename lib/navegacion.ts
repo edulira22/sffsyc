@@ -10,6 +10,7 @@ import {
   CalendarDays,
   ClipboardList,
   Rocket,
+  Megaphone,
   type LucideIcon,
 } from "lucide-react"
 
@@ -87,6 +88,11 @@ export const NAV_AREAS: AreaNav[] = [
         titulo: "Verano DIFertido 2026",
         href: "/eventos/verano-difertido",
         icono: Rocket,
+      },
+      {
+        titulo: "Informe de la Sra. Karina",
+        href: "/eventos/informe-karina",
+        icono: Megaphone,
       },
     ],
   },

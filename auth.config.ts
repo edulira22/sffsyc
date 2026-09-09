@@ -13,8 +13,11 @@ export const authConfig = {
       const estaLogueado = !!auth?.user
       const enLogin = nextUrl.pathname.startsWith("/login")
 
-      // Rutas públicas (sin sesión): inscripción al curso de verano.
-      const esPublica = nextUrl.pathname.startsWith("/verano")
+      // Rutas públicas (sin sesión): inscripción al curso de verano y
+      // registro de asistencia al Informe de la Sra. Karina.
+      const esPublica =
+        nextUrl.pathname.startsWith("/verano") ||
+        nextUrl.pathname.startsWith("/informe")
       if (esPublica) return true
 
       if (enLogin) {

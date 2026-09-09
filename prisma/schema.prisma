@@ -399,6 +399,26 @@ model EncuestaPadresVerano {
   @@map("encuestas_padres_verano")
 }
 
+/// Registro de asistencia al Informe de la Sra. Karina.
+/// Cada fila es un colaborador del DIF con su familiar invitado (uno por
+/// colaborador). Ver lib/eventos/informe.ts.
+model RegistroInforme {
+  id          Int      @id @default(autoincrement())
+  colaborador String
+  /// Área, departamento o centro de trabajo del colaborador.
+  area        String
+  /// Nombre completo del familiar invitado.
+  invitado    String
+  /// Parentesco del invitado con el colaborador. Ver PARENTESCOS_INFORME.
+  parentesco  String
+  estatus     String   @default("activo")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([createdAt])
+  @@map("registros_informe")
+}
+
 model UsuarioSistema {
   id               Int            @id @default(autoincrement())
   nombre           String

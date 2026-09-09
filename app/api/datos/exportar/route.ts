@@ -18,10 +18,16 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const entidad = searchParams.get("entidad") ?? ""
 
-  // Las entidades de Verano DIFertido están disponibles para cualquier usuario
-  // con sesión. Las entidades del sistema principal requieren rol admin.
-  const esVerano = entidad.endsWith("-verano")
-  if (!esVerano && session.user.rol !== "admin" && session.user.rol !== "coordinacion_general") {
+  // Las entidades de eventos (Verano DIFertido, Informe) están disponibles para
+  // cualquier usuario con sesión: son herramientas operativas de todo el equipo.
+  // Las entidades del padrón principal siguen requiriendo rol admin.
+  const esEvento =
+    entidad.endsWith("-verano") || entidad.startsWith("registros-informe")
+  if (
+    !esEvento &&
+    session.user.rol !== "admin" &&
+    session.user.rol !== "coordinacion_general"
+  ) {
     return new Response("Acceso restringido", { status: 403 })
   }
   const esPlantilla = searchParams.get("plantilla") === "1"

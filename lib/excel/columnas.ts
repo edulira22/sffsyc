@@ -167,6 +167,20 @@ export const ENTIDADES_EXCEL: Record<string, EntidadExcel> = {
       { clave: "estatus",  encabezado: "Estatus",      ancho: 10 },
     ],
   },
+  "registros-informe": {
+    id: "registros-informe",
+    titulo: "Registro de asistencia — Informe de la Sra. Karina",
+    hoja: "Registros Informe",
+    descripcion:
+      "Colaboradores del DIF Municipal registrados con su familiar invitado.",
+    columnas: [
+      { clave: "colaborador", encabezado: "Nombre del colaborador", ancho: 32 },
+      { clave: "area", encabezado: "Área, departamento o centro", ancho: 30 },
+      { clave: "invitado", encabezado: "Familiar invitado", ancho: 32 },
+      { clave: "parentesco", encabezado: "Parentesco", ancho: 20 },
+      { clave: "fecha", encabezado: "Fecha de registro", ancho: 20 },
+    ],
+  },
   // Las columnas se derivan de las preguntas: una por pregunta, en orden.
   "encuesta-padres-verano": {
     id: "encuesta-padres-verano",
