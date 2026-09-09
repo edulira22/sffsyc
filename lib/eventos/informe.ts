@@ -21,6 +21,20 @@ export const EVENTO_INFORME = {
   sede: null as string | null,
 } as const
 
+// --- Invitados ---------------------------------------------------------------
+
+/** Un familiar invitado. Se guardan como arreglo JSON en el registro. */
+export type InvitadoInforme = {
+  nombre: string
+  parentesco: string
+}
+
+/**
+ * Tope de invitados por registro. No es una regla del evento: es un límite
+ * sano para un formulario público sin sesión. En la práctica nadie lo alcanza.
+ */
+export const MAX_INVITADOS = 10
+
 // --- Parentesco del invitado -------------------------------------------------
 
 export type ParentescoInforme = {

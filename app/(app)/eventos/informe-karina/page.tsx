@@ -6,6 +6,7 @@ import {
   TriangleAlert,
   UserRound,
   Users,
+  UsersRound,
 } from "lucide-react"
 
 import { requerirSesion } from "@/lib/session"
@@ -59,7 +60,7 @@ export default async function InformeKarinaPage() {
 
       <PageHeader
         titulo={EVENTO_INFORME.nombre}
-        descripcion="Registro de asistencia de colaboradores del DIF y su familiar invitado."
+        descripcion="Registro de asistencia de colaboradores del DIF y sus familiares invitados."
         acciones={
           registros.length > 0 ? (
             <Button asChild variant="outline" className="gap-2">
@@ -74,7 +75,7 @@ export default async function InformeKarinaPage() {
 
       <LigaPublica
         ruta="/informe"
-        descripcion="Compártela con los colaboradores. No requiere iniciar sesión y se llena en menos de un minuto desde el celular."
+        descripcion="Compártela con los colaboradores. No requiere iniciar sesión y pueden agregar los familiares que necesiten."
       />
 
       {registros.length === 0 ? (
@@ -98,20 +99,19 @@ export default async function InformeKarinaPage() {
 
           <div className="grid gap-3 lg:grid-cols-2">
             <Desglose
-              titulo="Parentesco del invitado"
+              titulo="Parentesco de los invitados"
               icono={UserRound}
               items={resumen.porParentesco}
-              total={resumen.totalRegistros}
+              pie={`Sobre ${resumen.totalInvitados} invitados.`}
             />
             <Desglose
-              titulo="Registros por área"
+              titulo="Asistentes por área"
               icono={Building2}
               items={resumen.porArea.slice(0, 8)}
-              total={resumen.totalRegistros}
               pie={
                 resumen.porArea.length > 8
-                  ? `y ${resumen.porArea.length - 8} áreas más`
-                  : undefined
+                  ? `Colaborador + invitados. Se muestran 8 de ${resumen.porArea.length} áreas.`
+                  : "Incluye al colaborador y a sus invitados."
               }
             />
           </div>
@@ -134,21 +134,33 @@ export default async function InformeKarinaPage() {
                   <TableRow>
                     <TableHead>Colaborador</TableHead>
                     <TableHead>Área</TableHead>
-                    <TableHead>Familiar invitado</TableHead>
-                    <TableHead>Parentesco</TableHead>
+                    <TableHead>Familiares invitados</TableHead>
                     <TableHead className="text-right">Registro</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {registros.map((r) => (
-                    <TableRow key={r.id}>
-                      <TableCell className="font-medium">{r.colaborador}</TableCell>
+                    <TableRow key={r.id} className="align-top">
+                      <TableCell className="font-medium">
+                        {r.colaborador}
+                      </TableCell>
                       <TableCell className="text-muted-foreground">
                         {r.area}
                       </TableCell>
-                      <TableCell>{r.invitado}</TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {labelParentesco(r.parentesco)}
+                      <TableCell>
+                        <ul className="space-y-1">
+                          {r.invitados.map((inv, i) => (
+                            <li key={i} className="flex flex-wrap items-baseline gap-x-2">
+                              <span>{inv.nombre}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {labelParentesco(inv.parentesco)}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                        <p className="mt-1 text-[11px] text-muted-foreground">
+                          {r.invitados.length + 1} personas en total
+                        </p>
                       </TableCell>
                       <TableCell className="whitespace-nowrap text-right text-xs text-muted-foreground">
                         {fechaCorta(r.createdAt)}
@@ -170,17 +182,25 @@ export default async function InformeKarinaPage() {
 function Totales({ resumen }: { resumen: ResumenInforme }) {
   const tarjetas = [
     {
+      icono: Users,
+      valor: resumen.totalPersonas,
+      etiqueta: "Asistentes en total",
+      pie: "Colaboradores más sus invitados",
+      color: "bg-agua-50 text-agua",
+      destacada: true,
+    },
+    {
       icono: UserRound,
       valor: resumen.totalRegistros,
       etiqueta: "Colaboradores registrados",
       color: "bg-gobierno-50 text-gobierno",
     },
     {
-      icono: Users,
-      valor: resumen.totalPersonas,
-      etiqueta: "Asistentes en total",
-      pie: "Colaborador + invitado por registro",
-      color: "bg-agua-50 text-agua",
+      icono: UsersRound,
+      valor: resumen.totalInvitados,
+      etiqueta: "Familiares invitados",
+      pie: `${resumen.promedioInvitados} en promedio por colaborador`,
+      color: "bg-amber-50 text-amber-600",
     },
     {
       icono: Building2,
@@ -191,11 +211,17 @@ function Totales({ resumen }: { resumen: ResumenInforme }) {
   ]
 
   return (
-    <div className="grid gap-3 sm:grid-cols-3">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {tarjetas.map((t) => {
         const Icono = t.icono
         return (
-          <div key={t.etiqueta} className="rounded-xl border bg-white p-4">
+          <div
+            key={t.etiqueta}
+            className={cn(
+              "rounded-xl border bg-white p-4",
+              t.destacada && "border-agua/30 ring-1 ring-agua/15"
+            )}
+          >
             <div className="mb-2.5 flex items-center gap-2.5">
               <div
                 className={cn(
@@ -205,7 +231,7 @@ function Totales({ resumen }: { resumen: ResumenInforme }) {
               >
                 <Icono className="size-4" />
               </div>
-              <p className="text-xs font-medium text-muted-foreground">
+              <p className="text-xs font-medium leading-tight text-muted-foreground">
                 {t.etiqueta}
               </p>
             </div>
@@ -213,7 +239,9 @@ function Totales({ resumen }: { resumen: ResumenInforme }) {
               {t.valor}
             </p>
             {t.pie && (
-              <p className="mt-1 text-[11px] text-muted-foreground">{t.pie}</p>
+              <p className="mt-1 text-[11px] leading-tight text-muted-foreground">
+                {t.pie}
+              </p>
             )}
           </div>
         )
@@ -231,12 +259,13 @@ function Duplicados({ resumen }: { resumen: ResumenInforme }) {
         <TriangleAlert className="mt-0.5 size-4 shrink-0 text-amber-600" />
         <div className="min-w-0">
           <p className="text-sm font-semibold text-amber-900">
-            Posibles registros duplicados
+            Colaboradores con más de un registro
           </p>
           <p className="mt-0.5 text-xs text-amber-800">
-            El formulario pide un solo registro por colaborador. Estos nombres
-            aparecen más de una vez; conviene confirmarlos antes de cerrar la
-            lista.
+            El formulario permite agregar varios familiares en un solo envío, así
+            que un segundo registro suele ser un duplicado. El total de
+            asistentes ya cuenta a cada colaborador una sola vez, pero conviene
+            revisar que sus invitados no estén repetidos.
           </p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {resumen.posiblesDuplicados.map((d) => (
@@ -260,15 +289,15 @@ function Desglose({
   titulo,
   icono: Icono,
   items,
-  total,
   pie,
 }: {
   titulo: string
   icono: typeof Users
   items: ResumenInforme["porParentesco"]
-  total: number
   pie?: string
 }) {
+  const mayor = Math.max(1, ...items.map((i) => i.cuenta))
+
   return (
     <div className="rounded-xl border bg-white p-5">
       <p className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -288,7 +317,7 @@ function Desglose({
             <div className="h-1.5 overflow-hidden rounded-full bg-muted">
               <div
                 className="h-full rounded-full bg-gobierno"
-                style={{ width: `${total === 0 ? 0 : (i.cuenta / total) * 100}%` }}
+                style={{ width: `${(i.cuenta / mayor) * 100}%` }}
               />
             </div>
           </div>

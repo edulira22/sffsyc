@@ -4,7 +4,7 @@ import { TIPO_CENTRO_LABEL } from "@/lib/schemas/centro"
 import { ESCOLARIDAD_LABEL } from "@/lib/schemas/beneficiario"
 import { folioVerano, grupoPorId, TOTAL_DOCUMENTOS } from "@/lib/eventos/verano"
 import { PREGUNTAS_ENCUESTA, labelDeValor } from "@/lib/eventos/encuesta-padres"
-import { labelParentesco } from "@/lib/eventos/informe"
+import { labelParentesco, type InvitadoInforme } from "@/lib/eventos/informe"
 import type { AutorizadoVerano } from "@/lib/data/verano"
 
 // Convierte los registros de la base de datos al formato legible de las columnas
@@ -149,19 +149,26 @@ export async function obtenerFilasExport(
         where: { estatus: "activo" },
         orderBy: { createdAt: "desc" },
       })
-      return filas.map((r) => ({
-        colaborador: r.colaborador,
-        area: r.area,
-        invitado: r.invitado,
-        parentesco: labelParentesco(r.parentesco),
-        fecha: r.createdAt.toLocaleString("es-MX", {
+      // Un renglón por familiar invitado: así el archivo sirve como lista de
+      // acceso en la puerta. Los datos del colaborador se repiten.
+      return filas.flatMap((r) => {
+        const invitados = (r.invitados as unknown as InvitadoInforme[]) ?? []
+        const fecha = r.createdAt.toLocaleString("es-MX", {
           day: "2-digit",
           month: "2-digit",
           year: "numeric",
           hour: "2-digit",
           minute: "2-digit",
-        }),
-      }))
+        })
+        return invitados.map((inv, i) => ({
+          colaborador: r.colaborador,
+          area: r.area,
+          numero: `${i + 1} de ${invitados.length}`,
+          invitado: inv.nombre,
+          parentesco: labelParentesco(inv.parentesco),
+          fecha,
+        }))
+      })
     }
     case "encuesta-padres-verano": {
       const filas = await prisma.encuestaPadresVerano.findMany({

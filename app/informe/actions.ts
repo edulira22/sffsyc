@@ -33,8 +33,10 @@ export async function registrarAsistenciaInforme(
         // Normalización silenciosa: los nombres quedan en formato Título.
         colaborador: aTitulo(d.colaborador),
         area: aTitulo(d.area),
-        invitado: aTitulo(d.invitado),
-        parentesco: d.parentesco,
+        invitados: d.invitados.map((i) => ({
+          nombre: aTitulo(i.nombre),
+          parentesco: i.parentesco,
+        })),
       },
     })
 

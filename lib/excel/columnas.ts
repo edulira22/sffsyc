@@ -172,12 +172,13 @@ export const ENTIDADES_EXCEL: Record<string, EntidadExcel> = {
     titulo: "Registro de asistencia — Informe de la Sra. Karina",
     hoja: "Registros Informe",
     descripcion:
-      "Colaboradores del DIF Municipal registrados con su familiar invitado.",
+      "Lista de acceso: un renglón por familiar invitado, con los datos del colaborador que lo registró.",
     columnas: [
       { clave: "colaborador", encabezado: "Nombre del colaborador", ancho: 32 },
       { clave: "area", encabezado: "Área, departamento o centro", ancho: 30 },
       { clave: "invitado", encabezado: "Familiar invitado", ancho: 32 },
       { clave: "parentesco", encabezado: "Parentesco", ancho: 20 },
+      { clave: "numero", encabezado: "Invitado", ancho: 12, nota: "Posición dentro del registro del colaborador" },
       { clave: "fecha", encabezado: "Fecha de registro", ancho: 20 },
     ],
   },
