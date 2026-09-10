@@ -191,8 +191,13 @@ function Totales({ resumen }: { resumen: ResumenInforme }) {
     },
     {
       icono: UserRound,
-      valor: resumen.totalRegistros,
+      valor: resumen.colaboradoresDistintos,
       etiqueta: "Colaboradores registrados",
+      // Si hubo duplicados, los envíos son más que las personas: se aclara.
+      pie:
+        resumen.totalRegistros !== resumen.colaboradoresDistintos
+          ? `${resumen.totalRegistros} envíos del formulario`
+          : undefined,
       color: "bg-gobierno-50 text-gobierno",
     },
     {

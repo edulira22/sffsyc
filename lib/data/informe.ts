@@ -32,8 +32,10 @@ export type ConteoEtiquetado = {
 }
 
 export type ResumenInforme = {
-  /** Registros = colaboradores que llenaron el formulario. */
+  /** Envíos del formulario. Puede ser mayor que las personas si hay duplicados. */
   totalRegistros: number
+  /** Personas distintas que se registraron, sin contar duplicados. */
+  colaboradoresDistintos: number
   /** Familiares invitados sumando todos los registros. */
   totalInvitados: number
   /**
@@ -133,11 +135,15 @@ export async function obtenerResumenInforme(): Promise<ResumenInforme> {
 
   return {
     totalRegistros: total,
+    colaboradoresDistintos,
     totalInvitados,
     totalPersonas: colaboradoresDistintos + totalInvitados,
     totalAreas: cuentaArea.size,
+    // Por persona, no por envío, para que no lo distorsionen los duplicados.
     promedioInvitados:
-      total === 0 ? 0 : Math.round((totalInvitados / total) * 10) / 10,
+      colaboradoresDistintos === 0
+        ? 0
+        : Math.round((totalInvitados / colaboradoresDistintos) * 10) / 10,
     porParentesco,
     porArea,
     posiblesDuplicados,
