@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { Check, Loader2, Plus, X } from "lucide-react"
+import { Check, Loader2, Plus, TriangleAlert, X } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -32,6 +32,7 @@ export function InformeForm() {
     VALORES_INICIALES_INFORME
   )
   const [errores, setErrores] = useState<Errores>({})
+  const [bloqueo, setBloqueo] = useState<string | null>(null)
   const [enviado, setEnviado] = useState(false)
   const [pendiente, iniciar] = useTransition()
 
@@ -41,6 +42,8 @@ export function InformeForm() {
   function setCampo(campo: "colaborador" | "area", v: string) {
     setValores((prev) => ({ ...prev, [campo]: v }))
     setErrores((prev) => ({ ...prev, [campo]: undefined }))
+    // Si corrige el nombre, el bloqueo por duplicado deja de aplicar.
+    if (campo === "colaborador") setBloqueo(null)
   }
 
   function setInvitado(i: number, campo: keyof ErroresInvitado, v: string) {
@@ -98,11 +101,18 @@ export function InformeForm() {
       return
     }
 
+    setBloqueo(null)
     iniciar(async () => {
       const r = await registrarAsistenciaInforme(parsed.data)
       if (r.ok) {
         setEnviado(true)
         window.scrollTo({ top: 0, behavior: "smooth" })
+      } else if (r.duplicado) {
+        // Es un callejón sin salida: se queda a la vista, no en un toast.
+        setBloqueo(r.error)
+        document
+          .getElementById("aviso-duplicado")
+          ?.scrollIntoView({ behavior: "smooth", block: "center" })
       } else {
         toast.error(r.error)
       }
@@ -140,9 +150,8 @@ export function InformeForm() {
             <h2 className="text-sm font-medium text-foreground">
               Familiares invitados
             </h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Los invitados deben ser familiares del colaborador. Puedes agregar
-              los que necesites.
+            <p className="mt-2 rounded-md border-l-2 border-l-gobierno bg-gobierno/[0.04] px-3 py-2 text-xs leading-relaxed text-foreground">
+              {EVENTO_INFORME.avisoFamiliares}
             </p>
           </div>
 
@@ -178,6 +187,24 @@ export function InformeForm() {
 
         {/* Envío */}
         <div className="border-t border-border p-5 sm:px-7">
+          {bloqueo && (
+            <div
+              id="aviso-duplicado"
+              role="alert"
+              className="mb-4 flex gap-3 rounded-lg border border-red-200 bg-red-50 p-4"
+            >
+              <TriangleAlert className="mt-0.5 size-4 shrink-0 text-red-600" />
+              <div>
+                <p className="text-sm font-semibold text-red-900">
+                  Este colaborador ya está registrado
+                </p>
+                <p className="mt-1 text-xs leading-relaxed text-red-800">
+                  {bloqueo}
+                </p>
+              </div>
+            </div>
+          )}
+
           <p className="mb-3 text-center text-sm text-foreground">
             Asistirán{" "}
             <span className="font-semibold">{invitados.length + 1} personas</span>

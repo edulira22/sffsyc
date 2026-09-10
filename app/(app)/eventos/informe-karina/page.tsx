@@ -262,10 +262,11 @@ function Duplicados({ resumen }: { resumen: ResumenInforme }) {
             Colaboradores con más de un registro
           </p>
           <p className="mt-0.5 text-xs text-amber-800">
-            El formulario permite agregar varios familiares en un solo envío, así
-            que un segundo registro suele ser un duplicado. El total de
-            asistentes ya cuenta a cada colaborador una sola vez, pero conviene
-            revisar que sus invitados no estén repetidos.
+            Son registros hechos antes de que el formulario bloqueara los
+            duplicados; de aquí en adelante ya no pueden repetirse. El total de
+            asistentes cuenta a cada colaborador una sola vez, pero si el mismo
+            familiar aparece en dos de sus registros se está contando doble:
+            conviene revisarlos y dejar uno solo por persona.
           </p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {resumen.posiblesDuplicados.map((d) => (

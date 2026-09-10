@@ -405,6 +405,11 @@ model EncuestaPadresVerano {
 model RegistroInforme {
   id          Int      @id @default(autoincrement())
   colaborador String
+  /// Nombre del colaborador normalizado (sin acentos, minúsculas). Un índice
+  /// único PARCIAL sobre esta columna (solo estatus = 'activo') impide que la
+  /// misma persona se registre dos veces. Se crea por SQL, no desde Prisma:
+  /// ver prisma/sql/informe_colaborador_unico.sql.
+  colaboradorClave String? @map("colaborador_clave")
   /// Área, departamento o centro de trabajo del colaborador.
   area        String
   /// Familiares invitados: [{ nombre, parentesco }]. Al menos uno.
