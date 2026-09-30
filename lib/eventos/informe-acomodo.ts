@@ -79,6 +79,21 @@ export type InvitadoAcomodo = {
   tejedora: boolean
 }
 
+/**
+ * Normaliza los bloques pedidos contra los que existen: sin repetir, en el
+ * orden del plano, y «Por revisar» nunca combinado con bloques reales.
+ * Devuelve null si se pidió un bloque que no existe.
+ */
+export function normalizarBloques(pedidos: string[], existentes: string[]): string[] | null {
+  const set = new Set(pedidos)
+  for (const b of Array.from(set)) {
+    if (b !== POR_REVISAR && !existentes.includes(b)) return null
+  }
+  const reales = existentes.filter((id) => set.has(id))
+  if (reales.length > 0) return reales
+  return set.has(POR_REVISAR) ? [POR_REVISAR] : []
+}
+
 /** Búsqueda sin acentos ni mayúsculas. */
 export function normalizarBusqueda(s: string): string {
   return (s || "")

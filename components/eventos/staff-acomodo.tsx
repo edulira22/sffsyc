@@ -176,7 +176,7 @@ export function StaffAcomodo({
               type="search"
               value={q}
               onChange={(e) => buscar(e.target.value)}
-              placeholder="Buscar invitado por nombre, cargo o grupo…"
+              placeholder="Nombre, cargo o grupo…"
               aria-label="Buscar invitado"
               autoComplete="off"
               className="h-12 w-full rounded-xl border-[1.5px] border-border bg-white pl-11 pr-11 text-base text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-gobierno [&::-webkit-search-cancel-button]:hidden"
@@ -202,12 +202,14 @@ export function StaffAcomodo({
             bloques={bloques}
             invitados={invitados}
             onVolver={volver}
+            aResultados={termino.length >= 2}
           />
         ) : vista.tipo === "grupo" ? (
           <VistaGrupo
             id={vista.id}
             invitados={invitados}
             onVolver={volver}
+            aResultados={termino.length >= 2}
           />
         ) : buscando ? (
           <Resultados
@@ -579,11 +581,13 @@ function VistaBloque({
   bloques,
   invitados,
   onVolver,
+  aResultados,
 }: {
   bloque: BloqueAcomodo
   bloques: BloqueAcomodo[]
   invitados: InvitadoAcomodo[]
   onVolver: () => void
+  aResultados: boolean
 }) {
   const confirmados = invitados
     .filter((p) => p.asistencia === "confirmado" && p.bloques.includes(b.id))
@@ -592,7 +596,7 @@ function VistaBloque({
 
   return (
     <div className="space-y-4">
-      <BotonVolver onClick={onVolver} />
+      <BotonVolver onClick={onVolver} aResultados={aResultados} />
 
       <div className="rounded-2xl border border-border bg-white p-4">
         <div className="mb-3 flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
@@ -658,10 +662,12 @@ function VistaGrupo({
   id,
   invitados,
   onVolver,
+  aResultados,
 }: {
   id: "tejedoras" | "por-revisar"
   invitados: InvitadoAcomodo[]
   onVolver: () => void
+  aResultados: boolean
 }) {
   const esTejedoras = id === "tejedoras"
   const personas = invitados
@@ -674,7 +680,7 @@ function VistaGrupo({
 
   return (
     <div className="space-y-4">
-      <BotonVolver onClick={onVolver} />
+      <BotonVolver onClick={onVolver} aResultados={aResultados} />
 
       <div>
         <h1 className="text-2xl font-extrabold tracking-tight text-foreground">
@@ -693,7 +699,11 @@ function VistaGrupo({
       <ListaPersonas
         personas={personas}
         vacio="Nadie en esta lista."
-        detalle={(p) => [p.cargo, p.grupo].filter(Boolean).join(" · ")}
+        // En Tejedoras el grupo es el mismo para todas: solo aporta el cargo.
+        // En Por revisar el grupo es justo lo que hay que resolver.
+        detalle={(p) =>
+          esTejedoras ? p.cargo : [p.cargo, p.grupo].filter(Boolean).join(" · ")
+        }
       />
     </div>
   )
@@ -701,7 +711,14 @@ function VistaGrupo({
 
 // --- Piezas compartidas ------------------------------------------------------
 
-function BotonVolver({ onClick }: { onClick: () => void }) {
+function BotonVolver({
+  onClick,
+  aResultados,
+}: {
+  onClick: () => void
+  /** Si hay una búsqueda activa, "volver" regresa a sus resultados. */
+  aResultados: boolean
+}) {
   return (
     <button
       type="button"
@@ -709,7 +726,7 @@ function BotonVolver({ onClick }: { onClick: () => void }) {
       className="inline-flex items-center gap-1.5 rounded-lg py-1 text-sm font-semibold text-gobierno hover:underline"
     >
       <ArrowLeft className="size-4" />
-      Todos los bloques
+      {aResultados ? "Volver a los resultados" : "Todos los bloques"}
     </button>
   )
 }
@@ -738,7 +755,9 @@ function ListaPersonas({
             {p.titulo ? `${p.titulo} ` : ""}
             {p.nombre}
           </p>
-          <p className="text-[13px] leading-snug text-muted-foreground">{detalle(p)}</p>
+          {detalle(p) && (
+            <p className="text-[13px] leading-snug text-muted-foreground">{detalle(p)}</p>
+          )}
         </div>
       ))}
     </div>

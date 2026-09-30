@@ -7,6 +7,7 @@ import { requerirSesion } from "@/lib/session"
 import { TAG_ACOMODO } from "@/lib/data/informe-acomodo"
 import {
   POR_REVISAR,
+  normalizarBloques,
   type AsistenciaInforme,
   type InvitadoAcomodo,
 } from "@/lib/eventos/informe-acomodo"
@@ -51,15 +52,7 @@ async function limpiarBloques(bloques: string[]): Promise<string[] | null> {
     select: { id: true },
     orderBy: { orden: "asc" },
   })
-  const orden = validos.map((b) => b.id)
-  const pedidos = new Set(bloques)
-  for (const b of Array.from(pedidos)) {
-    if (b !== POR_REVISAR && !orden.includes(b)) return null
-  }
-  // «Por revisar» no se combina con bloques reales.
-  const reales = orden.filter((id) => pedidos.has(id))
-  if (reales.length > 0) return reales
-  return pedidos.has(POR_REVISAR) ? [POR_REVISAR] : []
+  return normalizarBloques(bloques, validos.map((b) => b.id))
 }
 
 export async function guardarInvitadoAcomodo(
