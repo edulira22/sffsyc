@@ -1,6 +1,8 @@
 import Link from "next/link"
 import {
+  Armchair,
   ArrowLeft,
+  ArrowRight,
   Building2,
   Download,
   TriangleAlert,
@@ -72,6 +74,22 @@ export default async function InformeKarinaPage() {
           ) : undefined
         }
       />
+
+      <Link
+        href="/eventos/informe-karina/acomodo"
+        className="flex items-center gap-3 rounded-xl border bg-white p-4 transition-colors hover:border-gobierno/30"
+      >
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-gobierno-50 text-gobierno">
+          <Armchair className="size-5" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-foreground">Acomodo de invitados</p>
+          <p className="text-xs text-muted-foreground">
+            Confirma asistencias, cambia de bloque o agrega invitados del layout del evento.
+          </p>
+        </div>
+        <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
+      </Link>
 
       <div className="grid gap-3 lg:grid-cols-2">
         <LigaPublica
