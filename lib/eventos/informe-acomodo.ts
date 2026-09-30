@@ -72,8 +72,9 @@ export const CONFIRMADOS_SIN_NOMBRE: {
   /** Bloques donde pueden sentarse, según la asignación. */
   bloques: string[]
 }[] = [
-  // A1.2 es el bloque de Familia DIF (60 sillas); lo que no quepa, a C8–C12.
-  { grupo: "Familia DIF", lugares: 126, bloques: ["A1.2", "C8", "C9", "C10", "C11", "C12"] },
+  // A1.2 es el bloque de Familia DIF (60 sillas); lo que no quepa, a C9–C12.
+  // C8 quedó completo para Seguridad Pública.
+  { grupo: "Familia DIF", lugares: 126, bloques: ["A1.2", "C9", "C10", "C11", "C12"] },
   { grupo: "Amigos Municipio", lugares: 38, bloques: ["C10", "C11", "C12"] },
 ]
 
