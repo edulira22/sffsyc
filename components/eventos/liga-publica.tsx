@@ -14,9 +14,11 @@ import { Button } from "@/components/ui/button"
 export function LigaPublica({
   ruta,
   descripcion,
+  titulo = "Liga pública",
 }: {
   ruta: string
   descripcion?: string
+  titulo?: string
 }) {
   const [url, setUrl] = useState("")
   const [copiada, setCopiada] = useState(false)
@@ -40,7 +42,7 @@ export function LigaPublica({
     <div className="rounded-xl border bg-white p-4">
       <div className="mb-2.5 flex items-center gap-2">
         <Link2 className="size-4 text-agua" />
-        <p className="text-sm font-semibold text-foreground">Liga pública</p>
+        <p className="text-sm font-semibold text-foreground">{titulo}</p>
       </div>
 
       {descripcion && (

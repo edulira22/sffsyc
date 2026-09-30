@@ -14,7 +14,7 @@ export const authConfig = {
       const enLogin = nextUrl.pathname.startsWith("/login")
 
       // Rutas públicas (sin sesión): inscripción al curso de verano y
-      // registro de asistencia al Informe de la Sra. Karina.
+      // registro de asistencia y acomodo del staff del 5º Informe DIF Municipal.
       const esPublica =
         nextUrl.pathname.startsWith("/verano") ||
         nextUrl.pathname.startsWith("/informe")

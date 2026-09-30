@@ -1,12 +1,12 @@
 ﻿// =============================================================================
-//  Informe de la Sra. Karina — fuente única de verdad del evento.
+//  5º Informe DIF Municipal — fuente única de verdad del evento.
 //  De aquí se generan el formulario público, la validación, el panel de
 //  registros y la exportación a Excel.
 // =============================================================================
 
 export const EVENTO_INFORME = {
-  nombre: "Informe de la Sra. Karina",
-  titulo: "Registro de asistencia – Informe de la Sra. Karina",
+  nombre: "5º Informe DIF Municipal",
+  titulo: "Registro de asistencia – 5º Informe DIF Municipal",
   descripcion:
     "Este registro lo realiza únicamente el colaborador del DIF Municipal, una sola vez. Captura en este mismo formulario a todos los familiares que te acompañarán: no envíes un registro por cada uno.",
   /** Recordatorio dentro de la sección de familiares, donde ocurre el error. */
@@ -16,11 +16,10 @@ export const EVENTO_INFORME = {
     "Gracias por tu registro. Tu información ha sido recibida correctamente.",
   institucion: "DIF Municipal de Chihuahua",
   /**
-   * Fecha y sede del evento. Se quedan en null hasta que se confirmen: la
-   * página solo las muestra cuando tienen valor, para no publicar datos
-   * inventados. Formato de fecha: "2026-10-15" (ISO).
+   * Fecha y sede del evento. La página solo las muestra cuando tienen valor,
+   * para no publicar datos inventados. Formato de fecha ISO.
    */
-  fecha: null as string | null,
+  fecha: "2026-09-30" as string | null,
   sede: null as string | null,
 } as const
 

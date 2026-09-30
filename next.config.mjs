@@ -6,6 +6,16 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Las páginas y archivos públicos del Informe (registro, acomodo del staff,
+  // planos) se comparten por WhatsApp y contienen nombres: fuera de buscadores.
+  async headers() {
+    return [
+      {
+        source: "/informe/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+    ]
+  },
 }
 
 export default nextConfig

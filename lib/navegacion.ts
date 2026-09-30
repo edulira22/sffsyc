@@ -90,7 +90,7 @@ export const NAV_AREAS: AreaNav[] = [
         icono: Rocket,
       },
       {
-        titulo: "Informe de la Sra. Karina",
+        titulo: "5º Informe DIF Municipal",
         href: "/eventos/informe-karina",
         icono: Megaphone,
       },

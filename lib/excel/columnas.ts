@@ -169,7 +169,7 @@ export const ENTIDADES_EXCEL: Record<string, EntidadExcel> = {
   },
   "registros-informe": {
     id: "registros-informe",
-    titulo: "Registro de asistencia — Informe de la Sra. Karina",
+    titulo: "Registro de asistencia — 5º Informe DIF Municipal",
     hoja: "Registros Informe",
     descripcion:
       "Lista de acceso: un renglón por familiar invitado, con los datos del colaborador que lo registró.",

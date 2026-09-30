@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
 
-export const metadata = { title: "Informe de la Sra. Karina" }
+export const metadata = { title: "5º Informe DIF Municipal" }
 
 function fechaCorta(d: Date) {
   return new Date(d).toLocaleDateString("es-MX", {
@@ -73,10 +73,18 @@ export default async function InformeKarinaPage() {
         }
       />
 
-      <LigaPublica
-        ruta="/informe"
-        descripcion="Compártela con los colaboradores. No requiere iniciar sesión y pueden agregar los familiares que necesiten."
-      />
+      <div className="grid gap-3 lg:grid-cols-2">
+        <LigaPublica
+          ruta="/informe/staff"
+          titulo="Acomodo para el staff"
+          descripcion="Buscador de invitados por bloque, plano y guía en PDF. Compártela con el staff del evento; no requiere iniciar sesión."
+        />
+        <LigaPublica
+          ruta="/informe"
+          titulo="Registro de colaboradores"
+          descripcion="Compártela con los colaboradores. No requiere iniciar sesión y pueden agregar los familiares que necesiten."
+        />
+      </div>
 
       {registros.length === 0 ? (
         <div className="rounded-xl border border-dashed bg-muted/20 p-10 text-center">

@@ -399,7 +399,7 @@ model EncuestaPadresVerano {
   @@map("encuestas_padres_verano")
 }
 
-/// Registro de asistencia al Informe de la Sra. Karina.
+/// Registro de asistencia de colaboradores al 5º Informe DIF Municipal.
 /// Cada fila es un colaborador del DIF con su familiar invitado (uno por
 /// colaborador). Ver lib/eventos/informe.ts.
 model RegistroInforme {
@@ -421,6 +421,60 @@ model RegistroInforme {
 
   @@index([createdAt])
   @@map("registros_informe")
+}
+
+/// Bloque de sillas del acomodo del 5º Informe (A1…C12, MEDIOS).
+/// La geometría viene del proyecto de layout; `grupos` y `nota` son la
+/// asignación y pueden corregirse. Ver lib/eventos/informe-acomodo.ts.
+model InformeBloque {
+  id        String   @id
+  orden     Int
+  lugares   Int
+  /// Qué tipo de invitado va en el bloque.
+  grupos    String   @default("")
+  nota      String   @default("")
+  /// Path SVG de todas las sillas del bloque.
+  d         String
+  /// Posición de la etiqueta del bloque en el plano.
+  x         Float
+  y         Float
+  /// Sillas por fila, del templete hacia atrás.
+  filas     Json     @default("[]")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("informe_bloques")
+}
+
+/// Invitado del 5º Informe con el bloque donde se sienta.
+model InformeInvitado {
+  id         Int      @id @default(autoincrement())
+  nombre     String
+  titulo     String   @default("")
+  cargo      String   @default("")
+  grupo      String
+  /// ["A2"], varios ("B4","B5",…), ["POR REVISAR"] o vacío si es tejedora.
+  bloques    String[] @default([])
+  /// confirmado | no_asiste | sin_confirmar
+  asistencia String   @default("sin_confirmar")
+  nota       String   @default("")
+  tejedora   Boolean  @default(false)
+  estatus    String   @default("activo")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@index([estatus])
+  @@map("informe_invitados")
+}
+
+/// Archivos del 5º Informe que no deben vivir en el repositorio público
+/// (la guía del staff lista a los invitados confirmados).
+model InformeArchivo {
+  nombre    String   @id
+  tipo      String
+  contenido Bytes
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("informe_archivos")
 }
 
 model UsuarioSistema {
