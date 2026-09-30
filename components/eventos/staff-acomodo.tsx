@@ -546,9 +546,9 @@ function TarjetaPersona({
       <div
         className={cn(
           "flex min-w-[58px] shrink-0 flex-col items-center justify-center rounded-lg px-1.5 py-2 text-center text-[15px] font-extrabold leading-tight text-white",
-          !confirmado
-            ? "bg-slate-400"
-            : p.tejedora
+          // Confirmados y no confirmados comparten el mismo tono; la
+          // diferencia solo se indica con la etiqueta junto al nombre.
+          p.tejedora
               ? "bg-agua"
               : reales.length === 0
                 ? "bg-amber-500"
@@ -584,10 +584,8 @@ function TarjetaPersona({
     </>
   )
 
-  const clases = cn(
-    "flex w-full items-center gap-3 rounded-xl border border-border bg-white p-3 text-left",
-    !confirmado && "opacity-55"
-  )
+  const clases =
+    "flex w-full items-center gap-3 rounded-xl border border-border bg-white p-3 text-left"
 
   return destino ? (
     <button
