@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils"
 import {
   CONFIRMADOS_SIN_NOMBRE,
   PLANO_INFORME,
+  ZONAS_INFORME,
   POR_REVISAR,
   dondeVa,
   labelAsistencia,
@@ -25,13 +26,13 @@ import {
 
 // Réplica de la app del staff del proyecto de layout (paginas/app_staff.html)
 // con el diseño de la plataforma. Solo lectura. La navegación usa el hash de
-// la URL (#A2, #tejedoras) para que el botón "atrás" del celular funcione y
+// la URL (#A2, #por-revisar) para que el botón "atrás" del celular funcione y
 // cualquier bloque se pueda compartir con un enlace directo.
 
 type Vista =
   | { tipo: "inicio" }
   | { tipo: "bloque"; id: string }
-  | { tipo: "grupo"; id: "tejedoras" | "por-revisar" }
+  | { tipo: "grupo"; id: "por-revisar" }
 
 const MAX_RESULTADOS = 60
 
@@ -41,6 +42,8 @@ const C = {
   bloqueApagado: "#D3D9E0",
   templete: "#2E8B7A", // agua
   marco: "#D8DEE4",
+  zona: "#F59E0B", // ámbar: zonas que no son bloques (porra)
+  zonaTexto: "#78350F",
   etiqueta: "#0F172A",
   etiquetaSuave: "#64748B",
   halo: "#FFFFFF",
@@ -48,7 +51,7 @@ const C = {
 
 function vistaDeHash(bloques: BloqueAcomodo[]): Vista {
   const h = decodeURIComponent(window.location.hash.replace(/^#/, ""))
-  if (h === "tejedoras" || h === "por-revisar") return { tipo: "grupo", id: h }
+  if (h === "por-revisar") return { tipo: "grupo", id: h }
   if (h && bloques.some((b) => b.id === h)) return { tipo: "bloque", id: h }
   return { tipo: "inicio" }
 }
@@ -284,6 +287,31 @@ function Plano({
           </g>
         )
       })}
+      {/* Zonas de referencia (no son bloques de invitados) */}
+      {ZONAS_INFORME.map((z) => (
+        <g key={z.id}>
+          <circle
+            cx={z.x}
+            cy={z.y}
+            r={z.r}
+            fill={C.zona}
+            fillOpacity={0.3}
+            stroke={C.zona}
+            strokeWidth={0.35}
+          />
+          <text
+            x={z.x}
+            y={z.y}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fontSize={1.9}
+            fontWeight={800}
+            fill={C.zonaTexto}
+          >
+            {z.nombre.toUpperCase()}
+          </text>
+        </g>
+      ))}
     </svg>
   )
 }
@@ -310,7 +338,16 @@ function Inicio({
             <span className="size-2.5 rounded-sm" style={{ background: C.bloque }} />
             Sillas
           </span>
+          <span className="flex items-center gap-1.5">
+            <span className="size-2.5 rounded-full" style={{ background: C.zona }} />
+            Porra
+          </span>
         </p>
+        {ZONAS_INFORME.map((z) => (
+          <p key={z.id} className="mt-1 text-center text-[11px] text-muted-foreground">
+            <span className="font-semibold text-foreground">{z.nombre}:</span> {z.descripcion}
+          </p>
+        ))}
       </div>
 
       <section>
@@ -333,14 +370,6 @@ function Inicio({
               </span>
             </button>
           ))}
-          <button
-            type="button"
-            onClick={() => onIr({ tipo: "grupo", id: "tejedoras" })}
-            className="rounded-xl border-[1.5px] border-agua/40 bg-agua/[0.05] px-1 py-3 text-center transition-colors hover:border-agua"
-          >
-            <span className="block text-[17px] font-extrabold text-agua-700">TEJ.</span>
-            <span className="block text-xs text-muted-foreground">Tejedoras</span>
-          </button>
           <button
             type="button"
             onClick={() => onIr({ tipo: "grupo", id: "por-revisar" })}
@@ -506,10 +535,9 @@ function TarjetaPersona({
   const confirmado = p.asistencia === "confirmado"
   const reales = p.bloques.filter((b) => b !== POR_REVISAR)
 
-  // A dónde lleva el toque: su bloque, Tejedoras o Por revisar.
+  // A dónde lleva el toque: su bloque o Por revisar.
   let destino: Vista | null = null
-  if (p.tejedora) destino = { tipo: "grupo", id: "tejedoras" }
-  else if (p.bloques.length === 1 && p.bloques[0] === POR_REVISAR)
+  if (p.bloques.length === 1 && p.bloques[0] === POR_REVISAR)
     destino = { tipo: "grupo", id: "por-revisar" }
   else if (reales.length === 1) destino = { tipo: "bloque", id: reales[0] }
 
@@ -649,33 +677,28 @@ function VistaBloque({
         <ListaPersonas
           personas={confirmados}
           vacio="Sin confirmados con nombre en este bloque."
-          detalle={(p) => p.cargo || p.grupo}
+          detalle={(p) => [p.cargo || p.grupo, p.nota].filter(Boolean).join(" · ")}
         />
       </section>
     </div>
   )
 }
 
-// --- Tejedoras / Por revisar -------------------------------------------------
+// --- Por revisar -------------------------------------------------------------
+// (Las tejedoras ya no van aparte: se sientan al final de la fila de A1.)
 
 function VistaGrupo({
-  id,
   invitados,
   onVolver,
   aResultados,
 }: {
-  id: "tejedoras" | "por-revisar"
+  id: "por-revisar"
   invitados: InvitadoAcomodo[]
   onVolver: () => void
   aResultados: boolean
 }) {
-  const esTejedoras = id === "tejedoras"
   const personas = invitados
-    .filter(
-      (p) =>
-        p.asistencia === "confirmado" &&
-        (esTejedoras ? p.tejedora : p.bloques.includes(POR_REVISAR))
-    )
+    .filter((p) => p.asistencia === "confirmado" && p.bloques.includes(POR_REVISAR))
     .sort((a, c) => a.nombre.localeCompare(c.nombre, "es"))
 
   return (
@@ -684,26 +707,22 @@ function VistaGrupo({
 
       <div>
         <h1 className="text-2xl font-extrabold tracking-tight text-foreground">
-          {esTejedoras ? "Tejedoras" : "Por revisar"}{" "}
+          Por revisar{" "}
           <span className="text-lg font-semibold text-muted-foreground">
             ({personas.length})
           </span>
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {esTejedoras
-            ? "Grupo de amigas de la Directora del DIF. Van aparte, sin bloque asignado."
-            : "Confirmados cuyo grupo aún no tiene bloque asignado. Consulta con coordinación dónde acomodarlos."}
+          Confirmados cuyo grupo aún no tiene bloque asignado. Consulta con
+          coordinación dónde acomodarlos.
         </p>
       </div>
 
       <ListaPersonas
         personas={personas}
         vacio="Nadie en esta lista."
-        // En Tejedoras el grupo es el mismo para todas: solo aporta el cargo.
         // En Por revisar el grupo es justo lo que hay que resolver.
-        detalle={(p) =>
-          esTejedoras ? p.cargo : [p.cargo, p.grupo].filter(Boolean).join(" · ")
-        }
+        detalle={(p) => [p.cargo, p.grupo].filter(Boolean).join(" · ")}
       />
     </div>
   )

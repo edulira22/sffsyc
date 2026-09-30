@@ -203,7 +203,6 @@ export function AcomodoEditor({
               </option>
             ))}
             <option value="por-revisar">Por revisar</option>
-            <option value="tejedoras">Tejedoras</option>
           </select>
           <Button variant="outline" className="gap-2" onClick={() => setMoviendo(true)}>
             <ArrowRightLeft className="size-4" />
@@ -442,7 +441,8 @@ function DialogoInvitado({
     bloques: invitado?.bloques ?? [],
     asistencia: (invitado?.asistencia as AsistenciaInforme) ?? "confirmado",
     nota: invitado?.nota ?? "",
-    tejedora: invitado?.tejedora ?? false,
+    // Las tejedoras ya no van aparte (se sientan en A1): siempre con bloque.
+    tejedora: false,
   })
   const [guardando, setGuardando] = useState(false)
 
@@ -522,28 +522,15 @@ function DialogoInvitado({
           </Campo>
 
           <Campo etiqueta="Dónde se sienta">
-            <label className="mb-2 flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={f.tejedora}
-                onChange={(e) => setF({ ...f, tejedora: e.target.checked })}
-                className="size-4 accent-agua"
-              />
-              Es tejedora (va aparte, sin bloque)
-            </label>
-            {!f.tejedora && (
-              <>
-                <SelectorBloques
-                  bloques={bloques}
-                  valor={f.bloques}
-                  onChange={(b) => setF({ ...f, bloques: b })}
-                  permitirPorRevisar
-                />
-                <p className="mt-1.5 text-xs text-muted-foreground">
-                  Puedes elegir varios: el staff lo manda al que tenga lugar.
-                </p>
-              </>
-            )}
+            <SelectorBloques
+              bloques={bloques}
+              valor={f.bloques}
+              onChange={(b) => setF({ ...f, bloques: b, tejedora: false })}
+              permitirPorRevisar
+            />
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              Puedes elegir varios: el staff lo manda al que tenga lugar.
+            </p>
           </Campo>
 
           <Campo etiqueta="Nota (opcional)">
