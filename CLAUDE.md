@@ -20,6 +20,8 @@ npm run db:migrate   # Create and apply a migration (uses DIRECT_URL)
 
 **Applying schema changes**: the Vercel build runs `prisma generate` (not `migrate`), so new tables/columns must be created in the DB separately. For additive, non-destructive changes the safe pattern is a SQL file in `prisma/sql/` applied with `npx prisma db execute --file <f>.sql --schema prisma/schema.prisma` (uses `CREATE ... IF NOT EXISTS`), then `npx prisma generate` to refresh the client types. Avoid `prisma migrate dev` against Supabase (shadow-DB/drift risk).
 
+**Every new table must enable Row-Level Security** in the same SQL file: `ALTER TABLE public.<tabla> ENABLE ROW LEVEL SECURITY;` with no policies. Supabase exposes the `public` schema through its REST API (PostgREST); without RLS the `anon` role can read, insert and delete rows (Security Advisor error `rls_disabled_in_public`). The app is unaffected because Prisma connects as `postgres`, which has BYPASSRLS, and nothing uses `supabase-js`. See `prisma/sql/rls_tablas_eventos.sql`.
+
 ## Stack
 
 - **Next.js 14** App Router (no Pages Router anywhere)
