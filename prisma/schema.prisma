@@ -477,6 +477,106 @@ model InformeArchivo {
   @@map("informe_archivos")
 }
 
+/// Oficio recibido por la Subdirección. Folio interno OF{aa}-{consecutivo},
+/// reinicia por año. Catálogos y reglas en lib/oficios/catalogos.ts.
+model Oficio {
+  id                Int       @id @default(autoincrement())
+  anio              Int
+  consecutivo       Int
+  /// Número del oficio según el remitente (el que se cita al responder).
+  numeroOficio      String    @default("") @map("numero_oficio")
+  /// Número anotado a mano al recibirlo, si lo hay.
+  numeroRecepcion   String    @default("") @map("numero_recepcion")
+  fechaDocumento    DateTime? @map("fecha_documento") @db.Date
+  fechaRecepcion    DateTime  @default(now()) @map("fecha_recepcion") @db.Date
+  remitente         String    @default("")
+  cargoRemitente    String    @default("") @map("cargo_remitente")
+  dependencia       String    @default("")
+  dirigidoA         String    @default("") @map("dirigido_a")
+  tipo              String    @default("solicitud")
+  asunto            String    @default("")
+  /// Detalles útiles: fechas, horarios, sedes, montos, contactos.
+  resumen           String    @default("")
+  areaResponsable   String    @default("por_definir") @map("area_responsable")
+  prioridad         String    @default("normal")
+  /// recibido | turnado | en_proceso | atendido | archivado
+  estado            String    @default("recibido")
+  requiereRespuesta Boolean   @default(true) @map("requiere_respuesta")
+  fechaLimite       DateTime? @map("fecha_limite") @db.Date
+  respuestaNumero   String    @default("") @map("respuesta_numero")
+  respuestaFecha    DateTime? @map("respuesta_fecha") @db.Date
+  /// Una persona confirmó los datos (la IA solo propone).
+  revisado          Boolean   @default(false)
+  /// pendiente | leido | error | sin_ia
+  iaEstado          String    @default("pendiente") @map("ia_estado")
+  iaCamposDudosos   String[]  @default([]) @map("ia_campos_dudosos")
+  iaObservacion     String    @default("") @map("ia_observacion")
+  creadoPorId       Int?      @map("creado_por_id")
+  creadoPorNombre   String    @default("") @map("creado_por_nombre")
+  estatus           String    @default("activo")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  archivo     OficioArchivo?
+  movimientos OficioMovimiento[]
+  lecturas    OficioLectura[]
+
+  @@unique([anio, consecutivo], map: "oficios_folio_unico")
+  @@index([estado])
+  @@index([fechaRecepcion])
+  @@map("oficios")
+}
+
+model OficioArchivo {
+  oficioId       Int      @id @map("oficio_id")
+  nombreOriginal String   @map("nombre_original")
+  tipo           String
+  tamano         Int
+  contenido      Bytes
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  oficio Oficio @relation(fields: [oficioId], references: [id])
+
+  @@map("oficios_archivos")
+}
+
+/// Bitácora de seguimiento de un oficio. Solo se agregan renglones.
+model OficioMovimiento {
+  id            Int      @id @default(autoincrement())
+  oficioId      Int      @map("oficio_id")
+  tipo          String
+  descripcion   String   @default("")
+  usuarioId     Int?     @map("usuario_id")
+  usuarioNombre String   @default("") @map("usuario_nombre")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  oficio Oficio @relation(fields: [oficioId], references: [id])
+
+  @@index([oficioId])
+  @@map("oficios_movimientos")
+}
+
+/// Una llamada a la IA para leer un oficio, con tokens y costo estimado.
+model OficioLectura {
+  id                   Int      @id @default(autoincrement())
+  oficioId             Int?     @map("oficio_id")
+  modelo               String
+  tokensEntrada        Int      @default(0) @map("tokens_entrada")
+  tokensSalida         Int      @default(0) @map("tokens_salida")
+  tokensCacheLectura   Int      @default(0) @map("tokens_cache_lectura")
+  tokensCacheEscritura Int      @default(0) @map("tokens_cache_escritura")
+  costoUsd             Float    @default(0) @map("costo_usd")
+  exito                Boolean
+  error                String   @default("")
+  duracionMs           Int      @default(0) @map("duracion_ms")
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  oficio Oficio? @relation(fields: [oficioId], references: [id])
+
+  @@index([createdAt])
+  @@map("oficios_lecturas")
+}
+
 model UsuarioSistema {
   id               Int            @id @default(autoincrement())
   nombre           String

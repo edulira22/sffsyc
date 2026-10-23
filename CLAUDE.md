@@ -128,6 +128,12 @@ Coordinadoras are assigned to zonas and centros but are separate from system use
 
 `autorizados` (up to 3 pickup contacts) is stored as a `Json`/`jsonb` column, typed as `AutorizadoVerano[]` in `lib/data/verano.ts`.
 
+### Oficios module
+
+Bitácora of incoming official letters (`/oficios`, authenticated). `lib/oficios/catalogos.ts` is the single source of truth (estados, áreas responsables, tipos, prioridades, `folioOficio` → `OF26-0001`, plazo `semaforo`). The folio is assigned when the scan is uploaded (`registrarOficio`), restarts each year, and is never reused — a mistaken upload is annulled (`estatus = "baja"`), never deleted. Scans live in `oficios_archivos` (bytea, ≤4 MB; images are downscaled in the browser to ≤1568 px) and are served by `app/api/oficios/[id]/archivo/route.ts`, which checks the session itself. Every change writes a row to `oficios_movimientos` (the accountability trail).
+
+AI reading (`lib/oficios/ia.ts`) uses the Anthropic SDK with structured outputs (`client.beta.messages.parse` + `betaZodOutputFormat`). The AI only **proposes**; a person confirms (`revisado`). Every call is logged with tokens and estimated cost in `oficios_lecturas`, and a monthly cap blocks further calls. Env vars: `ANTHROPIC_API_KEY` (without it the module works with manual capture), optional `OFICIOS_MODELO` (default `claude-opus-5-5`), `OFICIOS_ESFUERZO` (default `low`), `OFICIOS_TOPE_MENSUAL_USD` (default 15). Pages that trigger AI reads export `maxDuration = 60`; `next.config.mjs` raises the Server Action body limit to 5 MB.
+
 ## Key constraints (do not change without reason)
 
 - `prisma/schema.prisma`: records are never deleted — all have an `estatus` field. Age is never stored — always calculated from `fechaNacimiento`.

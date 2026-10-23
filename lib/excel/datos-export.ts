@@ -5,6 +5,14 @@ import { ESCOLARIDAD_LABEL } from "@/lib/schemas/beneficiario"
 import { folioVerano, grupoPorId, TOTAL_DOCUMENTOS } from "@/lib/eventos/verano"
 import { PREGUNTAS_ENCUESTA, labelDeValor } from "@/lib/eventos/encuesta-padres"
 import { labelParentesco, type InvitadoInforme } from "@/lib/eventos/informe"
+import {
+  AREAS_OFICIO,
+  ESTADOS_OFICIO,
+  PRIORIDADES_OFICIO,
+  TIPOS_OFICIO,
+  folioOficio,
+  label,
+} from "@/lib/oficios/catalogos"
 import type { AutorizadoVerano } from "@/lib/data/verano"
 
 // Convierte los registros de la base de datos al formato legible de las columnas
@@ -143,6 +151,39 @@ export async function obtenerFilasExport(
           motivoBaja:       i.motivoBaja ?? "",
         }
       })
+    }
+    case "oficios": {
+      const filas = await prisma.oficio.findMany({
+        where: { estatus: "activo" },
+        orderBy: [{ anio: "asc" }, { consecutivo: "asc" }],
+        select: {
+          anio: true, consecutivo: true, fechaRecepcion: true, numeroOficio: true, numeroRecepcion: true,
+          fechaDocumento: true, remitente: true, cargoRemitente: true, dependencia: true, tipo: true,
+          asunto: true, resumen: true, areaResponsable: true, prioridad: true, estado: true,
+          fechaLimite: true, respuestaNumero: true, respuestaFecha: true, revisado: true,
+        },
+      })
+      const f = (d: Date | null) => (d ? formatoFecha(d) : "")
+      return filas.map((o) => ({
+        folio: folioOficio(o.anio, o.consecutivo),
+        fechaRecepcion: f(o.fechaRecepcion),
+        numeroOficio: o.numeroOficio,
+        numeroRecepcion: o.numeroRecepcion,
+        fechaDocumento: f(o.fechaDocumento),
+        remitente: o.remitente,
+        cargoRemitente: o.cargoRemitente,
+        dependencia: o.dependencia,
+        tipo: label(TIPOS_OFICIO, o.tipo),
+        asunto: o.asunto,
+        resumen: o.resumen,
+        areaResponsable: label(AREAS_OFICIO, o.areaResponsable),
+        prioridad: label(PRIORIDADES_OFICIO, o.prioridad),
+        estado: label(ESTADOS_OFICIO, o.estado),
+        fechaLimite: f(o.fechaLimite),
+        respuestaNumero: o.respuestaNumero,
+        respuestaFecha: f(o.respuestaFecha),
+        revisado: o.revisado ? "Sí" : "No",
+      }))
     }
     case "registros-informe": {
       const filas = await prisma.registroInforme.findMany({

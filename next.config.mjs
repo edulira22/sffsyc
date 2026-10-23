@@ -6,6 +6,11 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Los oficios escaneados se suben por Server Action (hasta 4 MB; Vercel
+  // acepta 4.5 MB por petición). El límite por defecto es 1 MB.
+  experimental: {
+    serverActions: { bodySizeLimit: "5mb" },
+  },
   // Las páginas y archivos públicos del Informe (registro, acomodo del staff,
   // planos) se comparten por WhatsApp y contienen nombres: fuera de buscadores.
   async headers() {

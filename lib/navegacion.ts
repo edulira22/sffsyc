@@ -11,6 +11,9 @@ import {
   ClipboardList,
   Rocket,
   Megaphone,
+  Mail,
+  Inbox,
+  FilePlus2,
   type LucideIcon,
 } from "lucide-react"
 
@@ -68,6 +71,16 @@ export const NAV_AREAS: AreaNav[] = [
       { titulo: "Beneficiarios", href: "/beneficiarios", icono: Users },
       { titulo: "Catálogos", href: "/catalogos", icono: BookMarked },
       { titulo: "Importar / Exportar", href: "/datos", icono: FileSpreadsheet },
+    ],
+  },
+  {
+    id: "oficios",
+    titulo: "Oficios",
+    descripcion: "Bitácora de oficios recibidos, turnado y seguimiento",
+    icono: Mail,
+    modulos: [
+      { titulo: "Bandeja de oficios", href: "/oficios", icono: Inbox },
+      { titulo: "Registrar oficios", href: "/oficios/nuevo", icono: FilePlus2 },
     ],
   },
   {
