@@ -17,6 +17,7 @@ const CAMPOS_LISTA = {
   anio: true,
   consecutivo: true,
   numeroOficio: true,
+  numeroRecepcion: true,
   fechaRecepcion: true,
   remitente: true,
   dependencia: true,

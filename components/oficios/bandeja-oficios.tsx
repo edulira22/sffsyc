@@ -48,7 +48,7 @@ export function BandejaOficios({
     () =>
       oficios.map((o) => ({
         o,
-        texto: norm(`${o.folio} ${o.numeroOficio} ${o.remitente} ${o.dependencia} ${o.asunto}`),
+        texto: norm(`${o.folio} ${o.numeroOficio} ${o.numeroRecepcion} ${o.remitente} ${o.dependencia} ${o.asunto}`),
         sem: semaforo(o.estado, o.fechaLimite, hoy),
       })),
     [oficios, hoy]
