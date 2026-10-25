@@ -87,8 +87,8 @@ export function DetalleOficio({ oficio, hoy, iaDisponible }: { oficio: OficioDet
       setAviso(r.observacion)
       toast.success(
         r.guardado
-          ? "Datos leídos con IA. Revísalos y confirma."
-          : "Propuesta de la IA cargada en el formulario. Revísala y guarda si es correcta."
+          ? "Datos leídos por Lirabot. Revísalos y confirma."
+          : "Propuesta de Lirabot cargada en el formulario. Revísala y guarda si es correcta."
       )
       if (r.guardado) router.refresh()
     } finally {
@@ -200,7 +200,7 @@ export function DetalleOficio({ oficio, hoy, iaDisponible }: { oficio: OficioDet
               {iaDisponible && (
                 <Button variant="outline" size="sm" className="gap-1.5" disabled={ocupado === "leer"} onClick={releer}>
                   {ocupado === "leer" ? <Loader2 className="size-3.5 animate-spin" /> : oficio.iaEstado === "leido" ? <RotateCw className="size-3.5" /> : <Sparkles className="size-3.5" />}
-                  {oficio.iaEstado === "leido" ? "Leer de nuevo con IA" : "Leer con IA"}
+                  {oficio.iaEstado === "leido" ? "Que Lirabot lo lea de nuevo" : "Leer con Lirabot"}
                 </Button>
               )}
             </div>
@@ -261,7 +261,7 @@ export function DetalleOficio({ oficio, hoy, iaDisponible }: { oficio: OficioDet
             </ol>
             {oficio.lecturas.length > 0 && (
               <p className="mt-4 border-t pt-3 text-[11px] text-muted-foreground">
-                Lecturas con IA: {oficio.lecturas.length} · costo total US${" "}
+                Lecturas de Lirabot: {oficio.lecturas.length} · costo total US${" "}
                 {oficio.lecturas.reduce((a, l) => a + l.costoUsd, 0).toFixed(4)}
               </p>
             )}

@@ -211,7 +211,7 @@ export function CapturaOficios({ hoy, iaDisponible }: { hoy: string; iaDisponibl
       {!iaDisponible && (
         <div className="flex gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
           <AlertTriangle className="mt-0.5 size-4 shrink-0" />
-          La lectura con IA no está activa (falta configurar la clave de Claude). Puedes registrar los oficios y
+          Lirabot todavía no está activo (falta configurar su clave). Puedes registrar los oficios y
           capturar sus datos a mano.
         </div>
       )}
@@ -316,7 +316,7 @@ export function CapturaOficios({ hoy, iaDisponible }: { hoy: string; iaDisponibl
               <Button className="w-full gap-2 bg-agua hover:bg-agua-600" disabled={procesando} onClick={procesar}>
                 {procesando ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
                 Registrar {enCola} {enCola === 1 ? "oficio" : "oficios"}
-                {iaDisponible ? " y leer con IA" : ""}
+                {iaDisponible ? " y que Lirabot los lea" : ""}
               </Button>
             )}
             {confirmados > 0 && confirmados === items.length && (
@@ -336,7 +336,7 @@ export function CapturaOficios({ hoy, iaDisponible }: { hoy: string; iaDisponibl
                     <h2 className="text-lg font-bold text-foreground">{actual.folio}</h2>
                     <p className="text-xs text-muted-foreground">
                       Compara los datos con el escaneo y confirma.
-                      {actual.costoUsd !== undefined && ` Lectura IA: US$ ${actual.costoUsd.toFixed(4)}.`}
+                      {actual.costoUsd !== undefined && ` Lectura de Lirabot: US$ ${actual.costoUsd.toFixed(4)}.`}
                     </p>
                   </div>
                   {iaDisponible && actual.estado !== "leyendo" && actual.estado !== "confirmado" && (
@@ -348,7 +348,7 @@ export function CapturaOficios({ hoy, iaDisponible }: { hoy: string; iaDisponibl
 
                 {actual.estado === "leyendo" ? (
                   <div className="flex items-center gap-2 rounded-xl bg-violet-50 p-4 text-sm text-violet-800">
-                    <Loader2 className="size-4 animate-spin" /> La IA está leyendo el oficio…
+                    <Loader2 className="size-4 animate-spin" /> Lirabot está leyendo el oficio…
                   </div>
                 ) : (
                   <>
@@ -357,7 +357,7 @@ export function CapturaOficios({ hoy, iaDisponible }: { hoy: string; iaDisponibl
                     )}
                     {(actual.observacion || actual.dudosos.length > 0) && (
                       <p className="mb-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                        {actual.observacion || "La IA marcó algunos campos para verificar."}
+                        {actual.observacion || "Lirabot marcó algunos campos para verificar."}
                       </p>
                     )}
                     <CamposOficio

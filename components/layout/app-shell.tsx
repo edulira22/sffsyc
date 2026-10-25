@@ -64,7 +64,7 @@ export function AppShell({
         </SheetContent>
       </Sheet>
 
-      <div className="flex min-h-screen flex-1 flex-col md:pl-64 print:pl-0">
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col md:pl-64 print:pl-0">
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-white px-4 sm:px-6 print:hidden">
           <div className="flex items-center gap-3">
             <Button
@@ -81,7 +81,7 @@ export function AppShell({
           <UserMenu nombre={usuario.nombre} email={usuario.email} />
         </header>
 
-        <main className="flex-1 bg-superficie p-4 sm:p-6 lg:p-8 print:bg-white print:p-0">{children}</main>
+        <main className="min-w-0 flex-1 bg-superficie p-4 sm:p-6 lg:p-8 print:bg-white print:p-0">{children}</main>
       </div>
     </div>
   )

@@ -162,7 +162,7 @@ export async function leerOficio(id: number): Promise<
         movimientos: {
           create: {
             tipo: "lectura_ia",
-            descripcion: `Datos propuestos por IA (${r.modelo}, ${costoTxt}).`,
+            descripcion: `Datos propuestos por Lirabot (${r.modelo}, ${costoTxt}).`,
             usuarioId: u.id,
             usuarioNombre: u.nombre,
           },
@@ -175,7 +175,7 @@ export async function leerOficio(id: number): Promise<
       data: {
         oficioId: id,
         tipo: "lectura_ia",
-        descripcion: `Se volvió a leer con IA (${r.modelo}, ${costoTxt}); la propuesta no se aplicó automáticamente.`,
+        descripcion: `Lirabot volvió a leer el oficio (${r.modelo}, ${costoTxt}); la propuesta no se aplicó automáticamente.`,
         usuarioId: u.id,
         usuarioNombre: u.nombre,
       },

@@ -21,7 +21,7 @@ export default async function NuevoOficioPage() {
       </Link>
       <PageHeader
         titulo="Registrar oficios"
-        descripcion="Sube los escaneos: cada uno recibe su folio, la IA propone los datos y tú los confirmas."
+        descripcion="Sube los escaneos: cada uno recibe su folio, Lirabot propone los datos y tú los confirmas."
       />
       <CapturaOficios hoy={hoyChihuahua()} iaDisponible={iaDisponible()} />
     </div>

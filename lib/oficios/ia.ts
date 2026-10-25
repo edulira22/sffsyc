@@ -178,23 +178,23 @@ export type ResultadoLectura =
 
 function mensajeError(e: unknown): string {
   if (e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError) {
-    return "La clave de la API de Claude no es válida. Revisa ANTHROPIC_API_KEY."
+    return "La clave de Lirabot no es válida. Revisa ANTHROPIC_API_KEY."
   }
   if (e instanceof Anthropic.RateLimitError) {
-    return "La IA recibió demasiadas solicitudes. Espera un minuto y vuelve a intentar."
+    return "Lirabot recibió demasiadas solicitudes. Espera un minuto y vuelve a intentar."
   }
   if (e instanceof Anthropic.APIConnectionTimeoutError) {
-    return "La IA tardó demasiado en responder. Vuelve a intentar."
+    return "Lirabot tardó demasiado en responder. Vuelve a intentar."
   }
   if (e instanceof Anthropic.BadRequestError) {
-    return "La IA no pudo procesar el archivo (¿está dañado o protegido?)."
+    return "Lirabot no pudo procesar el archivo (¿está dañado o protegido?)."
   }
   if (e instanceof Anthropic.APIError) {
     return e.status === 529 || (e.status ?? 0) >= 500
-      ? "El servicio de IA está saturado en este momento. Vuelve a intentar en unos minutos."
-      : `Error de la IA (${e.status ?? "sin estado"}).`
+      ? "Lirabot está saturado en este momento. Vuelve a intentar en unos minutos."
+      : `Error de Lirabot (${e.status ?? "sin estado"}).`
   }
-  return "No se pudo leer el oficio con IA."
+  return "Lirabot no pudo leer el oficio."
 }
 
 /**
@@ -208,13 +208,13 @@ export async function leerOficioConClaude(params: {
   datos: Uint8Array
 }): Promise<ResultadoLectura> {
   if (!iaDisponible()) {
-    return { ok: false, error: "La lectura con IA no está configurada (falta ANTHROPIC_API_KEY). Captura los datos a mano." }
+    return { ok: false, error: "Lirabot no está configurado (falta ANTHROPIC_API_KEY). Captura los datos a mano." }
   }
   const gastado = await gastoDelMes()
   if (gastado >= TOPE_MENSUAL_USD) {
     return {
       ok: false,
-      error: `Se alcanzó el tope mensual de IA (US$ ${TOPE_MENSUAL_USD.toFixed(2)}). Captura los datos a mano o sube el tope.`,
+      error: `Se alcanzó el tope mensual de Lirabot (US$ ${TOPE_MENSUAL_USD.toFixed(2)}). Captura los datos a mano o sube el tope.`,
     }
   }
 
@@ -265,9 +265,9 @@ export async function leerOficioConClaude(params: {
     }
 
     let error = ""
-    if (resp.stop_reason === "refusal") error = "La IA no procesó este documento."
-    else if (resp.stop_reason === "max_tokens") error = "La respuesta de la IA quedó incompleta."
-    else if (!resp.parsed_output) error = "La IA devolvió datos con formato inválido."
+    if (resp.stop_reason === "refusal") error = "Lirabot no procesó este documento."
+    else if (resp.stop_reason === "max_tokens") error = "La respuesta de Lirabot quedó incompleta."
+    else if (!resp.parsed_output) error = "Lirabot devolvió datos con formato inválido."
 
     await prisma.oficioLectura.create({ data: { ...base, exito: !error, error } })
     if (error || !resp.parsed_output) return { ok: false, error: error || "Sin datos." }

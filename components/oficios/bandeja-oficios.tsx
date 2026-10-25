@@ -170,10 +170,10 @@ export function BandejaOficios({
           </span>
           <span className="min-w-0">
             <span className="block text-sm font-bold tabular-nums text-foreground">
-              {resumen.ia.disponible ? `US$ ${resumen.ia.gastoMesUsd.toFixed(2)}` : "IA inactiva"}
+              {resumen.ia.disponible ? `US$ ${resumen.ia.gastoMesUsd.toFixed(2)}` : "Lirabot inactivo"}
             </span>
             <span className="block text-[11px] leading-tight text-muted-foreground">
-              {resumen.ia.disponible ? `IA este mes · tope US$ ${resumen.ia.topeMesUsd}` : "Captura manual"}
+              {resumen.ia.disponible ? `Lirabot este mes · tope US$ ${resumen.ia.topeMesUsd}` : "Captura manual"}
               {` · ${resumen.recibidosMes} recibidos este mes`}
             </span>
           </span>

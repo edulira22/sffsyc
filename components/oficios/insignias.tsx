@@ -65,7 +65,7 @@ export function RevisionBadge({ revisado, iaEstado }: { revisado: boolean; iaEst
   return (
     <span className="inline-flex items-center gap-1 rounded-full bg-violet-50 px-2 py-0.5 text-[11px] font-semibold text-violet-700">
       <Sparkles className="size-3" />
-      {iaEstado === "leido" ? "Por revisar (IA)" : "Por capturar"}
+      {iaEstado === "leido" ? "Por revisar (Lirabot)" : "Por capturar"}
     </span>
   )
 }
