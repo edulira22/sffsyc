@@ -23,6 +23,7 @@ const CAMPOS_LISTA = {
   dependencia: true,
   tipo: true,
   asunto: true,
+  resumen: true,
   areaResponsable: true,
   prioridad: true,
   estado: true,
@@ -30,6 +31,7 @@ const CAMPOS_LISTA = {
   fechaLimite: true,
   revisado: true,
   iaEstado: true,
+  archivo: { select: { tipo: true } },
 } as const
 
 export async function listarOficios(anio?: number) {
@@ -38,8 +40,9 @@ export async function listarOficios(anio?: number) {
     orderBy: [{ anio: "desc" }, { consecutivo: "desc" }],
     select: CAMPOS_LISTA,
   })
-  return filas.map((o) => ({
+  return filas.map(({ archivo, ...o }) => ({
     ...o,
+    tieneArchivo: archivo !== null,
     folio: folioOficio(o.anio, o.consecutivo),
     fechaRecepcion: aISO(o.fechaRecepcion)!,
     fechaLimite: aISO(o.fechaLimite),
