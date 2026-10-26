@@ -8,6 +8,8 @@ import {
   ArrowDownWideNarrow,
   ArrowUpWideNarrow,
   ChevronDown,
+  LayoutGrid,
+  List,
   Clock,
   ExternalLink,
   FileText,
@@ -30,6 +32,7 @@ import {
 } from "@/lib/oficios/catalogos"
 import type { OficioListado, ResumenOficios } from "@/lib/data/oficios"
 import { EstadoBadge, PlazoBadge, PrioridadTexto, RevisionBadge } from "@/components/oficios/insignias"
+import { TableroOficios } from "@/components/oficios/tablero-oficios"
 
 type Vista = "todos" | "pendientes" | "vencidos" | "por_vencer" | "sin_revisar" | string
 
@@ -62,12 +65,20 @@ export function BandejaOficios({
 }) {
   const router = useRouter()
   const params = useSearchParams()
+  const [modo, setModo] = useState<"tablero" | "lista">("tablero")
   const [vista, setVista] = useState<Vista>("todos")
   const [area, setArea] = useState("")
   const [mes, setMes] = useState("")
   const [q, setQ] = useState("")
   const [recientes, setRecientes] = useState(true)
   const [abierto, setAbierto] = useState<number | null>(null)
+
+  function cambiarAnio(valor: string) {
+    const p = new URLSearchParams(params.toString())
+    p.set("anio", valor)
+    setMes("")
+    router.push(`/oficios?${p.toString()}`)
+  }
 
   const indice = useMemo(
     () =>
@@ -148,10 +159,13 @@ export function BandejaOficios({
             <button
               key={t.id}
               type="button"
-              onClick={() => setVista(vista === t.id ? "todos" : t.id)}
+              onClick={() => {
+                setModo("lista")
+                setVista(vista === t.id && modo === "lista" ? "todos" : t.id)
+              }}
               className={cn(
                 "flex items-center gap-3 rounded-xl border bg-white p-3 text-left transition-colors hover:border-gobierno/30",
-                vista === t.id && "border-gobierno ring-1 ring-gobierno/20"
+                modo === "lista" && vista === t.id && "border-gobierno ring-1 ring-gobierno/20"
               )}
             >
               <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-lg", t.color)}>
@@ -180,6 +194,40 @@ export function BandejaOficios({
         </div>
       </div>
 
+      {/* Tablero o lista */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex rounded-lg border bg-white p-0.5">
+          {([["tablero", "Tablero", LayoutGrid], ["lista", "Lista por mes", List]] as const).map(([id, t, Icono]) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setModo(id)}
+              className={cn(
+                "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                modo === id ? "bg-agua text-white" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Icono className="size-4" /> {t}
+            </button>
+          ))}
+        </div>
+        {anios.length > 1 && (
+          <select
+            value={anio}
+            onChange={(e) => cambiarAnio(e.target.value)}
+            className="h-9 rounded-md border border-input bg-white px-3 text-sm font-medium"
+            aria-label="Año"
+          >
+            {anios.map((a) => (
+              <option key={a} value={a}>{a}</option>
+            ))}
+          </select>
+        )}
+      </div>
+
+      {modo === "tablero" && <TableroOficios oficios={oficios} hoy={hoy} />}
+
+      {modo === "lista" && (<>
       {/* Último registrado */}
       {ultimo && (
         <Link
@@ -225,23 +273,6 @@ export function BandejaOficios({
                 <option key={a.valor} value={a.valor}>{a.label}</option>
               ))}
             </select>
-            {anios.length > 1 && (
-              <select
-                value={anio}
-                onChange={(e) => {
-                  const p = new URLSearchParams(params.toString())
-                  p.set("anio", e.target.value)
-                  setMes("")
-                  router.push(`/oficios?${p.toString()}`)
-                }}
-                className="h-10 rounded-md border border-input bg-white px-3 text-sm font-medium"
-                aria-label="Año"
-              >
-                {anios.map((a) => (
-                  <option key={a} value={a}>{a}</option>
-                ))}
-              </select>
-            )}
             <button
               type="button"
               onClick={() => setRecientes(!recientes)}
@@ -354,6 +385,7 @@ export function BandejaOficios({
           ))
         )}
       </div>
+      </>)}
     </div>
   )
 }

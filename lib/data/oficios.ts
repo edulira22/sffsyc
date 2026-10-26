@@ -43,6 +43,7 @@ export async function listarOficios(anio?: number) {
   return filas.map(({ archivo, ...o }) => ({
     ...o,
     tieneArchivo: archivo !== null,
+    archivoTipo: archivo?.tipo ?? null,
     folio: folioOficio(o.anio, o.consecutivo),
     fechaRecepcion: aISO(o.fechaRecepcion)!,
     fechaLimite: aISO(o.fechaLimite),
