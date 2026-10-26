@@ -6,7 +6,7 @@ import {
   hoyChihuahua,
   semaforo,
 } from "@/lib/oficios/catalogos"
-import { gastoDelMes, iaDisponible, MODELO_OFICIOS, TOPE_MENSUAL_USD } from "@/lib/oficios/ia"
+import { energiaLirabot } from "@/lib/oficios/ia"
 import type { OficioInput } from "@/lib/schemas/oficio"
 
 // Consultas de solo lectura del módulo Oficios. Nunca cargan los bytes del
@@ -60,14 +60,14 @@ export async function aniosConOficios(): Promise<number[]> {
 export async function resumenOficios() {
   const hoy = hoyChihuahua()
   const inicioMes = new Date(`${hoy.slice(0, 7)}-01T00:00:00Z`)
-  const [abiertos, recibidosMes, espacio, gasto] = await Promise.all([
+  const [abiertos, recibidosMes, espacio, energia] = await Promise.all([
     prisma.oficio.findMany({
       where: { estatus: "activo", estado: { in: ["recibido", "turnado", "en_proceso"] } },
       select: { estado: true, fechaLimite: true, revisado: true },
     }),
     prisma.oficio.count({ where: { estatus: "activo", fechaRecepcion: { gte: inicioMes } } }),
     prisma.oficioArchivo.aggregate({ _sum: { tamano: true } }),
-    gastoDelMes(),
+    energiaLirabot(),
   ])
   const semaforos = abiertos.map((o) => semaforo(o.estado, aISO(o.fechaLimite), hoy))
   const sinRevisar = await prisma.oficio.count({ where: { estatus: "activo", revisado: false } })
@@ -78,12 +78,7 @@ export async function resumenOficios() {
     sinRevisar,
     recibidosMes,
     espacioMB: Math.round(((espacio._sum.tamano ?? 0) / 1024 / 1024) * 10) / 10,
-    ia: {
-      disponible: iaDisponible(),
-      modelo: MODELO_OFICIOS,
-      gastoMesUsd: Math.round(gasto * 100) / 100,
-      topeMesUsd: TOPE_MENSUAL_USD,
-    },
+    energia,
   }
 }
 

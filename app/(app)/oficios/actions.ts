@@ -124,7 +124,7 @@ function propuestaDesdeIA(d: LecturaOficio, actual: OficioInput): OficioInput {
  * propuesta; si ya lo está, solo la devuelve para que la persona decida.
  */
 export async function leerOficio(id: number): Promise<
-  Ok<{ formulario: OficioInput; dudosos: string[]; observacion: string; guardado: boolean; costoUsd: number }> | Fallo
+  Ok<{ formulario: OficioInput; dudosos: string[]; observacion: string; guardado: boolean }> | Fallo
 > {
   const u = await usuario()
   const o = await prisma.oficio.findFirst({
@@ -147,7 +147,6 @@ export async function leerOficio(id: number): Promise<
   const formulario = propuestaDesdeIA(r.datos, aFormulario(o))
   const dudosos = r.datos.campos_dudosos
   const observacion = r.datos.observacion.trim()
-  const costoTxt = `US$ ${r.costoUsd.toFixed(4)}`
 
   if (!o.revisado) {
     const p = oficioSchema.parse(formulario)
@@ -161,7 +160,7 @@ export async function leerOficio(id: number): Promise<
         movimientos: {
           create: {
             tipo: "lectura_ia",
-            descripcion: `Datos propuestos por Lirabot (${r.modelo}, ${costoTxt}).`,
+            descripcion: "Datos propuestos por Lirabot.",
             usuarioId: u.id,
             usuarioNombre: u.nombre,
           },
@@ -174,14 +173,14 @@ export async function leerOficio(id: number): Promise<
       data: {
         oficioId: id,
         tipo: "lectura_ia",
-        descripcion: `Lirabot volvió a leer el oficio (${r.modelo}, ${costoTxt}); la propuesta no se aplicó automáticamente.`,
+        descripcion: "Lirabot volvió a leer el oficio; la propuesta no se aplicó automáticamente.",
         usuarioId: u.id,
         usuarioNombre: u.nombre,
       },
     })
   }
 
-  return { ok: true, formulario, dudosos, observacion, guardado: !o.revisado, costoUsd: r.costoUsd }
+  return { ok: true, formulario, dudosos, observacion, guardado: !o.revisado }
 }
 
 // --- Guardar datos ------------------------------------------------------------

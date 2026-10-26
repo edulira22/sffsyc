@@ -19,7 +19,8 @@
 //   ANTHROPIC_API_KEY          obligatoria para usar la IA
 //   OFICIOS_MODELO             por defecto claude-opus-5-5
 //   OFICIOS_ESFUERZO           low | medium | high (por defecto low)
-//   OFICIOS_TOPE_MENSUAL_USD   por defecto 15
+//   OFICIOS_TOPE_MENSUAL_USD   por defecto 15 (red de seguridad, no se muestra)
+//   OFICIOS_LIMITE_DIARIO      lecturas por día, por defecto 30 (la "energía")
 // =============================================================================
 
 import Anthropic from "@anthropic-ai/sdk"
@@ -32,6 +33,7 @@ import {
   AREAS_OFICIO,
   PRIORIDADES_OFICIO,
   TIPOS_OFICIO,
+  hoyChihuahua,
   valores,
 } from "@/lib/oficios/catalogos"
 
@@ -42,6 +44,10 @@ const ESFUERZO = (["low", "medium", "high"].includes(process.env.OFICIOS_ESFUERZ
 export const TOPE_MENSUAL_USD = Number(process.env.OFICIOS_TOPE_MENSUAL_USD) > 0
   ? Number(process.env.OFICIOS_TOPE_MENSUAL_USD)
   : 15
+/** Lecturas permitidas por día. Evita que un clic repetido o un lote enorme gaste de más. */
+export const LIMITE_DIARIO = Number(process.env.OFICIOS_LIMITE_DIARIO) > 0 ? Number(process.env.OFICIOS_LIMITE_DIARIO) : 30
+
+export const MENSAJE_CANSADO = "Lirabot está cansado, espera hasta mañana."
 
 /** Páginas de un PDF que se envían a la IA. */
 const PAGINAS_PDF_IA = 2
@@ -204,6 +210,18 @@ export async function gastoDelMes(): Promise<number> {
   return r._sum.costoUsd ?? 0
 }
 
+/** Lecturas hechas hoy (día de Chihuahua, UTC−6). */
+export async function lecturasDeHoy(): Promise<number> {
+  const inicio = new Date(`${hoyChihuahua()}T00:00:00-06:00`)
+  return prisma.oficioLectura.count({ where: { createdAt: { gte: inicio } } })
+}
+
+/** Energía de Lirabot para hoy: cuántas lecturas le quedan. */
+export async function energiaLirabot() {
+  const usadas = await lecturasDeHoy()
+  return { disponible: iaDisponible(), usadas, limite: LIMITE_DIARIO, restantes: Math.max(0, LIMITE_DIARIO - usadas) }
+}
+
 // --- Lectura -----------------------------------------------------------------
 
 export type ResultadoLectura =
@@ -244,12 +262,9 @@ export async function leerOficioConClaude(params: {
   if (!iaDisponible()) {
     return { ok: false, error: "Lirabot no está configurado (falta ANTHROPIC_API_KEY). Captura los datos a mano." }
   }
-  const gastado = await gastoDelMes()
-  if (gastado >= TOPE_MENSUAL_USD) {
-    return {
-      ok: false,
-      error: `Se alcanzó el tope mensual de Lirabot (US$ ${TOPE_MENSUAL_USD.toFixed(2)}). Captura los datos a mano o sube el tope.`,
-    }
+  const [usadasHoy, gastado] = await Promise.all([lecturasDeHoy(), gastoDelMes()])
+  if (usadasHoy >= LIMITE_DIARIO || gastado >= TOPE_MENSUAL_USD) {
+    return { ok: false, error: MENSAJE_CANSADO }
   }
 
   let paginasPdf: number | null = null

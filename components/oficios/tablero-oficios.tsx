@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react"
 import Link from "next/link"
-import { FileText, Flag, Sparkles } from "lucide-react"
+import { Archive, FileText, Flag, PartyPopper, Sparkles, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import {
@@ -11,7 +11,6 @@ import {
   PRIORIDADES_OFICIO,
   TIPOS_OFICIO,
   diasEntre,
-  esPendiente,
   label,
 } from "@/lib/oficios/catalogos"
 import type { OficioListado } from "@/lib/data/oficios"
@@ -60,35 +59,38 @@ function cuando(iso: string, hoy: string) {
 const recientePrimero = (a: OficioListado, b: OficioListado) =>
   b.fechaRecepcion.localeCompare(a.fechaRecepcion) || b.consecutivo - a.consecutivo
 
-export function TableroOficios({ oficios, hoy }: { oficios: OficioListado[]; hoy: string }) {
+export function TableroOficios({
+  oficios,
+  hoy,
+  filtro,
+  quitarFiltro,
+  verArchivo,
+}: {
+  /** Solo lo pendiente (o el subconjunto que eligió el indicador). */
+  oficios: OficioListado[]
+  hoy: string
+  filtro: string
+  quitarFiltro: () => void
+  verArchivo: () => void
+}) {
   const [agrupar, setAgrupar] = useState<Agrupar>("area")
-  const [soloPendientes, setSoloPendientes] = useState(false)
   const [previa, setPrevia] = useState<OficioListado | null>(null)
 
-  const base = useMemo(
-    () => oficios.filter((o) => !soloPendientes || esPendiente(o.estado)).sort(recientePrimero),
-    [oficios, soloPendientes]
-  )
+  const base = useMemo(() => [...oficios].sort(recientePrimero), [oficios])
 
   const porArea = useMemo(
     () =>
-      AREAS_OFICIO.map((a) => {
-        const del = base.filter((o) => o.areaResponsable === a.valor)
-        return { ...a, total: del.length, pendientes: del.filter((o) => esPendiente(o.estado)).length }
-      }),
+      AREAS_OFICIO.map((a) => ({ ...a, total: base.filter((o) => o.areaResponsable === a.valor).length })).filter((a) => a.total > 0),
     [base]
   )
   const maxArea = Math.max(1, ...porArea.map((a) => a.total))
 
   const porPrioridad = useMemo(
-    () =>
-      [...PRIORIDADES_OFICIO].reverse().map((p) => {
-        const del = base.filter((o) => o.prioridad === p.valor)
-        return { ...p, total: del.length, pendientes: del.filter((o) => esPendiente(o.estado)).length }
-      }),
+    () => [...PRIORIDADES_OFICIO].reverse().map((p) => ({ ...p, total: base.filter((o) => o.prioridad === p.valor).length })),
     [base]
   )
 
+  // Solo columnas con oficios: menos ruido a la vista.
   const columnas = useMemo(() => {
     const defs =
       agrupar === "area"
@@ -96,10 +98,11 @@ export function TableroOficios({ oficios, hoy }: { oficios: OficioListado[]; hoy
         : agrupar === "prioridad"
           ? [...PRIORIDADES_OFICIO].reverse().map((p) => ({ id: p.valor, titulo: p.label, punto: COLOR_PRIORIDAD[p.valor].punto, de: (o: OficioListado) => o.prioridad === p.valor }))
           : ESTADOS_OFICIO.map((e) => ({ id: e.valor, titulo: e.label, punto: COLOR_ESTADO[e.valor], de: (o: OficioListado) => o.estado === e.valor }))
-    return defs.map((d) => ({ ...d, items: base.filter(d.de) }))
+    return defs.map((d) => ({ ...d, items: base.filter(d.de) })).filter((c) => c.items.length > 0)
   }, [agrupar, base])
 
-  const recientes = base.slice(0, 4)
+  // Con pocos pendientes, el tablero ya los muestra todos; "lo más reciente" solo estorbaría.
+  const recientes = base.length > 4 ? base.slice(0, 4) : []
 
   return (
     <div className="space-y-4">
@@ -120,28 +123,50 @@ export function TableroOficios({ oficios, hoy }: { oficios: OficioListado[]; hoy
             </button>
           ))}
         </div>
-        <label className="flex cursor-pointer items-center gap-2 rounded-lg border bg-white px-3 py-1.5 text-xs font-medium text-muted-foreground">
-          <input type="checkbox" checked={soloPendientes} onChange={(e) => setSoloPendientes(e.target.checked)} className="accent-gobierno" />
-          Solo pendientes
-        </label>
-        <span className="text-xs text-muted-foreground">{base.length} oficios</span>
+        {filtro && (
+          <button
+            type="button"
+            onClick={quitarFiltro}
+            className="flex items-center gap-1 rounded-full border border-gobierno bg-gobierno-50 px-3 py-1 text-xs font-medium text-gobierno"
+          >
+            Solo: {filtro} <X className="size-3.5" />
+          </button>
+        )}
+        <span className="text-xs text-muted-foreground">
+          {base.length} {base.length === 1 ? "oficio" : "oficios"}
+        </span>
       </div>
 
       {base.length === 0 ? (
-        <p className="rounded-xl border bg-white px-4 py-10 text-center text-sm text-muted-foreground">
-          {oficios.length === 0 ? "Aún no hay oficios registrados en este año." : "No hay oficios pendientes."}
-        </p>
+        <div className="flex flex-col items-center gap-3 rounded-xl border bg-white px-4 py-12 text-center">
+          <span className="flex size-12 items-center justify-center rounded-full bg-agua-50 text-agua">
+            <PartyPopper className="size-6" />
+          </span>
+          <div>
+            <p className="font-semibold text-foreground">{filtro ? `No hay oficios en "${filtro}".` : "Todo al día: no hay oficios pendientes."}</p>
+            <p className="text-sm text-muted-foreground">Lo concluido sigue a la mano en el archivo.</p>
+          </div>
+          <button
+            type="button"
+            onClick={filtro ? quitarFiltro : verArchivo}
+            className="inline-flex h-9 items-center gap-1.5 rounded-md border bg-white px-3 text-sm font-medium hover:bg-muted/50"
+          >
+            {filtro ? "Ver todos los pendientes" : <><Archive className="size-4" /> Ver el archivo</>}
+          </button>
+        </div>
       ) : (
         <>
           {/* Lo más reciente */}
-          <section>
-            <h2 className="mb-2 text-sm font-bold text-gobierno">Lo más reciente</h2>
-            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-              {recientes.map((o) => (
-                <TarjetaOficio key={o.id} o={o} hoy={hoy} grande onClick={() => setPrevia(o)} />
-              ))}
-            </div>
-          </section>
+          {recientes.length > 0 && (
+            <section>
+              <h2 className="mb-2 text-sm font-bold text-gobierno">Lo más reciente</h2>
+              <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                {recientes.map((o) => (
+                  <TarjetaOficio key={o.id} o={o} hoy={hoy} grande onClick={() => setPrevia(o)} />
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* Distribución */}
           <section className="grid gap-3 lg:grid-cols-[2fr_1fr]">
@@ -156,22 +181,15 @@ export function TableroOficios({ oficios, hoy }: { oficios: OficioListado[]; hoy
                           <span className={cn("size-2.5 rounded-full", colorArea(a.valor).punto)} />
                           {a.label}
                         </span>
-                        <span className="tabular-nums text-muted-foreground">
-                          <b className="text-foreground">{a.total}</b>
-                          {a.pendientes > 0 && ` · ${a.pendientes} pendientes`}
-                        </span>
+                        <b className="tabular-nums text-foreground">{a.total}</b>
                       </div>
                       <div className="h-2.5 overflow-hidden rounded-full bg-muted">
-                        <div className="flex h-full" style={{ width: `${(a.total / maxArea) * 100}%` }}>
-                          <div className={cn("h-full", colorArea(a.valor).barra)} style={{ width: `${a.total ? (a.pendientes / a.total) * 100 : 0}%` }} />
-                          <div className={cn("h-full flex-1 opacity-35", colorArea(a.valor).barra)} />
-                        </div>
+                        <div className={cn("h-full rounded-full", colorArea(a.valor).barra)} style={{ width: `${(a.total / maxArea) * 100}%` }} />
                       </div>
                     </button>
                   </li>
                 ))}
               </ul>
-              <p className="mt-3 text-[11px] text-muted-foreground">Tramo fuerte: pendientes · tramo claro: concluidos o archivados.</p>
             </div>
             <div className="rounded-xl border bg-white p-4">
               <h2 className="mb-3 text-sm font-bold text-gobierno">Por prioridad</h2>
@@ -181,15 +199,16 @@ export function TableroOficios({ oficios, hoy }: { oficios: OficioListado[]; hoy
                     key={p.valor}
                     type="button"
                     onClick={() => setAgrupar("prioridad")}
-                    className={cn("flex flex-col rounded-lg border px-3 py-2 text-left lg:flex-row lg:items-center lg:justify-between", COLOR_PRIORIDAD[p.valor].tile)}
+                    className={cn(
+                      "flex flex-col rounded-lg border px-3 py-2 text-left lg:flex-row lg:items-center lg:justify-between",
+                      COLOR_PRIORIDAD[p.valor].tile,
+                      p.total === 0 && "opacity-50"
+                    )}
                   >
                     <span className="flex items-center gap-1.5 text-xs font-semibold">
                       <Flag className="size-3.5" /> {p.label}
                     </span>
-                    <span className="text-right">
-                      <span className="text-xl font-bold tabular-nums">{p.total}</span>
-                      {p.pendientes > 0 && <span className="ml-1 text-[11px] opacity-80">({p.pendientes} pend.)</span>}
-                    </span>
+                    <span className="text-xl font-bold tabular-nums">{p.total}</span>
                   </button>
                 ))}
               </div>
@@ -199,12 +218,12 @@ export function TableroOficios({ oficios, hoy }: { oficios: OficioListado[]; hoy
           {/* Tablero por columnas */}
           <section>
             <h2 className="mb-2 text-sm font-bold text-gobierno">
-              Tablero {agrupar === "area" ? "por área" : agrupar === "prioridad" ? "por prioridad" : "por estado"}
+              Pendientes {agrupar === "area" ? "por área" : agrupar === "prioridad" ? "por prioridad" : "por estado"}
             </h2>
             <div className="flex gap-3 overflow-x-auto pb-2">
               {columnas.map((c) => (
-                <div key={c.id} className="flex w-72 shrink-0 flex-col rounded-xl border bg-superficie xl:w-auto xl:min-w-[12rem] xl:flex-1">
-                  <div className="flex items-center justify-between border-b bg-white px-3 py-2.5 first:rounded-t-xl">
+                <div key={c.id} className="flex w-72 shrink-0 flex-col rounded-xl border bg-superficie xl:w-auto xl:min-w-[14rem] xl:max-w-sm xl:flex-1">
+                  <div className="flex items-center justify-between rounded-t-xl border-b bg-white px-3 py-2.5">
                     <span className="flex items-center gap-2 text-sm font-semibold text-foreground">
                       <span className={cn("size-2.5 rounded-full", c.punto)} />
                       {c.titulo}
@@ -212,11 +231,9 @@ export function TableroOficios({ oficios, hoy }: { oficios: OficioListado[]; hoy
                     <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-bold tabular-nums text-foreground">{c.items.length}</span>
                   </div>
                   <div className="max-h-[34rem] space-y-2 overflow-y-auto p-2">
-                    {c.items.length === 0 ? (
-                      <p className="px-2 py-6 text-center text-xs text-muted-foreground">Sin oficios</p>
-                    ) : (
-                      c.items.map((o) => <TarjetaOficio key={o.id} o={o} hoy={hoy} onClick={() => setPrevia(o)} />)
-                    )}
+                    {c.items.map((o) => (
+                      <TarjetaOficio key={o.id} o={o} hoy={hoy} onClick={() => setPrevia(o)} />
+                    ))}
                   </div>
                 </div>
               ))}

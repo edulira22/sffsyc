@@ -7,23 +7,21 @@ import {
   AlertTriangle,
   ArrowDownWideNarrow,
   ArrowUpWideNarrow,
+  Archive,
   ChevronDown,
-  LayoutGrid,
-  List,
   Clock,
-  ExternalLink,
   FileText,
   Inbox,
+  ListTodo,
   Search,
   Sparkles,
-  Wallet,
   X,
+  Zap,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import {
   AREAS_OFICIO,
-  ESTADOS_OFICIO,
   TIPOS_OFICIO,
   diasEntre,
   esPendiente,
@@ -34,7 +32,10 @@ import type { OficioListado, ResumenOficios } from "@/lib/data/oficios"
 import { EstadoBadge, PlazoBadge, PrioridadTexto, RevisionBadge } from "@/components/oficios/insignias"
 import { TableroOficios } from "@/components/oficios/tablero-oficios"
 
-type Vista = "todos" | "pendientes" | "vencidos" | "por_vencer" | "sin_revisar" | string
+/** Filtros del archivo (lo que ya no está pendiente). */
+type Vista = "todos" | "atendido" | "archivado"
+/** Filtros que se aplican desde los indicadores sobre lo pendiente. */
+type FiltroPendiente = "" | "vencidos" | "por_vencer" | "sin_revisar"
 
 const MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
 
@@ -65,7 +66,9 @@ export function BandejaOficios({
 }) {
   const router = useRouter()
   const params = useSearchParams()
-  const [modo, setModo] = useState<"tablero" | "lista">("tablero")
+  // Lo pendiente es la vista principal; lo concluido queda aparte, en el archivo.
+  const [modo, setModo] = useState<"pendientes" | "archivo">("pendientes")
+  const [filtroPend, setFiltroPend] = useState<FiltroPendiente>("")
   const [vista, setVista] = useState<Vista>("todos")
   const [area, setArea] = useState("")
   const [mes, setMes] = useState("")
@@ -80,26 +83,32 @@ export function BandejaOficios({
     router.push(`/oficios?${p.toString()}`)
   }
 
+  const pendientes = useMemo(() => oficios.filter((o) => esPendiente(o.estado)), [oficios])
+  const archivo = useMemo(() => oficios.filter((o) => !esPendiente(o.estado)), [oficios])
+
+  const enTablero = useMemo(() => {
+    if (filtroPend === "sin_revisar") return oficios.filter((o) => !o.revisado)
+    if (!filtroPend) return pendientes
+    const buscado = filtroPend === "vencidos" ? "vencido" : "por_vencer"
+    return pendientes.filter((o) => semaforo(o.estado, o.fechaLimite, hoy) === buscado)
+  }, [oficios, pendientes, filtroPend, hoy])
+
   const indice = useMemo(
     () =>
-      oficios.map((o) => ({
+      archivo.map((o) => ({
         o,
         texto: norm(`${o.folio} ${o.numeroOficio} ${o.numeroRecepcion} ${o.remitente} ${o.dependencia} ${o.asunto} ${o.resumen}`),
         sem: semaforo(o.estado, o.fechaLimite, hoy),
         mes: o.fechaRecepcion.slice(0, 7),
       })),
-    [oficios, hoy]
+    [archivo, hoy]
   )
 
   // Todo menos el mes: de aquí salen los conteos de los chips de mes.
   const filtrados = useMemo(() => {
     const palabras = norm(q).trim().split(/\s+/).filter(Boolean)
-    return indice.filter(({ o, sem, texto }) => {
-      if (vista === "pendientes" && !esPendiente(o.estado)) return false
-      if (vista === "vencidos" && sem !== "vencido") return false
-      if (vista === "por_vencer" && sem !== "por_vencer") return false
-      if (vista === "sin_revisar" && o.revisado) return false
-      if (ESTADOS_OFICIO.some((e) => e.valor === vista) && o.estado !== vista) return false
+    return indice.filter(({ o, texto }) => {
+      if (vista !== "todos" && o.estado !== vista) return false
       if (area && o.areaResponsable !== area) return false
       return palabras.every((p) => texto.includes(p))
     })
@@ -127,10 +136,6 @@ export function BandejaOficios({
   }, [filtrados, mes, recientes])
 
   const total = grupos.reduce((n, g) => n + g.items.length, 0)
-  const ultimo = useMemo(
-    () => oficios.reduce<OficioListado | null>((m, o) => (!m || o.consecutivo > m.consecutivo ? o : m), null),
-    [oficios]
-  )
 
   const tarjetas = [
     { id: "pendientes", icono: Inbox, valor: resumen.pendientes, texto: "Pendientes", color: "text-gobierno bg-gobierno-50" },
@@ -140,12 +145,17 @@ export function BandejaOficios({
   ]
 
   const chipsEstado: { id: Vista; texto: string }[] = [
-    { id: "todos", texto: "Todos" },
-    { id: "pendientes", texto: "Pendientes" },
+    { id: "todos", texto: "Todo el archivo" },
     { id: "atendido", texto: "Concluidos" },
-    { id: "sin_revisar", texto: "Por revisar" },
-    { id: "vencidos", texto: "Vencidos" },
+    { id: "archivado", texto: "Archivados" },
   ]
+  const textoFiltro: Record<Exclude<FiltroPendiente, "">, string> = {
+    vencidos: "Vencidos",
+    por_vencer: "Por vencer",
+    sin_revisar: "Por revisar",
+  }
+  const energia = resumen.energia
+  const nivel = energia.limite ? energia.restantes / energia.limite : 0
 
   const hayFiltros = vista !== "todos" || area || mes || q
 
@@ -160,12 +170,12 @@ export function BandejaOficios({
               key={t.id}
               type="button"
               onClick={() => {
-                setModo("lista")
-                setVista(vista === t.id && modo === "lista" ? "todos" : t.id)
+                setModo("pendientes")
+                setFiltroPend(t.id === "pendientes" || filtroPend === t.id ? "" : (t.id as FiltroPendiente))
               }}
               className={cn(
                 "flex items-center gap-3 rounded-xl border bg-white p-3 text-left transition-colors hover:border-gobierno/30",
-                modo === "lista" && vista === t.id && "border-gobierno ring-1 ring-gobierno/20"
+                modo === "pendientes" && (filtroPend || "pendientes") === t.id && "border-gobierno ring-1 ring-gobierno/20"
               )}
             >
               <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-lg", t.color)}>
@@ -179,35 +189,64 @@ export function BandejaOficios({
           )
         })}
         <div className="col-span-2 flex items-center gap-3 rounded-xl border bg-white p-3 lg:col-span-1">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-agua-50 text-agua">
-            <Wallet className="size-4" />
+          <span
+            className={cn(
+              "flex size-9 shrink-0 items-center justify-center rounded-lg",
+              !energia.disponible ? "bg-muted text-muted-foreground" : energia.restantes === 0 ? "bg-violet-50 text-violet-700" : "bg-agua-50 text-agua"
+            )}
+          >
+            <Zap className="size-4" />
           </span>
-          <span className="min-w-0">
-            <span className="block text-sm font-bold tabular-nums text-foreground">
-              {resumen.ia.disponible ? `US$ ${resumen.ia.gastoMesUsd.toFixed(2)}` : "Lirabot inactivo"}
-            </span>
-            <span className="block text-[11px] leading-tight text-muted-foreground">
-              {resumen.ia.disponible ? `Lirabot este mes · tope US$ ${resumen.ia.topeMesUsd}` : "Captura manual"}
-              {` · ${resumen.recibidosMes} recibidos este mes`}
-            </span>
+          <span className="min-w-0 flex-1">
+            {!energia.disponible ? (
+              <>
+                <span className="block text-sm font-bold text-foreground">Lirabot inactivo</span>
+                <span className="block text-[11px] leading-tight text-muted-foreground">Captura manual</span>
+              </>
+            ) : energia.restantes === 0 ? (
+              <>
+                <span className="block text-sm font-bold text-violet-800">Energía agotada</span>
+                <span className="block text-[11px] leading-tight text-muted-foreground">Lirabot está cansado, espera hasta mañana</span>
+              </>
+            ) : (
+              <>
+                <span className="flex items-baseline justify-between gap-2">
+                  <span className="text-sm font-bold text-foreground">Energía</span>
+                  <span className="text-xs font-semibold tabular-nums text-agua">{Math.round(nivel * 100)}%</span>
+                </span>
+                <span className="mt-1 block h-1.5 overflow-hidden rounded-full bg-muted">
+                  <span
+                    className={cn("block h-full rounded-full", nivel > 0.3 ? "bg-agua" : "bg-amber-500")}
+                    style={{ width: `${nivel * 100}%` }}
+                  />
+                </span>
+                <span className="mt-1 block text-[11px] leading-tight text-muted-foreground">
+                  Lirabot · {energia.restantes} lecturas más hoy
+                </span>
+              </>
+            )}
           </span>
         </div>
       </div>
 
-      {/* Tablero o lista */}
+      {/* Pendientes o archivo */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex rounded-lg border bg-white p-0.5">
-          {([["tablero", "Tablero", LayoutGrid], ["lista", "Lista por mes", List]] as const).map(([id, t, Icono]) => (
+          {([["pendientes", "Pendientes", ListTodo, pendientes.length], ["archivo", "Archivo", Archive, archivo.length]] as const).map(([id, t, Icono, n]) => (
             <button
               key={id}
               type="button"
-              onClick={() => setModo(id)}
+              onClick={() => {
+                setModo(id)
+                setFiltroPend("")
+              }}
               className={cn(
                 "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
                 modo === id ? "bg-agua text-white" : "text-muted-foreground hover:text-foreground"
               )}
             >
               <Icono className="size-4" /> {t}
+              <span className={cn("rounded-full px-1.5 text-xs tabular-nums", modo === id ? "bg-white/20" : "bg-muted")}>{n}</span>
             </button>
           ))}
         </div>
@@ -225,30 +264,17 @@ export function BandejaOficios({
         )}
       </div>
 
-      {modo === "tablero" && <TableroOficios oficios={oficios} hoy={hoy} />}
-
-      {modo === "lista" && (<>
-      {/* Último registrado */}
-      {ultimo && (
-        <Link
-          href={`/oficios/${ultimo.id}`}
-          className="flex items-center gap-3 rounded-xl border border-agua/30 bg-agua-50/60 px-4 py-3 transition-colors hover:bg-agua-50"
-        >
-          <span className="shrink-0 rounded-md bg-agua px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
-            Último
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-sm font-medium text-foreground">
-              <span className="font-mono text-gobierno">{ultimo.folio}</span> · {ultimo.asunto || "Sin asunto capturado"}
-            </span>
-            <span className="block truncate text-xs text-muted-foreground">
-              Recibido el {fecha(ultimo.fechaRecepcion)} · {[ultimo.remitente, ultimo.dependencia].filter(Boolean).join(" · ") || "Remitente sin capturar"}
-            </span>
-          </span>
-          <ExternalLink className="size-4 shrink-0 text-agua" />
-        </Link>
+      {modo === "pendientes" && (
+        <TableroOficios
+          oficios={enTablero}
+          hoy={hoy}
+          filtro={filtroPend ? textoFiltro[filtroPend] : ""}
+          quitarFiltro={() => setFiltroPend("")}
+          verArchivo={() => setModo("archivo")}
+        />
       )}
 
+      {modo === "archivo" && (<>
       {/* Filtros */}
       <div className="space-y-3 rounded-xl border bg-white p-3">
         <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
@@ -257,7 +283,7 @@ export function BandejaOficios({
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Buscar en asunto, resumen, remitente, folio o número (p. ej. B7-002)…"
+              placeholder="Buscar en el archivo: asunto, resumen, remitente, folio o número (p. ej. B7-002)…"
               className="h-10 w-full rounded-md border border-input bg-white pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
@@ -300,21 +326,6 @@ export function BandejaOficios({
               {c.texto}
             </button>
           ))}
-          <select
-            value={chipsEstado.some((c) => c.id === vista) ? "" : vista}
-            onChange={(e) => setVista(e.target.value || "todos")}
-            className={cn(
-              "h-7 rounded-full border px-2 text-xs",
-              chipsEstado.some((c) => c.id === vista) ? "text-muted-foreground" : "border-gobierno text-gobierno"
-            )}
-            aria-label="Otro estado"
-          >
-            <option value="">Otro estado…</option>
-            {ESTADOS_OFICIO.filter((e) => e.valor !== "atendido").map((e) => (
-              <option key={e.valor} value={e.valor}>{e.label}</option>
-            ))}
-            <option value="por_vencer">Por vencer</option>
-          </select>
           {hayFiltros && (
             <button
               type="button"
@@ -364,7 +375,7 @@ export function BandejaOficios({
       <div className="overflow-hidden rounded-xl border bg-white">
         {total === 0 ? (
           <p className="px-4 py-10 text-center text-sm text-muted-foreground">
-            {oficios.length === 0 ? "Aún no hay oficios registrados en este año." : "Sin oficios con estos filtros."}
+            {archivo.length === 0 ? "Aún no hay oficios concluidos en este año." : "Sin oficios con estos filtros."}
           </p>
         ) : (
           grupos.map((g) => (
@@ -373,7 +384,6 @@ export function BandejaOficios({
                 <h3 className="text-sm font-bold text-gobierno">{nombreMes(g.mes)}</h3>
                 <span className="text-xs text-muted-foreground">
                   {g.items.length} {g.items.length === 1 ? "oficio" : "oficios"}
-                  {` · ${g.items.filter((x) => esPendiente(x.o.estado)).length} pendientes`}
                 </span>
               </div>
               <ul className="divide-y">

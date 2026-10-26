@@ -261,8 +261,7 @@ export function DetalleOficio({ oficio, hoy, iaDisponible }: { oficio: OficioDet
             </ol>
             {oficio.lecturas.length > 0 && (
               <p className="mt-4 border-t pt-3 text-[11px] text-muted-foreground">
-                Lecturas de Lirabot: {oficio.lecturas.length} · costo total US${" "}
-                {oficio.lecturas.reduce((a, l) => a + l.costoUsd, 0).toFixed(4)}
+                Lecturas de Lirabot: {oficio.lecturas.length}
               </p>
             )}
           </section>

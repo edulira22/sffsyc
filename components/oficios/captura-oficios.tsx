@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import {
   AlertTriangle,
+  BatteryLow,
   Camera,
   CheckCircle2,
   FileUp,
@@ -36,7 +37,6 @@ type Item = {
   formulario: OficioInput
   dudosos: string[]
   observacion: string
-  costoUsd?: number
 }
 
 /**
@@ -73,7 +73,7 @@ const ETIQUETA: Record<Estado, { texto: string; clase: string }> = {
   error: { texto: "Error", clase: "bg-rose-100 text-rose-800" },
 }
 
-export function CapturaOficios({ hoy, iaDisponible }: { hoy: string; iaDisponible: boolean }) {
+export function CapturaOficios({ hoy, iaDisponible, cansado = false }: { hoy: string; iaDisponible: boolean; cansado?: boolean }) {
   const [items, setItems] = useState<Item[]>([])
   const [activo, setActivo] = useState<string | null>(null)
   const [procesando, setProcesando] = useState(false)
@@ -143,7 +143,6 @@ export function CapturaOficios({ hoy, iaDisponible }: { hoy: string; iaDisponibl
         formulario: r.formulario,
         dudosos: r.dudosos,
         observacion: r.observacion,
-        costoUsd: r.costoUsd,
       })
     } else {
       // El oficio ya está registrado: se puede capturar a mano.
@@ -208,6 +207,12 @@ export function CapturaOficios({ hoy, iaDisponible }: { hoy: string; iaDisponibl
 
   return (
     <div className="space-y-5">
+      {iaDisponible && cansado && (
+        <div className="flex gap-2 rounded-xl border border-violet-200 bg-violet-50 p-3 text-sm text-violet-900">
+          <BatteryLow className="mt-0.5 size-4 shrink-0" />
+          Lirabot está cansado, espera hasta mañana. Mientras tanto puedes registrar los oficios y capturar sus datos a mano.
+        </div>
+      )}
       {!iaDisponible && (
         <div className="flex gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
           <AlertTriangle className="mt-0.5 size-4 shrink-0" />
@@ -336,7 +341,6 @@ export function CapturaOficios({ hoy, iaDisponible }: { hoy: string; iaDisponibl
                     <h2 className="text-lg font-bold text-foreground">{actual.folio}</h2>
                     <p className="text-xs text-muted-foreground">
                       Compara los datos con el escaneo y confirma.
-                      {actual.costoUsd !== undefined && ` Lectura de Lirabot: US$ ${actual.costoUsd.toFixed(4)}.`}
                     </p>
                   </div>
                   {iaDisponible && actual.estado !== "leyendo" && actual.estado !== "confirmado" && (
