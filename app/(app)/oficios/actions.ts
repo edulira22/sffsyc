@@ -288,7 +288,6 @@ export async function cambiarEstadoOficio(id: number, estado: EstadoOficio, nota
   if (!o) return { ok: false, error: "No se encontró el oficio." }
   if (o.estado === estado) return { ok: true, mensaje: "Sin cambios." }
   const limpia = nota.replace(/\s+/g, " ").trim().slice(0, 1000)
-  if (estado === "archivado" && !limpia) return { ok: false, error: "Indica por qué se archiva." }
 
   await prisma.oficio.update({
     where: { id },

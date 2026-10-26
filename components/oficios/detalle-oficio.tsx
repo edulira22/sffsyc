@@ -154,7 +154,7 @@ export function DetalleOficio({ oficio, hoy, iaDisponible }: { oficio: OficioDet
                   rows={2}
                   placeholder={
                     nuevoEstado === "archivado"
-                      ? "¿Por qué se archiva? (obligatorio)"
+                      ? "¿Por qué se archiva? (opcional)"
                       : nuevoEstado === "turnado"
                         ? "¿A quién se turnó? (opcional)"
                         : "Nota (opcional)"

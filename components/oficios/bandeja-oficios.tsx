@@ -31,6 +31,7 @@ import {
 import type { OficioListado, ResumenOficios } from "@/lib/data/oficios"
 import { EstadoBadge, PlazoBadge, PrioridadTexto, RevisionBadge } from "@/components/oficios/insignias"
 import { TableroOficios } from "@/components/oficios/tablero-oficios"
+import { CambioEstadoRapido } from "@/components/oficios/cambio-estado-rapido"
 
 /** Filtros del archivo (lo que ya no está pendiente). */
 type Vista = "todos" | "atendido" | "archivado"
@@ -456,6 +457,7 @@ function FilaOficio({ o, hoy, abierto, alternar }: { o: OficioListado; hoy: stri
             <Dato titulo="No. de oficio" valor={o.numeroOficio || "—"} />
             <Dato titulo="Prioridad" valor={o.prioridad === "normal" ? "Normal" : <PrioridadTexto prioridad={o.prioridad} />} />
           </dl>
+          <CambioEstadoRapido id={o.id} folio={o.folio} estado={o.estado} />
           <div className="flex flex-wrap gap-2">
             <Link
               href={`/oficios/${o.id}`}

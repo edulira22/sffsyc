@@ -16,6 +16,7 @@ import {
 import type { OficioListado } from "@/lib/data/oficios"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { EstadoBadge, PlazoBadge, RevisionBadge } from "@/components/oficios/insignias"
+import { CambioEstadoRapido } from "@/components/oficios/cambio-estado-rapido"
 
 // Vista rápida de la bandeja: lo más reciente, cuántos hay por área y por
 // prioridad, y un tablero por columnas. Al tocar un oficio se abre una vista
@@ -314,6 +315,8 @@ function VistaPrevia({ o, hoy, cerrar }: { o: OficioListado | null; hoy: string;
               <PlazoBadge estado={o.estado} fechaLimite={o.fechaLimite} hoy={hoy} />
               {!o.revisado && <RevisionBadge revisado={o.revisado} iaEstado={o.iaEstado} />}
             </div>
+
+            <CambioEstadoRapido id={o.id} folio={o.folio} estado={o.estado} alCambiar={cerrar} />
 
             <div className="rounded-lg border bg-superficie p-3">
               <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Qué dice</p>
