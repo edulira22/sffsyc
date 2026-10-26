@@ -24,29 +24,25 @@ export type EstadoOficio =
 /** Etapa del trámite: ordena los estados y les da color (rojo → ámbar → verde). */
 export type EtapaOficio = "por_atender" | "en_curso" | "cerrado"
 
-export const ETAPAS_OFICIO: (Opcion<EtapaOficio> & { texto: string })[] = [
-  { valor: "por_atender", label: "Por atender", texto: "text-rose-700" },
-  { valor: "en_curso", label: "En curso", texto: "text-amber-700" },
-  { valor: "cerrado", label: "Cerrado", texto: "text-green-700" },
+export const ETAPAS_OFICIO: Opcion<EtapaOficio>[] = [
+  { valor: "por_atender", label: "Por atender" },
+  { valor: "en_curso", label: "En curso" },
+  { valor: "cerrado", label: "Cerrado" },
 ]
 
 export const ESTADOS_OFICIO: (Opcion<EstadoOficio> & {
   etapa: EtapaOficio
   descripcion: string
-  /** Insignia del estado (relleno). */
-  clase: string
-  /** Botón de un estado que no es el actual (contorno del mismo color). */
-  contorno: string
-  /** Punto de color para columnas y leyendas. */
+  /** Punto de color de la etapa (rojo, ámbar, verde). */
   punto: string
 })[] = [
-  { valor: "recibido", label: "Recibido", etapa: "por_atender", descripcion: "Llegó y está registrado; nadie lo ha tomado aún.", clase: "bg-rose-100 text-rose-700 border-rose-200", contorno: "border-rose-200 text-rose-700 hover:bg-rose-50", punto: "bg-rose-500" },
-  { valor: "en_revision", label: "En revisión", etapa: "en_curso", descripcion: "Se está analizando o atendiendo.", clase: "bg-amber-100 text-amber-800 border-amber-200", contorno: "border-amber-200 text-amber-800 hover:bg-amber-50", punto: "bg-amber-400" },
-  { valor: "en_transito", label: "En tránsito", etapa: "en_curso", descripcion: "Se gestiona con otra área o dependencia; va en camino.", clase: "bg-amber-100 text-amber-800 border-amber-200", contorno: "border-amber-200 text-amber-800 hover:bg-amber-50", punto: "bg-amber-500" },
-  { valor: "en_espera", label: "En espera", etapa: "en_curso", descripcion: "Detenido: falta información, una firma o la respuesta de alguien más.", clase: "bg-amber-100 text-amber-800 border-amber-200", contorno: "border-amber-200 text-amber-800 hover:bg-amber-50", punto: "bg-amber-600" },
-  { valor: "canalizado", label: "Canalizado", etapa: "cerrado", descripcion: "Se turnó a otra área o dependencia que lo atenderá.", clase: "bg-green-100 text-green-700 border-green-200", contorno: "border-green-200 text-green-700 hover:bg-green-50", punto: "bg-green-400" },
-  { valor: "no_aplica", label: "No aplica", etapa: "cerrado", descripcion: "No requiere acción (informativo, duplicado o fuera de nuestro ámbito).", clase: "bg-green-100 text-green-700 border-green-200", contorno: "border-green-200 text-green-700 hover:bg-green-50", punto: "bg-green-300" },
-  { valor: "concluido", label: "Concluido", etapa: "cerrado", descripcion: "Resuelto o respondido.", clase: "bg-green-200 text-green-800 border-green-300", contorno: "border-green-300 text-green-800 hover:bg-green-50", punto: "bg-green-600" },
+  { valor: "recibido", label: "Recibido", etapa: "por_atender", descripcion: "Llegó y está registrado; nadie lo ha tomado aún.", punto: "bg-rose-500" },
+  { valor: "en_revision", label: "En revisión", etapa: "en_curso", descripcion: "Se está analizando o atendiendo.", punto: "bg-amber-400" },
+  { valor: "en_transito", label: "En tránsito", etapa: "en_curso", descripcion: "Se gestiona con otra área o dependencia; va en camino.", punto: "bg-amber-500" },
+  { valor: "en_espera", label: "En espera", etapa: "en_curso", descripcion: "Detenido: falta información, una firma o la respuesta de alguien más.", punto: "bg-amber-600" },
+  { valor: "canalizado", label: "Canalizado", etapa: "cerrado", descripcion: "Se turnó a otra área o dependencia que lo atenderá.", punto: "bg-green-400" },
+  { valor: "no_aplica", label: "No aplica", etapa: "cerrado", descripcion: "No requiere acción (informativo, duplicado o fuera de nuestro ámbito).", punto: "bg-green-300" },
+  { valor: "concluido", label: "Concluido", etapa: "cerrado", descripcion: "Resuelto o respondido.", punto: "bg-green-600" },
 ]
 
 /** Estados que todavía exigen trabajo. */

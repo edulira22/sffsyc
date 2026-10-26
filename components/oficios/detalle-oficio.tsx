@@ -18,17 +18,16 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
-import { ESTADOS_OFICIO, type EstadoOficio } from "@/lib/oficios/catalogos"
 import type { OficioDetalle } from "@/lib/data/oficios"
 import type { OficioInput } from "@/lib/schemas/oficio"
 import {
   agregarNotaOficio,
   anularOficio,
-  cambiarEstadoOficio,
   guardarOficio,
   leerOficio,
 } from "@/app/(app)/oficios/actions"
 import { CamposOficio } from "@/components/oficios/campos-oficio"
+import { CambioEstadoRapido } from "@/components/oficios/cambio-estado-rapido"
 import { EstadoBadge, PlazoBadge, RevisionBadge } from "@/components/oficios/insignias"
 import { VisorOficio } from "@/components/oficios/visor-oficio"
 
@@ -52,8 +51,6 @@ export function DetalleOficio({ oficio, hoy, iaDisponible }: { oficio: OficioDet
   const [dudosos, setDudosos] = useState<string[]>(oficio.revisado ? [] : oficio.iaCamposDudosos)
   const [aviso, setAviso] = useState(oficio.revisado ? "" : oficio.iaObservacion)
   const [ocupado, setOcupado] = useState<string | null>(null)
-  const [nuevoEstado, setNuevoEstado] = useState<EstadoOficio | "">("")
-  const [notaEstado, setNotaEstado] = useState("")
   const [nota, setNota] = useState("")
   const [anulando, setAnulando] = useState(false)
   const [motivo, setMotivo] = useState("")
@@ -124,63 +121,7 @@ export function DetalleOficio({ oficio, hoy, iaDisponible }: { oficio: OficioDet
           {/* Seguimiento */}
           <section className="rounded-2xl border bg-white p-4 sm:p-5">
             <h2 className="mb-3 text-sm font-bold text-foreground">Seguimiento</h2>
-            <div className="flex flex-wrap gap-1.5">
-              {ESTADOS_OFICIO.map((e) => (
-                <button
-                  key={e.valor}
-                  type="button"
-                  disabled={e.valor === oficio.estado}
-                  onClick={() => setNuevoEstado(e.valor)}
-                  title={e.descripcion}
-                  className={cn(
-                    "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                    e.valor === oficio.estado
-                      ? cn(e.clase, "cursor-default font-bold")
-                      : nuevoEstado === e.valor
-                        ? "border-gobierno bg-gobierno text-white"
-                        : "bg-white text-muted-foreground hover:border-gobierno/40"
-                  )}
-                >
-                  {e.label}
-                </button>
-              ))}
-            </div>
-            {nuevoEstado && (
-              <div className="mt-3 space-y-2 rounded-xl bg-muted/40 p-3">
-                <p className="text-xs text-muted-foreground">{ESTADOS_OFICIO.find((e) => e.valor === nuevoEstado)?.descripcion}</p>
-                <Textarea
-                  value={notaEstado}
-                  onChange={(e) => setNotaEstado(e.target.value)}
-                  rows={2}
-                  placeholder={
-                    nuevoEstado === "no_aplica"
-                      ? "¿Por qué no aplica? (opcional)"
-                      : nuevoEstado === "canalizado"
-                        ? "¿A quién se canalizó? (opcional)"
-                        : "Nota (opcional)"
-                  }
-                  className="bg-white"
-                />
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    className="bg-gobierno hover:bg-gobierno/90"
-                    disabled={ocupado === "estado"}
-                    onClick={async () => {
-                      const ok = await correr("estado", () => cambiarEstadoOficio(oficio.id, nuevoEstado, notaEstado))
-                      if (ok) {
-                        setNuevoEstado("")
-                        setNotaEstado("")
-                      }
-                    }}
-                  >
-                    {ocupado === "estado" && <Loader2 className="mr-1.5 size-3.5 animate-spin" />}
-                    Cambiar a {ESTADOS_OFICIO.find((e) => e.valor === nuevoEstado)?.label}
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => setNuevoEstado("")}>Cancelar</Button>
-                </div>
-              </div>
-            )}
+            <CambioEstadoRapido id={oficio.id} folio={oficio.folio} estado={oficio.estado} />
             {oficio.estado === "concluido" && form.requiereRespuesta && !form.respuestaNumero && (
               <p className="mt-3 text-xs text-amber-800">
                 Este oficio requería respuesta: registra el número y la fecha del oficio de respuesta abajo.

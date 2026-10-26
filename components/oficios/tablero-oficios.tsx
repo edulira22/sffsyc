@@ -25,20 +25,20 @@ import { CambioEstadoRapido } from "@/components/oficios/cambio-estado-rapido"
 type Agrupar = "area" | "prioridad" | "estado"
 
 /** Colores fijos por área: borde de tarjeta, barra y punto. */
-const COLOR_AREA: Record<string, { borde: string; barra: string; punto: string; suave: string }> = {
-  centros_comunitarios: { borde: "border-l-teal-500", barra: "bg-teal-500", punto: "bg-teal-500", suave: "bg-teal-50 text-teal-800" },
-  asociaciones_civiles: { borde: "border-l-indigo-500", barra: "bg-indigo-500", punto: "bg-indigo-500", suave: "bg-indigo-50 text-indigo-800" },
-  secretaria_tecnica: { borde: "border-l-violet-500", barra: "bg-violet-500", punto: "bg-violet-500", suave: "bg-violet-50 text-violet-800" },
-  administrativo: { borde: "border-l-amber-500", barra: "bg-amber-500", punto: "bg-amber-500", suave: "bg-amber-50 text-amber-800" },
-  transparencia: { borde: "border-l-rose-500", barra: "bg-rose-500", punto: "bg-rose-500", suave: "bg-rose-50 text-rose-800" },
-  por_definir: { borde: "border-l-slate-400", barra: "bg-slate-400", punto: "bg-slate-400", suave: "bg-slate-100 text-slate-700" },
+const COLOR_AREA: Record<string, { borde: string; barra: string; punto: string }> = {
+  centros_comunitarios: { borde: "border-l-teal-500", barra: "bg-teal-500", punto: "bg-teal-500" },
+  asociaciones_civiles: { borde: "border-l-indigo-500", barra: "bg-indigo-500", punto: "bg-indigo-500" },
+  secretaria_tecnica: { borde: "border-l-violet-500", barra: "bg-violet-500", punto: "bg-violet-500" },
+  administrativo: { borde: "border-l-amber-500", barra: "bg-amber-500", punto: "bg-amber-500" },
+  transparencia: { borde: "border-l-rose-500", barra: "bg-rose-500", punto: "bg-rose-500" },
+  por_definir: { borde: "border-l-slate-400", barra: "bg-slate-400", punto: "bg-slate-400" },
 }
 const colorArea = (a: string) => COLOR_AREA[a] ?? COLOR_AREA.por_definir
 
 const COLOR_PRIORIDAD: Record<string, { punto: string; tile: string }> = {
-  urgente: { punto: "bg-rose-500", tile: "border-rose-200 bg-rose-50 text-rose-800" },
-  alta: { punto: "bg-amber-500", tile: "border-amber-200 bg-amber-50 text-amber-800" },
-  normal: { punto: "bg-slate-400", tile: "border-slate-200 bg-white text-slate-700" },
+  urgente: { punto: "bg-rose-500", tile: "bg-white text-rose-700" },
+  alta: { punto: "bg-amber-500", tile: "bg-white text-amber-700" },
+  normal: { punto: "bg-slate-400", tile: "bg-white text-slate-700" },
 }
 
 function cuando(iso: string, hoy: string) {
@@ -293,15 +293,15 @@ function VistaPrevia({ o, hoy, cerrar }: { o: OficioListado | null; hoy: string;
               </DialogDescription>
             </DialogHeader>
 
-            <div className="flex flex-wrap items-center gap-1.5">
-              <EstadoBadge estado={o.estado} />
-              <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium", colorArea(o.areaResponsable).suave)}>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1.5 font-medium text-foreground">
+                <span className={cn("size-2 rounded-full", colorArea(o.areaResponsable).punto)} />
                 {label(AREAS_OFICIO, o.areaResponsable)}
               </span>
-              <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground">{label(TIPOS_OFICIO, o.tipo)}</span>
+              <span>{label(TIPOS_OFICIO, o.tipo)}</span>
               {o.prioridad !== "normal" && (
-                <span className={cn("flex items-center gap-1 text-[11px] font-bold uppercase", PRIORIDADES_OFICIO.find((p) => p.valor === o.prioridad)?.clase)}>
-                  <Flag className="size-3" /> {label(PRIORIDADES_OFICIO, o.prioridad)}
+                <span className={cn("flex items-center gap-1 font-semibold", PRIORIDADES_OFICIO.find((p) => p.valor === o.prioridad)?.clase)}>
+                  <Flag className="size-3" /> Prioridad {label(PRIORIDADES_OFICIO, o.prioridad).toLowerCase()}
                 </span>
               )}
               <PlazoBadge estado={o.estado} fechaLimite={o.fechaLimite} hoy={hoy} />

@@ -11,7 +11,8 @@ import {
 export function EstadoBadge({ estado, className }: { estado: string; className?: string }) {
   const e = ESTADOS_OFICIO.find((x) => x.valor === estado)
   return (
-    <span className={cn("inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold", e?.clase, className)}>
+    <span className={cn("inline-flex items-center gap-1.5 text-xs font-medium text-foreground", className)}>
+      <span className={cn("size-2 shrink-0 rounded-full", e?.punto ?? "bg-slate-400")} />
       {e?.label ?? estado}
     </span>
   )
@@ -42,10 +43,10 @@ export function PlazoBadge({ estado, fechaLimite, hoy }: { estado: string; fecha
     <span
       title={`Fecha límite: ${fechaCorta(fechaLimite)}`}
       className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold",
-        s === "vencido" && "bg-rose-100 text-rose-800",
-        s === "por_vencer" && "bg-amber-100 text-amber-800",
-        s === "en_tiempo" && "bg-muted text-muted-foreground"
+        "inline-flex items-center gap-1 text-xs font-medium",
+        s === "vencido" && "text-rose-700",
+        s === "por_vencer" && "text-amber-700",
+        s === "en_tiempo" && "text-muted-foreground"
       )}
     >
       {s === "vencido" ? <AlertTriangle className="size-3" /> : <Clock className="size-3" />}
@@ -63,7 +64,7 @@ export function RevisionBadge({ revisado, iaEstado }: { revisado: boolean; iaEst
     )
   }
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-violet-50 px-2 py-0.5 text-[11px] font-semibold text-violet-700">
+    <span className="inline-flex items-center gap-1 text-xs font-medium text-violet-700">
       <Sparkles className="size-3" />
       {iaEstado === "leido" ? "Por revisar (Lirabot)" : "Por capturar"}
     </span>

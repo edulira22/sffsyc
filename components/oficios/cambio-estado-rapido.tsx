@@ -2,12 +2,22 @@
 
 import { Fragment, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { Check, ChevronRight, Loader2 } from "lucide-react"
+import { ChevronDown, Loader2, RefreshCw } from "lucide-react"
 import { toast } from "sonner"
 
 import { cn } from "@/lib/utils"
 import { ESTADOS_OFICIO, ETAPAS_OFICIO, label, type EstadoOficio } from "@/lib/oficios/catalogos"
 import { cambiarEstadoOficio } from "@/app/(app)/oficios/actions"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,10 +29,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
-// Cambio de estado a la mano. Los estados van en el orden del trámite
-// (por atender → en curso → cerrado) y el color dice en qué punto va:
-// rojo, ámbar, verde. Un toque en otro estado pide confirmación y el cambio
-// queda en la bitácora del oficio.
+// Estado actual a la vista y un botón "Actualizar estado" que despliega los
+// estados en el orden del trámite. Elegir uno pide confirmación (con nota
+// opcional) y el cambio queda en la bitácora del oficio.
 
 export function CambioEstadoRapido({
   id,
@@ -37,78 +46,101 @@ export function CambioEstadoRapido({
 }) {
   const router = useRouter()
   const [destino, setDestino] = useState<EstadoOficio | null>(null)
+  const [nota, setNota] = useState("")
   const [pendiente, iniciar] = useTransition()
-  const infoDestino = ESTADOS_OFICIO.find((e) => e.valor === destino)
+  const actual = ESTADOS_OFICIO.find((e) => e.valor === estado)
+  const etapaActual = ETAPAS_OFICIO.find((e) => e.valor === actual?.etapa)
+  const nuevo = ESTADOS_OFICIO.find((e) => e.valor === destino)
 
   function confirmar() {
     if (!destino) return
-    const nuevo = destino
+    const valor = destino
     iniciar(async () => {
-      const r = await cambiarEstadoOficio(id, nuevo, "")
+      const r = await cambiarEstadoOficio(id, valor, nota)
       if (!r.ok) {
         toast.error(r.error)
         return
       }
-      toast.success(`${folio}: ${label(ESTADOS_OFICIO, nuevo)}`)
+      toast.success(`${folio}: ${label(ESTADOS_OFICIO, valor)}`)
       setDestino(null)
+      setNota("")
       alCambiar?.()
       router.refresh()
     })
   }
 
   return (
-    <div className="rounded-lg border bg-white p-3">
-      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Estado del trámite</p>
-        <p className="text-[11px] text-muted-foreground">Toca un estado para cambiarlo; te pediremos confirmar.</p>
-      </div>
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
-        {ETAPAS_OFICIO.map((etapa, i) => (
-          <Fragment key={etapa.valor}>
-            {i > 0 && <ChevronRight className="hidden size-4 shrink-0 self-center text-muted-foreground/60 sm:block" />}
-            <div className="min-w-0 sm:flex-1">
-              <p className={cn("mb-1 text-[10px] font-bold uppercase tracking-wide", etapa.texto)}>{etapa.label}</p>
-              <div className="flex flex-wrap gap-1.5">
-                {ESTADOS_OFICIO.filter((e) => e.etapa === etapa.valor).map((e) => {
-                  const actual = e.valor === estado
-                  return (
-                    <button
-                      key={e.valor}
-                      type="button"
-                      disabled={actual || pendiente}
-                      onClick={() => setDestino(e.valor)}
-                      aria-pressed={actual}
-                      title={actual ? "Estado actual" : `Cambiar a ${e.label}: ${e.descripcion}`}
-                      className={cn(
-                        "inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-                        actual ? cn(e.clase, "font-bold shadow-sm ring-2 ring-offset-1 ring-gobierno/25") : cn("bg-white", e.contorno)
-                      )}
-                    >
-                      {actual && <Check className="size-3.5" />}
-                      {e.label}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          </Fragment>
-        ))}
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-white px-4 py-3">
+      <div className="min-w-0">
+        <p className="text-[11px] text-muted-foreground">Estado actual</p>
+        <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <span className={cn("size-2.5 shrink-0 rounded-full", actual?.punto ?? "bg-slate-400")} />
+          {actual?.label ?? estado}
+          {etapaActual && <span className="font-normal text-muted-foreground">· {etapaActual.label}</span>}
+        </p>
       </div>
 
-      <AlertDialog open={destino !== null} onOpenChange={(v) => !v && !pendiente && setDestino(null)}>
+      <DropdownMenu modal={false}>
+        <DropdownMenuTrigger asChild>
+          <Button size="sm" className="gap-1.5 bg-gobierno hover:bg-gobierno/90" disabled={pendiente}>
+            <RefreshCw className="size-4" /> Actualizar estado <ChevronDown className="size-4 opacity-70" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-72">
+          {ETAPAS_OFICIO.map((etapa, i) => (
+            <Fragment key={etapa.valor}>
+              {i > 0 && <DropdownMenuSeparator />}
+              <DropdownMenuLabel className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                {etapa.label}
+              </DropdownMenuLabel>
+              {ESTADOS_OFICIO.filter((e) => e.etapa === etapa.valor).map((e) => {
+                const esActual = e.valor === estado
+                return (
+                  <DropdownMenuItem
+                    key={e.valor}
+                    disabled={esActual}
+                    onSelect={() => setDestino(e.valor)}
+                    className="cursor-pointer items-start gap-2.5 py-2"
+                  >
+                    <span className={cn("mt-1.5 size-2 shrink-0 rounded-full", e.punto)} />
+                    <span className="min-w-0">
+                      <span className="block text-sm font-medium text-foreground">
+                        {e.label}
+                        {esActual && <span className="ml-1.5 text-xs font-normal text-muted-foreground">(actual)</span>}
+                      </span>
+                      <span className="block text-xs leading-snug text-muted-foreground">{e.descripcion}</span>
+                    </span>
+                  </DropdownMenuItem>
+                )
+              })}
+            </Fragment>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <AlertDialog
+        open={destino !== null}
+        onOpenChange={(v) => {
+          if (!v && !pendiente) {
+            setDestino(null)
+            setNota("")
+          }
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Cambiar a {infoDestino?.label}?</AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="space-y-2">
-                <p>
-                  {folio} pasará de <b>{label(ESTADOS_OFICIO, estado)}</b> a <b>{infoDestino?.label}</b>. El cambio queda
-                  registrado en su bitácora.
-                </p>
-                {infoDestino && <p className="text-xs">{infoDestino.descripcion}</p>}
-              </div>
+            <AlertDialogTitle>¿Cambiar a {nuevo?.label}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {folio} pasará de <b>{actual?.label ?? estado}</b> a <b>{nuevo?.label}</b>. El cambio queda registrado en su
+              bitácora.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <Input
+            value={nota}
+            onChange={(e) => setNota(e.target.value)}
+            placeholder={destino === "canalizado" ? "¿A quién se canalizó? (opcional)" : "Nota (opcional)"}
+            maxLength={300}
+          />
           <AlertDialogFooter>
             <AlertDialogCancel disabled={pendiente}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
