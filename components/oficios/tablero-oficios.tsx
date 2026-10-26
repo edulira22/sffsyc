@@ -283,7 +283,7 @@ function VistaPrevia({ o, hoy, cerrar }: { o: OficioListado | null; hoy: string;
             <DialogHeader>
               <p className="font-mono text-xs text-gobierno">
                 {o.folio}
-                {o.numeroRecepcion && ` · ${o.numeroRecepcion}`}
+                {o.numeroRecepcion && ` · Rec. ${o.numeroRecepcion}`}
                 {o.numeroOficio && ` · Oficio ${o.numeroOficio}`}
               </p>
               <DialogTitle className="text-left leading-snug">{o.asunto || "Sin asunto capturado"}</DialogTitle>

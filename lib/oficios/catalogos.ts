@@ -89,6 +89,39 @@ export const TIPOS_OFICIO: Opcion<TipoOficio>[] = [
   { valor: "otro", label: "Otro" },
 ]
 
+// --- Número de recepción ----------------------------------------------------
+//  La Dirección del DIF Municipal recibe los oficios y les anota a mano un
+//  número consecutivo con el año: 01319/26. Al leerlo (persona o Lirabot) es
+//  común confundir la diagonal con un 1 o un paréntesis, o perder los ceros.
+
+const RX_RECEPCION = /^0*(\d{1,5})\s*[/\\()|lI1\-–]\s*(\d{2})$/
+
+/**
+ * Deja el número de recepción como 00000/aa. Si no tiene esa forma, lo
+ * devuelve tal cual (limpio de espacios) para no inventar nada.
+ */
+export function normalizarNumeroRecepcion(texto: string): string {
+  const t = texto.replace(/\s+/g, " ").trim().replace(/^(no\.?|n[uú]m\.?|#)\s*/i, "")
+  if (!t) return ""
+  const m = t.match(RX_RECEPCION)
+  if (m) return `${m[1].padStart(5, "0")}/${m[2]}`
+  // Sin separador: 0130326 o 01303126 (la diagonal leída como 1).
+  const solo = t.replace(/\D/g, "")
+  if (solo.length === t.length && (solo.length === 7 || solo.length === 8)) {
+    const anio = solo.slice(-2)
+    const numero = solo.length === 8 && solo[5] === "1" ? solo.slice(0, 5) : solo.slice(0, solo.length - 2)
+    if (numero.length <= 5) return `${numero.padStart(5, "0")}/${anio}`
+  }
+  return t
+}
+
+/** ¿El número de recepción tiene la forma esperada y el año coincide? */
+export function recepcionCoherente(numero: string, fechaISO: string | null): boolean {
+  const m = numero.match(/^\d{5}\/(\d{2})$/)
+  if (!m) return false
+  return !fechaISO || fechaISO.slice(2, 4) === m[1]
+}
+
 // --- Prioridad ---------------------------------------------------------------
 
 export type PrioridadOficio = "normal" | "alta" | "urgente"

@@ -68,6 +68,7 @@ export function iaDisponible(): boolean {
 
 const CAMPOS_LEIDOS = [
   "numero_oficio",
+  "numero_recepcion",
   "fecha_documento",
   "fecha_recepcion",
   "remitente",
@@ -79,7 +80,8 @@ const CAMPOS_LEIDOS = [
 ] as const
 
 export const EsquemaLectura = z.object({
-  numero_oficio: z.string().describe("Número del oficio impreso por quien lo envía, tal cual aparece. Nunca un número escrito a mano al recibirlo. Vacío si no tiene."),
+  numero_recepcion: z.string().describe("Número de recepción de la Dirección del DIF: escrito a mano (pluma) en la esquina superior izquierda, con la forma 00000/aa (p. ej. 01319/26). Vacío si no hay."),
+  numero_oficio: z.string().describe("Número del oficio de quien lo envía, impreso (casi siempre arriba a la derecha, cerca de la fecha), tal cual aparece. Nunca el número escrito a mano. Vacío si no tiene."),
   fecha_documento: z.string().describe("Fecha del documento, AAAA-MM-DD. Vacío si no aparece."),
   fecha_recepcion: z.string().describe("Fecha del sello de RECIBIDO, AAAA-MM-DD. Vacío si no hay sello legible."),
   remitente: z.string().describe("Persona que firma, con su título si lo trae (Lic., Mtra.). Si no hay persona, la institución."),
@@ -109,7 +111,10 @@ Contexto de la Subdirección:
 - Los oficios llegan de dependencias municipales y estatales, escuelas, asociaciones, comités de vecinos, regidores y ciudadanos. Suelen ir dirigidos a la Presidencia del DIF Municipal, a la Dirección General o a la Subdirección; aunque vayan dirigidos a otra persona, la Subdirección los registra porque le toca atenderlos o canalizarlos.
 
 Cómo leer cada dato:
-- Número de oficio: el que imprime el remitente (p. ej. "UT/DIF/03/2026", "SR/002/2026", "014/DIF/DAS/2026"). Ignora los números escritos a mano al recibirlo y la hora del sello: no se capturan.
+- Los oficios llevan DOS números distintos; no los mezcles:
+  1. numero_recepcion: lo anota a mano, con pluma, la Dirección del DIF Municipal al recibir el oficio (ella los recibe y los turna a la Subdirección). Está en la esquina SUPERIOR IZQUIERDA, a veces encima del logotipo o inclinado. Tiene la forma de cinco dígitos, diagonal y los dos dígitos del año: "01319/26", "00833/26", "00409/26". La diagonal manuscrita suele parecer un 1 o un paréntesis: "01303126" o "00833(26" se escriben "01303/26" y "00833/26". Los ceros iniciales también cuentan. Si hay sello de recibido con hora, la hora NO es este número.
+  2. numero_oficio: lo imprime quien envía el oficio, casi siempre en la esquina SUPERIOR DERECHA junto a la fecha, con siglas de su dependencia: "IMM/DIM/468/2026", "UT/DIF/03/2026", "SR/002/2026", "014/DIF/DAS/2026". Copia exactamente lo impreso, sin la palabra "Oficio".
+  Si alguno no aparece, déjalo vacío. Si lo ves pero no estás seguro de algún dígito, captúralo y márcalo como dudoso.
 - Fecha de recepción: la del sello "RECIBIDO". Si no hay sello legible, déjala vacía y anota "Sin sello visible" en la observación.
 - Remitente: quien firma, sin inventar nombres. Si firma "en representación de", anótalo en el resumen. Si no se ve la firma, deja el remitente vacío y pon la institución en dependencia.
 - Asunto: una frase corta que empiece con verbo en presente y diga qué y dónde ("Solicita el auditorio del CEDEFAM Punta Oriente para un curso de panadería", "Invita a la entrega simbólica de becas", "Requiere información sobre programas sociales"). Los detalles van en el resumen.

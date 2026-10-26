@@ -157,7 +157,7 @@ export async function obtenerFilasExport(
         where: { estatus: "activo" },
         orderBy: [{ anio: "asc" }, { consecutivo: "asc" }],
         select: {
-          anio: true, consecutivo: true, fechaRecepcion: true, numeroOficio: true, numeroRecepcion: true,
+          anio: true, consecutivo: true, fechaRecepcion: true, numeroOficio: true, numeroRecepcion: true, idBitacora: true,
           fechaDocumento: true, remitente: true, cargoRemitente: true, dependencia: true, tipo: true,
           asunto: true, resumen: true, areaResponsable: true, prioridad: true, estado: true,
           fechaLimite: true, respuestaNumero: true, respuestaFecha: true, revisado: true,
@@ -169,6 +169,7 @@ export async function obtenerFilasExport(
         fechaRecepcion: f(o.fechaRecepcion),
         numeroOficio: o.numeroOficio,
         numeroRecepcion: o.numeroRecepcion,
+        idBitacora: o.idBitacora,
         fechaDocumento: f(o.fechaDocumento),
         remitente: o.remitente,
         cargoRemitente: o.cargoRemitente,

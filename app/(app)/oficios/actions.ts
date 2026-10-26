@@ -12,6 +12,8 @@ import {
   folioOficio,
   hoyChihuahua,
   label,
+  normalizarNumeroRecepcion,
+  recepcionCoherente,
   type EstadoOficio,
 } from "@/lib/oficios/catalogos"
 import { leerOficioConClaude, type LecturaOficio } from "@/lib/oficios/ia"
@@ -103,6 +105,7 @@ function propuestaDesdeIA(d: LecturaOficio, actual: OficioInput): OficioInput {
   return {
     ...actual,
     numeroOficio: d.numero_oficio.trim(),
+    numeroRecepcion: normalizarNumeroRecepcion(d.numero_recepcion),
     fechaDocumento: fechaValida(d.fecha_documento) ?? "",
     fechaRecepcion: fechaValida(d.fecha_recepcion) ?? actual.fechaRecepcion,
     remitente: d.remitente.trim(),
@@ -145,7 +148,15 @@ export async function leerOficio(id: number): Promise<
   }
 
   const formulario = propuestaDesdeIA(r.datos, aFormulario(o))
-  const dudosos = r.datos.campos_dudosos
+  const dudosos: string[] = [...r.datos.campos_dudosos]
+  // Revisión propia del número de recepción: forma 00000/aa y año del sello.
+  if (
+    formulario.numeroRecepcion &&
+    !recepcionCoherente(formulario.numeroRecepcion, formulario.fechaRecepcion || null) &&
+    !dudosos.includes("numero_recepcion")
+  ) {
+    dudosos.push("numero_recepcion")
+  }
   const observacion = r.datos.observacion.trim()
 
   if (!o.revisado) {
@@ -188,6 +199,7 @@ export async function leerOficio(id: number): Promise<
 function datosOficio(d: ReturnType<typeof oficioSchema.parse>) {
   return {
     numeroOficio: d.numeroOficio,
+    numeroRecepcion: d.numeroRecepcion,
     fechaDocumento: aFecha(d.fechaDocumento),
     fechaRecepcion: aFecha(d.fechaRecepcion)!,
     remitente: d.remitente,
@@ -208,6 +220,7 @@ function datosOficio(d: ReturnType<typeof oficioSchema.parse>) {
 
 const ETIQUETAS: Record<keyof OficioInput, string> = {
   numeroOficio: "número de oficio",
+  numeroRecepcion: "número de recepción",
   fechaDocumento: "fecha del documento",
   fechaRecepcion: "fecha de recepción",
   remitente: "remitente",

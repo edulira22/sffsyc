@@ -98,7 +98,7 @@ export function BandejaOficios({
     () =>
       archivo.map((o) => ({
         o,
-        texto: norm(`${o.folio} ${o.numeroOficio} ${o.numeroRecepcion} ${o.remitente} ${o.dependencia} ${o.asunto} ${o.resumen}`),
+        texto: norm(`${o.folio} ${o.numeroOficio} ${o.numeroRecepcion} ${o.idBitacora} ${o.remitente} ${o.dependencia} ${o.asunto} ${o.resumen}`),
         sem: semaforo(o.estado, o.fechaLimite, hoy),
         mes: o.fechaRecepcion.slice(0, 7),
       })),
@@ -417,7 +417,8 @@ function FilaOficio({ o, hoy, abierto, alternar }: { o: OficioListado; hoy: stri
         <div className="w-16 shrink-0 pt-0.5 md:w-20">
           <p className="text-sm font-semibold text-foreground">{fecha(o.fechaRecepcion)}</p>
           <p className="font-mono text-[11px] text-gobierno">{o.folio}</p>
-          {o.numeroRecepcion && <p className="font-mono text-[10px] text-muted-foreground">{o.numeroRecepcion}</p>}
+          {o.numeroRecepcion && <p className="font-mono text-[10px] text-foreground" title="No. de recepción (Dirección DIF)">Rec. {o.numeroRecepcion}</p>}
+          {o.idBitacora && <p className="font-mono text-[10px] text-muted-foreground" title="ID en la bitácora anterior">{o.idBitacora}</p>}
         </div>
         <div className="min-w-0 flex-1">
           <p className={cn("font-medium text-foreground", !abierto && "line-clamp-2")}>
@@ -452,10 +453,11 @@ function FilaOficio({ o, hoy, abierto, alternar }: { o: OficioListado; hoy: stri
               {o.resumen || <span className="italic text-muted-foreground">Sin resumen capturado.</span>}
             </p>
           </div>
-          <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm md:grid-cols-4">
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm md:grid-cols-5">
             <Dato titulo="Tipo" valor={label(TIPOS_OFICIO, o.tipo)} />
             <Dato titulo="Área" valor={label(AREAS_OFICIO, o.areaResponsable)} />
-            <Dato titulo="No. de oficio" valor={o.numeroOficio || "—"} />
+            <Dato titulo="No. de recepción" valor={o.numeroRecepcion || "—"} />
+            <Dato titulo="Oficio del remitente" valor={o.numeroOficio || "—"} />
             <Dato titulo="Prioridad" valor={o.prioridad === "normal" ? "Normal" : <PrioridadTexto prioridad={o.prioridad} />} />
           </dl>
           <CambioEstadoRapido id={o.id} folio={o.folio} estado={o.estado} />

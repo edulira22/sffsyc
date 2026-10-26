@@ -483,10 +483,14 @@ model Oficio {
   id                Int       @id @default(autoincrement())
   anio              Int
   consecutivo       Int
-  /// Número del oficio según el remitente (el que se cita al responder).
+  /// Número del oficio según el remitente (el que se cita al responder);
+  /// suele ir impreso arriba a la derecha.
   numeroOficio      String    @default("") @map("numero_oficio")
-  /// Número anotado a mano al recibirlo, si lo hay.
+  /// Número de recepción de la Dirección del DIF Municipal, que recibe los
+  /// oficios y los turna: escrito a mano arriba a la izquierda (01319/26).
   numeroRecepcion   String    @default("") @map("numero_recepcion")
+  /// ID que tenía en la bitácora anterior de Google Sheets (B{mes}-###).
+  idBitacora        String    @default("") @map("id_bitacora")
   fechaDocumento    DateTime? @map("fecha_documento") @db.Date
   fechaRecepcion    DateTime  @default(now()) @map("fecha_recepcion") @db.Date
   remitente         String    @default("")
