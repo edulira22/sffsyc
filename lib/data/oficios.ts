@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import {
   aISO,
+  ESTADOS_PENDIENTES,
   esPendiente,
   folioOficio,
   hoyChihuahua,
@@ -62,7 +63,7 @@ export async function resumenOficios() {
   const inicioMes = new Date(`${hoy.slice(0, 7)}-01T00:00:00Z`)
   const [abiertos, recibidosMes, espacio, energia] = await Promise.all([
     prisma.oficio.findMany({
-      where: { estatus: "activo", estado: { in: ["recibido", "turnado", "en_proceso"] } },
+      where: { estatus: "activo", estado: { in: ESTADOS_PENDIENTES } },
       select: { estado: true, fechaLimite: true, revisado: true },
     }),
     prisma.oficio.count({ where: { estatus: "activo", fechaRecepcion: { gte: inicioMes } } }),

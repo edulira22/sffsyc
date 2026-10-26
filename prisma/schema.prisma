@@ -499,7 +499,7 @@ model Oficio {
   resumen           String    @default("")
   areaResponsable   String    @default("por_definir") @map("area_responsable")
   prioridad         String    @default("normal")
-  /// recibido | turnado | en_proceso | atendido | archivado
+  /// recibido | en_revision | en_transito | en_espera (pendientes) · canalizado | no_aplica | concluido (cerrados)
   estado            String    @default("recibido")
   requiereRespuesta Boolean   @default(true) @map("requiere_respuesta")
   fechaLimite       DateTime? @map("fecha_limite") @db.Date

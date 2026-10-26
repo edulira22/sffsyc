@@ -41,14 +41,6 @@ const COLOR_PRIORIDAD: Record<string, { punto: string; tile: string }> = {
   normal: { punto: "bg-slate-400", tile: "border-slate-200 bg-white text-slate-700" },
 }
 
-const COLOR_ESTADO: Record<string, string> = {
-  recibido: "bg-slate-400",
-  turnado: "bg-sky-500",
-  en_proceso: "bg-amber-500",
-  atendido: "bg-emerald-500",
-  archivado: "bg-zinc-300",
-}
-
 function cuando(iso: string, hoy: string) {
   const d = diasEntre(iso, hoy)
   if (d <= 0) return "Hoy"
@@ -98,7 +90,7 @@ export function TableroOficios({
         ? AREAS_OFICIO.map((a) => ({ id: a.valor, titulo: a.label, punto: colorArea(a.valor).punto, de: (o: OficioListado) => o.areaResponsable === a.valor }))
         : agrupar === "prioridad"
           ? [...PRIORIDADES_OFICIO].reverse().map((p) => ({ id: p.valor, titulo: p.label, punto: COLOR_PRIORIDAD[p.valor].punto, de: (o: OficioListado) => o.prioridad === p.valor }))
-          : ESTADOS_OFICIO.map((e) => ({ id: e.valor, titulo: e.label, punto: COLOR_ESTADO[e.valor], de: (o: OficioListado) => o.estado === e.valor }))
+          : ESTADOS_OFICIO.map((e) => ({ id: e.valor, titulo: e.label, punto: e.punto, de: (o: OficioListado) => o.estado === e.valor }))
     return defs.map((d) => ({ ...d, items: base.filter(d.de) })).filter((c) => c.items.length > 0)
   }, [agrupar, base])
 

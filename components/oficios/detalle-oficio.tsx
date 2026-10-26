@@ -153,10 +153,10 @@ export function DetalleOficio({ oficio, hoy, iaDisponible }: { oficio: OficioDet
                   onChange={(e) => setNotaEstado(e.target.value)}
                   rows={2}
                   placeholder={
-                    nuevoEstado === "archivado"
-                      ? "¿Por qué se archiva? (opcional)"
-                      : nuevoEstado === "turnado"
-                        ? "¿A quién se turnó? (opcional)"
+                    nuevoEstado === "no_aplica"
+                      ? "¿Por qué no aplica? (opcional)"
+                      : nuevoEstado === "canalizado"
+                        ? "¿A quién se canalizó? (opcional)"
                         : "Nota (opcional)"
                   }
                   className="bg-white"
@@ -181,7 +181,7 @@ export function DetalleOficio({ oficio, hoy, iaDisponible }: { oficio: OficioDet
                 </div>
               </div>
             )}
-            {oficio.estado === "atendido" && form.requiereRespuesta && !form.respuestaNumero && (
+            {oficio.estado === "concluido" && form.requiereRespuesta && !form.respuestaNumero && (
               <p className="mt-3 text-xs text-amber-800">
                 Este oficio requería respuesta: registra el número y la fecha del oficio de respuesta abajo.
               </p>

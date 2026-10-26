@@ -34,7 +34,7 @@ import { TableroOficios } from "@/components/oficios/tablero-oficios"
 import { CambioEstadoRapido } from "@/components/oficios/cambio-estado-rapido"
 
 /** Filtros del archivo (lo que ya no está pendiente). */
-type Vista = "todos" | "atendido" | "archivado"
+type Vista = "todos" | "concluido" | "canalizado" | "no_aplica"
 /** Filtros que se aplican desde los indicadores sobre lo pendiente. */
 type FiltroPendiente = "" | "vencidos" | "por_vencer" | "sin_revisar"
 
@@ -147,8 +147,9 @@ export function BandejaOficios({
 
   const chipsEstado: { id: Vista; texto: string }[] = [
     { id: "todos", texto: "Todo el archivo" },
-    { id: "atendido", texto: "Concluidos" },
-    { id: "archivado", texto: "Archivados" },
+    { id: "concluido", texto: "Concluidos" },
+    { id: "canalizado", texto: "Canalizados" },
+    { id: "no_aplica", texto: "No aplica" },
   ]
   const textoFiltro: Record<Exclude<FiltroPendiente, "">, string> = {
     vencidos: "Vencidos",
