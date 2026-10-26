@@ -18,7 +18,7 @@ export const ESTADOS_OFICIO: (Opcion<EstadoOficio> & { descripcion: string; clas
   { valor: "recibido", label: "Recibido", descripcion: "Registrado; falta asignarlo a un área.", clase: "bg-slate-100 text-slate-700 border-slate-200" },
   { valor: "turnado", label: "Turnado", descripcion: "Asignado al área responsable.", clase: "bg-sky-50 text-sky-800 border-sky-200" },
   { valor: "en_proceso", label: "En proceso", descripcion: "El área ya lo está atendiendo.", clase: "bg-amber-50 text-amber-800 border-amber-200" },
-  { valor: "atendido", label: "Atendido", descripcion: "Resuelto o respondido.", clase: "bg-emerald-50 text-emerald-800 border-emerald-200" },
+  { valor: "atendido", label: "Concluido", descripcion: "Resuelto, respondido o canalizado.", clase: "bg-emerald-50 text-emerald-800 border-emerald-200" },
   { valor: "archivado", label: "Archivado", descripcion: "Cerrado sin acción (informativo, duplicado, etc.).", clase: "bg-zinc-100 text-zinc-500 border-zinc-200" },
 ]
 
@@ -34,26 +34,29 @@ export function esPendiente(estado: string): boolean {
 export type AreaOficio =
   | "centros_comunitarios"
   | "asociaciones_civiles"
-  | "proteccion_familiar"
-  | "asistencia_solidaria"
+  | "secretaria_tecnica"
+  | "administrativo"
+  | "transparencia"
   | "por_definir"
 
 export const AREAS_OFICIO: (Opcion<AreaOficio> & { criterio: string })[] = [
-  { valor: "centros_comunitarios", label: "Centros Comunitarios", criterio: "Uso de centros comunitarios, CEDEFAM, auditorios o instalaciones; actividades y talleres en centros." },
-  { valor: "asociaciones_civiles", label: "Asociaciones civiles", criterio: "Escritos de A.C., OSC, IBP, fundaciones, museos u organizaciones de la sociedad civil." },
-  { valor: "proteccion_familiar", label: "Protección Familiar", criterio: "Temas jurídicos, niñas, niños y adolescentes, protección de derechos, CEDH, violencia familiar." },
-  { valor: "asistencia_solidaria", label: "Asistencia Solidaria", criterio: "Solicitudes ciudadanas de apoyos (económicos, en especie, alimentarios)." },
+  { valor: "centros_comunitarios", label: "Centros Comunitarios", criterio: "Uso de centros comunitarios, CEDEFAM, Centro STEM, auditorios o instalaciones (también cuando lo pide una dependencia o una A.C.); cursos, talleres y actividades en los centros; su operación diaria (instructores, usuarios, horarios, unidades móviles)." },
+  { valor: "asociaciones_civiles", label: "Asociaciones civiles", criterio: "Escritos de A.C., fundaciones, OSC, IBP, clubes o colectivos sobre su relación con el DIF: proyectos, convenios, informes de actividades o de gastos y solicitudes de apoyo económico o en especie para su causa." },
+  { valor: "secretaria_tecnica", label: "Secretaría Técnica", criterio: "Tareas de oficina, casi siempre internas, que piden una acción administrativa específica o dar resolución a una solicitud: designar enlaces, enviar información o reportes, llenar formatos, lineamientos, comités, invitaciones institucionales y peticiones de apoyos que hay que resolver." },
+  { valor: "administrativo", label: "Administrativo", criterio: "Lo básico de oficina que implica dinero o recursos: nómina, personal, compras y licitaciones, pagos, limpieza, mantenimiento, vehículos, mobiliario, inventarios y presupuesto." },
+  { valor: "transparencia", label: "Transparencia", criterio: "Solicitudes de la Unidad de Transparencia: acceso a la información pública u obligaciones de transparencia a las que hay que dar respuesta en plazo." },
   { valor: "por_definir", label: "Por definir", criterio: "No es claro a qué área corresponde." },
 ]
 
 // --- Tipo de documento -------------------------------------------------------
 
-export type TipoOficio = "solicitud" | "invitacion" | "informativo" | "requerimiento" | "respuesta" | "otro"
+export type TipoOficio = "solicitud" | "invitacion" | "informativo" | "circular" | "requerimiento" | "respuesta" | "otro"
 
 export const TIPOS_OFICIO: Opcion<TipoOficio>[] = [
   { valor: "solicitud", label: "Solicitud" },
   { valor: "invitacion", label: "Invitación" },
   { valor: "informativo", label: "Informativo" },
+  { valor: "circular", label: "Circular" },
   { valor: "requerimiento", label: "Requerimiento (con plazo)" },
   { valor: "respuesta", label: "Respuesta a un oficio nuestro" },
   { valor: "otro", label: "Otro" },

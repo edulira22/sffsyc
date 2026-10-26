@@ -103,7 +103,6 @@ function propuestaDesdeIA(d: LecturaOficio, actual: OficioInput): OficioInput {
   return {
     ...actual,
     numeroOficio: d.numero_oficio.trim(),
-    numeroRecepcion: d.numero_recepcion.trim(),
     fechaDocumento: fechaValida(d.fecha_documento) ?? "",
     fechaRecepcion: fechaValida(d.fecha_recepcion) ?? actual.fechaRecepcion,
     remitente: d.remitente.trim(),
@@ -190,7 +189,6 @@ export async function leerOficio(id: number): Promise<
 function datosOficio(d: ReturnType<typeof oficioSchema.parse>) {
   return {
     numeroOficio: d.numeroOficio,
-    numeroRecepcion: d.numeroRecepcion,
     fechaDocumento: aFecha(d.fechaDocumento),
     fechaRecepcion: aFecha(d.fechaRecepcion)!,
     remitente: d.remitente,
@@ -211,7 +209,6 @@ function datosOficio(d: ReturnType<typeof oficioSchema.parse>) {
 
 const ETIQUETAS: Record<keyof OficioInput, string> = {
   numeroOficio: "número de oficio",
-  numeroRecepcion: "número de recepción",
   fechaDocumento: "fecha del documento",
   fechaRecepcion: "fecha de recepción",
   remitente: "remitente",

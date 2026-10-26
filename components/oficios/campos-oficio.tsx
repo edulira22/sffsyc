@@ -13,7 +13,6 @@ import type { OficioInput } from "@/lib/schemas/oficio"
 /** Nombres de campo que usa la IA → campo del formulario. */
 const DUDOSO_A_CAMPO: Record<string, keyof OficioInput> = {
   numero_oficio: "numeroOficio",
-  numero_recepcion: "numeroRecepcion",
   fecha_documento: "fechaDocumento",
   fecha_recepcion: "fechaRecepcion",
   remitente: "remitente",
@@ -27,7 +26,6 @@ const DUDOSO_A_CAMPO: Record<string, keyof OficioInput> = {
 export function oficioVacio(hoy: string): OficioInput {
   return {
     numeroOficio: "",
-    numeroRecepcion: "",
     fechaDocumento: "",
     fechaRecepcion: hoy,
     remitente: "",
@@ -102,7 +100,6 @@ export function CamposOficio({
       <Seccion titulo="Documento">
         <div className="grid gap-3 sm:grid-cols-2">
           {texto("numeroOficio", "No. de oficio", "", "Ej. UT/DIF/03/2026")}
-          {texto("numeroRecepcion", "No. anotado al recibir")}
           {fecha("fechaDocumento", "Fecha del documento")}
           {fecha("fechaRecepcion", "Fecha de recepción (sello)")}
           {campo(

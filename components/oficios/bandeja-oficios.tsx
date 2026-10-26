@@ -142,7 +142,7 @@ export function BandejaOficios({
   const chipsEstado: { id: Vista; texto: string }[] = [
     { id: "todos", texto: "Todos" },
     { id: "pendientes", texto: "Pendientes" },
-    { id: "atendido", texto: "Atendidos" },
+    { id: "atendido", texto: "Concluidos" },
     { id: "sin_revisar", texto: "Por revisar" },
     { id: "vencidos", texto: "Vencidos" },
   ]

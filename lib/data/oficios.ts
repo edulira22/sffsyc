@@ -92,7 +92,6 @@ export type ResumenOficios = Awaited<ReturnType<typeof resumenOficios>>
 /** Valores del formulario a partir de un oficio guardado. */
 export function aFormulario(o: {
   numeroOficio: string
-  numeroRecepcion: string
   fechaDocumento: Date | null
   fechaRecepcion: Date
   remitente: string
@@ -111,7 +110,6 @@ export function aFormulario(o: {
 }): OficioInput {
   return {
     numeroOficio: o.numeroOficio,
-    numeroRecepcion: o.numeroRecepcion,
     fechaDocumento: aISO(o.fechaDocumento) ?? "",
     fechaRecepcion: aISO(o.fechaRecepcion)!,
     remitente: o.remitente,

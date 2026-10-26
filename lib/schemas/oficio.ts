@@ -24,7 +24,6 @@ const fechaOpcional = z
 
 export const oficioSchema = z.object({
   numeroOficio: texto(120),
-  numeroRecepcion: texto(60),
   fechaDocumento: fechaOpcional,
   fechaRecepcion: z.string().trim().regex(FECHA, "Indica la fecha de recepción"),
   remitente: texto(200),

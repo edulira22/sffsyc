@@ -28,8 +28,9 @@ type Agrupar = "area" | "prioridad" | "estado"
 const COLOR_AREA: Record<string, { borde: string; barra: string; punto: string; suave: string }> = {
   centros_comunitarios: { borde: "border-l-teal-500", barra: "bg-teal-500", punto: "bg-teal-500", suave: "bg-teal-50 text-teal-800" },
   asociaciones_civiles: { borde: "border-l-indigo-500", barra: "bg-indigo-500", punto: "bg-indigo-500", suave: "bg-indigo-50 text-indigo-800" },
-  proteccion_familiar: { borde: "border-l-rose-500", barra: "bg-rose-500", punto: "bg-rose-500", suave: "bg-rose-50 text-rose-800" },
-  asistencia_solidaria: { borde: "border-l-amber-500", barra: "bg-amber-500", punto: "bg-amber-500", suave: "bg-amber-50 text-amber-800" },
+  secretaria_tecnica: { borde: "border-l-violet-500", barra: "bg-violet-500", punto: "bg-violet-500", suave: "bg-violet-50 text-violet-800" },
+  administrativo: { borde: "border-l-amber-500", barra: "bg-amber-500", punto: "bg-amber-500", suave: "bg-amber-50 text-amber-800" },
+  transparencia: { borde: "border-l-rose-500", barra: "bg-rose-500", punto: "bg-rose-500", suave: "bg-rose-50 text-rose-800" },
   por_definir: { borde: "border-l-slate-400", barra: "bg-slate-400", punto: "bg-slate-400", suave: "bg-slate-100 text-slate-700" },
 }
 const colorArea = (a: string) => COLOR_AREA[a] ?? COLOR_AREA.por_definir
@@ -170,7 +171,7 @@ export function TableroOficios({ oficios, hoy }: { oficios: OficioListado[]; hoy
                   </li>
                 ))}
               </ul>
-              <p className="mt-3 text-[11px] text-muted-foreground">Tramo fuerte: pendientes · tramo claro: atendidos o archivados.</p>
+              <p className="mt-3 text-[11px] text-muted-foreground">Tramo fuerte: pendientes · tramo claro: concluidos o archivados.</p>
             </div>
             <div className="rounded-xl border bg-white p-4">
               <h2 className="mb-3 text-sm font-bold text-gobierno">Por prioridad</h2>
