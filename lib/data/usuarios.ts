@@ -9,6 +9,8 @@ export async function listarUsuarios() {
       email: true,
       estatus: true,
       createdAt: true,
+      areasPermitidas: true,
+      areasOficios: true,
     },
     orderBy: { nombre: "asc" },
   })

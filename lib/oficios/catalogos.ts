@@ -71,6 +71,16 @@ export const AREAS_OFICIO: (Opcion<AreaOficio> & { criterio: string })[] = [
   { valor: "por_definir", label: "Por definir", criterio: "No es claro a qué área corresponde." },
 ]
 
+/**
+ * Áreas de oficios que puede ver un usuario, antes de guardar: quita valores
+ * inválidos y si quedan todas (o ninguna) devuelve [] = sin restricción.
+ */
+export function normalizarAreasOficio(seleccionadas: string[]): string[] {
+  const validas = AREAS_OFICIO.map((a) => a.valor).filter((v) => seleccionadas.includes(v))
+  if (validas.length === 0 || validas.length === AREAS_OFICIO.length) return []
+  return validas
+}
+
 // --- Tipo de documento -------------------------------------------------------
 
 export type TipoOficio = "solicitud" | "invitacion" | "informativo" | "circular" | "requerimiento" | "respuesta" | "otro"

@@ -1,3 +1,5 @@
+import type { Prisma } from "@prisma/client"
+
 import { prisma } from "@/lib/prisma"
 import { formatoFecha, calcularEdad } from "@/lib/fechas"
 import { TIPO_CENTRO_LABEL } from "@/lib/schemas/centro"
@@ -19,7 +21,9 @@ import type { AutorizadoVerano } from "@/lib/data/verano"
 // de exportación (nombres en vez de IDs, fechas dd/mm/aaaa, etiquetas, etc.).
 
 export async function obtenerFilasExport(
-  entidadId: string
+  entidadId: string,
+  /** Filtro de acceso a oficios del usuario (solo aplica a "oficios"). */
+  filtroOficios: Prisma.OficioWhereInput = {}
 ): Promise<Record<string, unknown>[]> {
   switch (entidadId) {
     case "coordinadoras": {
@@ -154,7 +158,7 @@ export async function obtenerFilasExport(
     }
     case "oficios": {
       const filas = await prisma.oficio.findMany({
-        where: { estatus: "activo" },
+        where: { estatus: "activo", AND: [filtroOficios] },
         orderBy: [{ anio: "asc" }, { consecutivo: "asc" }],
         select: {
           anio: true, consecutivo: true, fechaRecepcion: true, numeroOficio: true, numeroRecepcion: true, idBitacora: true,

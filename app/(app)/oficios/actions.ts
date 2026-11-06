@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache"
 import { Prisma } from "@prisma/client"
 
 import { prisma } from "@/lib/prisma"
-import { requerirSesion } from "@/lib/session"
+import { accesoOficios } from "@/lib/oficios/acceso"
 import {
   ESTADOS_OFICIO,
   MAX_BYTES_ARCHIVO,
@@ -25,10 +25,10 @@ type Fallo = { ok: false; error: string }
 
 const RUTA = "/oficios"
 
+/** Usuario actual y su acceso a oficios (se revisa en cada acción, no solo en la UI). */
 async function usuario() {
-  const s = await requerirSesion()
-  const id = Number.parseInt(String(s.user.id), 10)
-  return { id: Number.isFinite(id) ? id : null, nombre: s.user.nombre ?? s.user.name ?? "Usuario" }
+  const a = await accesoOficios()
+  return { id: a.usuarioId, nombre: a.nombre, entra: a.entra, filtro: a.filtro }
 }
 
 const aFecha = (iso: string | null) => (iso ? new Date(`${iso}T00:00:00Z`) : null)
@@ -52,6 +52,7 @@ function fechaValida(v: string): string | null {
  */
 export async function registrarOficio(formData: FormData): Promise<Ok<{ id: number; folio: string }> | Fallo> {
   const u = await usuario()
+  if (!u.entra) return { ok: false, error: "No tienes acceso a Oficios." }
   const archivo = formData.get("archivo")
   if (!(archivo instanceof File) || archivo.size === 0) return { ok: false, error: "No se recibió ningún archivo." }
   if (!TIPOS_ARCHIVO_PERMITIDOS.includes(archivo.type)) {
@@ -131,7 +132,7 @@ export async function leerOficio(id: number): Promise<
 > {
   const u = await usuario()
   const o = await prisma.oficio.findFirst({
-    where: { id, estatus: "activo" },
+    where: { id, estatus: "activo", AND: [u.filtro] },
     include: { archivo: true },
   })
   if (!o?.archivo) return { ok: false, error: "No se encontró el oficio o su archivo." }
@@ -252,7 +253,7 @@ export async function guardarOficio(
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Revisa los datos." }
   const d = parsed.data
 
-  const actual = await prisma.oficio.findFirst({ where: { id, estatus: "activo" } })
+  const actual = await prisma.oficio.findFirst({ where: { id, estatus: "activo", AND: [u.filtro] } })
   if (!actual) return { ok: false, error: "No se encontró el oficio." }
 
   if (opciones.confirmar) {
@@ -297,7 +298,7 @@ export async function guardarOficio(
 export async function cambiarEstadoOficio(id: number, estado: EstadoOficio, nota: string): Promise<Ok | Fallo> {
   const u = await usuario()
   if (!ESTADOS_OFICIO.some((e) => e.valor === estado)) return { ok: false, error: "Estado inválido." }
-  const o = await prisma.oficio.findFirst({ where: { id, estatus: "activo" }, select: { estado: true } })
+  const o = await prisma.oficio.findFirst({ where: { id, estatus: "activo", AND: [u.filtro] }, select: { estado: true } })
   if (!o) return { ok: false, error: "No se encontró el oficio." }
   if (o.estado === estado) return { ok: true, mensaje: "Sin cambios." }
   const limpia = nota.replace(/\s+/g, " ").trim().slice(0, 1000)
@@ -325,7 +326,7 @@ export async function agregarNotaOficio(id: number, nota: string): Promise<Ok | 
   const u = await usuario()
   const limpia = nota.replace(/\s+/g, " ").trim().slice(0, 1000)
   if (limpia.length < 2) return { ok: false, error: "Escribe la nota." }
-  const existe = await prisma.oficio.count({ where: { id, estatus: "activo" } })
+  const existe = await prisma.oficio.count({ where: { id, estatus: "activo", AND: [u.filtro] } })
   if (!existe) return { ok: false, error: "No se encontró el oficio." }
   await prisma.oficioMovimiento.create({
     data: { oficioId: id, tipo: "nota", descripcion: limpia, usuarioId: u.id, usuarioNombre: u.nombre },
@@ -342,7 +343,7 @@ export async function anularOficio(id: number, motivo: string): Promise<Ok | Fal
   const u = await usuario()
   const limpio = motivo.replace(/\s+/g, " ").trim().slice(0, 500)
   if (limpio.length < 3) return { ok: false, error: "Indica el motivo de la anulación." }
-  const o = await prisma.oficio.findFirst({ where: { id, estatus: "activo" }, select: { id: true } })
+  const o = await prisma.oficio.findFirst({ where: { id, estatus: "activo", AND: [u.filtro] }, select: { id: true } })
   if (!o) return { ok: false, error: "No se encontró el oficio." }
   await prisma.oficio.update({
     where: { id },

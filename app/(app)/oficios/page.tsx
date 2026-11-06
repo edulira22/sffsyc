@@ -1,22 +1,28 @@
 import Link from "next/link"
 import { Download, FilePlus2 } from "lucide-react"
 
-import { requerirSesion } from "@/lib/session"
+import { accesoOficios } from "@/lib/oficios/acceso"
 import { aniosConOficios, listarOficios, resumenOficios } from "@/lib/data/oficios"
 import { hoyChihuahua } from "@/lib/oficios/catalogos"
 import { PageHeader } from "@/components/ui-patterns/page-header"
 import { Button } from "@/components/ui/button"
 import { BandejaOficios } from "@/components/oficios/bandeja-oficios"
+import { SinAccesoOficios } from "@/components/oficios/sin-acceso"
 
 export const metadata = { title: "Oficios" }
 
 export default async function OficiosPage({ searchParams }: { searchParams: { anio?: string } }) {
-  await requerirSesion()
+  const acceso = await accesoOficios()
+  if (!acceso.entra) return <SinAccesoOficios />
   const hoy = hoyChihuahua()
   const anioActual = Number(hoy.slice(0, 4))
   const anio = Number(searchParams.anio) || anioActual
 
-  const [oficios, resumen, anios] = await Promise.all([listarOficios(anio), resumenOficios(), aniosConOficios()])
+  const [oficios, resumen, anios] = await Promise.all([
+    listarOficios(acceso.filtro, anio),
+    resumenOficios(acceso.filtro),
+    aniosConOficios(acceso.filtro),
+  ])
 
   return (
     <div className="space-y-4">

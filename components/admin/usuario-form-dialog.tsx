@@ -32,10 +32,15 @@ import {
   type CrearUsuarioInput,
 } from "@/lib/schemas/usuario"
 import { NAV_AREAS } from "@/lib/navegacion"
+import { AREAS_OFICIO } from "@/lib/oficios/catalogos"
 import { crearUsuario, editarUsuario } from "@/app/(app)/admin/usuarios/actions"
 import type { UsuarioListado } from "@/lib/data/usuarios"
 
 const TODAS_LAS_AREAS = NAV_AREAS.map((a) => a.id)
+const TODAS_AREAS_OFICIO = AREAS_OFICIO.map((a) => a.valor)
+
+/** En la base, lista vacía = todo; en el formulario se ve todo marcado. */
+const oTodas = (guardadas: string[] | undefined, todas: string[]) => (guardadas && guardadas.length > 0 ? guardadas : todas)
 
 export function UsuarioFormDialog({
   open,
@@ -58,6 +63,7 @@ export function UsuarioFormDialog({
       email: "",
       password: "",
       areasPermitidas: TODAS_LAS_AREAS,
+      areasOficios: TODAS_AREAS_OFICIO,
     },
   })
 
@@ -67,21 +73,19 @@ export function UsuarioFormDialog({
       nombre: usuario?.nombre ?? "",
       email: usuario?.email ?? "",
       password: "",
-      areasPermitidas: TODAS_LAS_AREAS,
+      // Se carga el acceso guardado; antes se reiniciaba a "todo" al editar.
+      areasPermitidas: oTodas(usuario?.areasPermitidas, TODAS_LAS_AREAS),
+      areasOficios: oTodas(usuario?.areasOficios, TODAS_AREAS_OFICIO),
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, usuario])
 
   const areasActuales = form.watch("areasPermitidas")
+  const oficiosActuales = form.watch("areasOficios")
 
-  function toggleArea(areaId: string) {
-    const actual = form.getValues("areasPermitidas")
-    form.setValue(
-      "areasPermitidas",
-      actual.includes(areaId)
-        ? actual.filter((a) => a !== areaId)
-        : [...actual, areaId]
-    )
+  function alternar(campo: "areasPermitidas" | "areasOficios", valor: string) {
+    const actual = form.getValues(campo)
+    form.setValue(campo, actual.includes(valor) ? actual.filter((a) => a !== valor) : [...actual, valor])
   }
 
   async function onSubmit(valores: CrearUsuarioInput) {
@@ -101,7 +105,7 @@ export function UsuarioFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{esEdicion ? "Editar usuario" : "Nuevo usuario"}</DialogTitle>
           <DialogDescription>
@@ -173,7 +177,7 @@ export function UsuarioFormDialog({
                     <button
                       key={area.id}
                       type="button"
-                      onClick={() => toggleArea(area.id)}
+                      onClick={() => alternar("areasPermitidas", area.id)}
                       className={`flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors ${
                         activa ? "border-gobierno/40 bg-gobierno-50" : "hover:bg-muted/30"
                       }`}
@@ -196,6 +200,33 @@ export function UsuarioFormDialog({
                 })}
               </div>
             </div>
+
+            {areasActuales.includes("oficios") && (
+              <div className="border-t pt-4">
+                <p className="text-sm font-semibold leading-none">Oficios que puede ver</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {oficiosActuales.length === TODAS_AREAS_OFICIO.length
+                    ? "Ve los oficios de todas las áreas."
+                    : "Solo verá los oficios de las áreas marcadas, además de los que él mismo registre."}
+                </p>
+                <div className="mt-2 grid gap-1 sm:grid-cols-2">
+                  {AREAS_OFICIO.map((a) => (
+                    <label
+                      key={a.valor}
+                      className="flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-sm text-foreground hover:bg-muted/40"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={oficiosActuales.includes(a.valor)}
+                        onChange={() => alternar("areasOficios", a.valor)}
+                        className="size-4 accent-gobierno"
+                      />
+                      {a.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <DialogFooter className="gap-2 pt-2">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

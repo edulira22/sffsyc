@@ -1,3 +1,5 @@
+import type { Prisma } from "@prisma/client"
+
 import { prisma } from "@/lib/prisma"
 import {
   aISO,
@@ -11,7 +13,8 @@ import { energiaLirabot } from "@/lib/oficios/ia"
 import type { OficioInput } from "@/lib/schemas/oficio"
 
 // Consultas de solo lectura del módulo Oficios. Nunca cargan los bytes del
-// escaneo (se sirven aparte por /api/oficios/[id]/archivo).
+// escaneo (se sirven aparte por /api/oficios/[id]/archivo). Todas reciben el
+// filtro de acceso del usuario (lib/oficios/acceso.ts).
 
 const CAMPOS_LISTA = {
   id: true,
@@ -36,9 +39,9 @@ const CAMPOS_LISTA = {
   archivo: { select: { tipo: true } },
 } as const
 
-export async function listarOficios(anio?: number) {
+export async function listarOficios(filtro: Prisma.OficioWhereInput, anio?: number) {
   const filas = await prisma.oficio.findMany({
-    where: { estatus: "activo", ...(anio ? { anio } : {}) },
+    where: { estatus: "activo", ...(anio ? { anio } : {}), AND: [filtro] },
     orderBy: [{ anio: "desc" }, { consecutivo: "desc" }],
     select: CAMPOS_LISTA,
   })
@@ -54,25 +57,25 @@ export async function listarOficios(anio?: number) {
 
 export type OficioListado = Awaited<ReturnType<typeof listarOficios>>[number]
 
-export async function aniosConOficios(): Promise<number[]> {
-  const r = await prisma.oficio.groupBy({ by: ["anio"], where: { estatus: "activo" }, orderBy: { anio: "desc" } })
+export async function aniosConOficios(filtro: Prisma.OficioWhereInput): Promise<number[]> {
+  const r = await prisma.oficio.groupBy({ by: ["anio"], where: { estatus: "activo", AND: [filtro] }, orderBy: { anio: "desc" } })
   return r.map((x) => x.anio)
 }
 
-export async function resumenOficios() {
+export async function resumenOficios(filtro: Prisma.OficioWhereInput) {
   const hoy = hoyChihuahua()
   const inicioMes = new Date(`${hoy.slice(0, 7)}-01T00:00:00Z`)
   const [abiertos, recibidosMes, espacio, energia] = await Promise.all([
     prisma.oficio.findMany({
-      where: { estatus: "activo", estado: { in: ESTADOS_PENDIENTES } },
+      where: { estatus: "activo", estado: { in: ESTADOS_PENDIENTES }, AND: [filtro] },
       select: { estado: true, fechaLimite: true, revisado: true },
     }),
-    prisma.oficio.count({ where: { estatus: "activo", fechaRecepcion: { gte: inicioMes } } }),
+    prisma.oficio.count({ where: { estatus: "activo", fechaRecepcion: { gte: inicioMes }, AND: [filtro] } }),
     prisma.oficioArchivo.aggregate({ _sum: { tamano: true } }),
     energiaLirabot(),
   ])
   const semaforos = abiertos.map((o) => semaforo(o.estado, aISO(o.fechaLimite), hoy))
-  const sinRevisar = await prisma.oficio.count({ where: { estatus: "activo", revisado: false } })
+  const sinRevisar = await prisma.oficio.count({ where: { estatus: "activo", revisado: false, AND: [filtro] } })
   return {
     pendientes: abiertos.length,
     vencidos: semaforos.filter((s) => s === "vencido").length,
@@ -127,9 +130,9 @@ export function aFormulario(o: {
   }
 }
 
-export async function obtenerOficio(id: number) {
+export async function obtenerOficio(id: number, filtro: Prisma.OficioWhereInput) {
   const o = await prisma.oficio.findFirst({
-    where: { id, estatus: "activo" },
+    where: { id, estatus: "activo", AND: [filtro] },
     include: {
       archivo: { select: { nombreOriginal: true, tipo: true, tamano: true } },
       movimientos: { orderBy: { createdAt: "desc" } },

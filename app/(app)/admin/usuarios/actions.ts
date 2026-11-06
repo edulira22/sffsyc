@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma"
 import { requerirSesion } from "@/lib/session"
 import { exito, fallo, type ResultadoAccion } from "@/lib/acciones"
 import { normalizarAreas } from "@/lib/areas"
+import { normalizarAreasOficio } from "@/lib/oficios/catalogos"
 import {
   crearUsuarioSchema,
   editarUsuarioSchema,
@@ -34,6 +35,7 @@ export async function crearUsuario(input: CrearUsuarioInput): Promise<ResultadoA
         // real es por área (abajo). El rol queda en "admin" por compatibilidad.
         rol: "admin",
         areasPermitidas: normalizarAreas(d.areasPermitidas),
+        areasOficios: normalizarAreasOficio(d.areasOficios),
       },
     })
     revalidatePath("/admin/usuarios")
@@ -63,6 +65,7 @@ export async function editarUsuario(
         nombre: d.nombre,
         email: d.email,
         areasPermitidas: normalizarAreas(d.areasPermitidas),
+        areasOficios: normalizarAreasOficio(d.areasOficios),
       },
     })
     revalidatePath("/admin/usuarios")

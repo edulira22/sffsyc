@@ -1,5 +1,6 @@
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
+import { accesoOficios } from "@/lib/oficios/acceso"
 
 // Sirve el escaneo de un oficio. /api no pasa por el middleware: la sesión se
 // verifica aquí. Los oficios contienen datos personales; nunca se cachean en
@@ -11,8 +12,9 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   const id = Number.parseInt(params.id, 10)
   if (!Number.isFinite(id)) return new Response("Solicitud inválida", { status: 400 })
 
+  const { filtro } = await accesoOficios(session)
   const archivo = await prisma.oficioArchivo.findFirst({
-    where: { oficioId: id, oficio: { estatus: "activo" } },
+    where: { oficioId: id, oficio: { estatus: "activo", AND: [filtro] } },
   })
   if (!archivo) return new Response("No encontrado", { status: 404 })
 

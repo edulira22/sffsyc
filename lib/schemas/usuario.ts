@@ -5,6 +5,8 @@ const campos = z.object({
   email: z.string().trim().toLowerCase().email("Correo no válido"),
   // Áreas a las que puede entrar. Lista vacía = acceso a todo (uso interno).
   areasPermitidas: z.array(z.string()).default([]),
+  // Áreas de Oficios que puede ver. Lista vacía = todas.
+  areasOficios: z.array(z.string()).default([]),
 })
 
 export const editarUsuarioSchema = campos

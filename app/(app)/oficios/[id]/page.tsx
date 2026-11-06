@@ -2,11 +2,12 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
 
-import { requerirSesion } from "@/lib/session"
+import { accesoOficios } from "@/lib/oficios/acceso"
 import { obtenerOficio } from "@/lib/data/oficios"
 import { hoyChihuahua } from "@/lib/oficios/catalogos"
 import { iaDisponible } from "@/lib/oficios/ia"
 import { DetalleOficio } from "@/components/oficios/detalle-oficio"
+import { SinAccesoOficios } from "@/components/oficios/sin-acceso"
 
 export const metadata = { title: "Oficio" }
 
@@ -14,9 +15,11 @@ export const metadata = { title: "Oficio" }
 export const maxDuration = 60
 
 export default async function OficioPage({ params }: { params: { id: string } }) {
-  await requerirSesion()
+  const acceso = await accesoOficios()
+  if (!acceso.entra) return <SinAccesoOficios />
   const id = Number.parseInt(params.id, 10)
-  const oficio = Number.isFinite(id) ? await obtenerOficio(id) : null
+  // Un oficio de un área que el usuario no ve se trata como inexistente.
+  const oficio = Number.isFinite(id) ? await obtenerOficio(id, acceso.filtro) : null
   if (!oficio) notFound()
 
   return (

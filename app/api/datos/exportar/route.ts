@@ -4,6 +4,7 @@ import { auth } from "@/auth"
 import { ENTIDADES_EXCEL } from "@/lib/excel/columnas"
 import { construirLibro, construirPlantilla } from "@/lib/excel/exportar"
 import { obtenerFilasExport } from "@/lib/excel/datos-export"
+import { accesoOficios } from "@/lib/oficios/acceso"
 
 const TIPO_XLSX =
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -38,7 +39,10 @@ export async function GET(req: NextRequest) {
 
   const buffer = esPlantilla
     ? await construirPlantilla(entidad)
-    : await construirLibro(entidad, await obtenerFilasExport(entidad))
+    : await construirLibro(
+        entidad,
+        await obtenerFilasExport(entidad, entidad === "oficios" ? (await accesoOficios(session)).filtro : {})
+      )
 
   const fecha = new Date().toISOString().slice(0, 10)
   const nombreArchivo = esPlantilla

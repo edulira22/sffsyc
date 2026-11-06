@@ -1,11 +1,12 @@
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 
-import { requerirSesion } from "@/lib/session"
+import { accesoOficios } from "@/lib/oficios/acceso"
 import { hoyChihuahua } from "@/lib/oficios/catalogos"
 import { energiaLirabot } from "@/lib/oficios/ia"
 import { PageHeader } from "@/components/ui-patterns/page-header"
 import { CapturaOficios } from "@/components/oficios/captura-oficios"
+import { SinAccesoOficios } from "@/components/oficios/sin-acceso"
 
 export const metadata = { title: "Registrar oficios" }
 
@@ -13,7 +14,8 @@ export const metadata = { title: "Registrar oficios" }
 export const maxDuration = 60
 
 export default async function NuevoOficioPage() {
-  await requerirSesion()
+  const acceso = await accesoOficios()
+  if (!acceso.entra) return <SinAccesoOficios />
   const energia = await energiaLirabot()
   return (
     <div className="space-y-4">
