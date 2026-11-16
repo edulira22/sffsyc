@@ -31,7 +31,7 @@ function ContenidoSidebar({ onNavigate, soloProfesor }: { onNavigate?: () => voi
         </div>
       </Link>
 
-      <div className="mt-2 flex-1 overflow-y-auto px-3">
+      <div className="scroll-oscuro mt-2 min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-3">
         <SidebarNav onNavigate={onNavigate} soloProfesor={soloProfesor} />
       </div>
 

@@ -74,6 +74,31 @@
   .text-balance {
     text-wrap: balance;
   }
+
+  /* Barra de desplazamiento delgada y discreta sobre fondos oscuros (menú lateral). */
+  /* Chrome y Edge usan ::-webkit-scrollbar (sin flechas); Firefox, el estándar. */
+  @supports (-moz-appearance: none) {
+    .scroll-oscuro {
+      scrollbar-width: thin;
+      scrollbar-color: rgb(255 255 255 / 0.2) transparent;
+    }
+  }
+  .scroll-oscuro::-webkit-scrollbar {
+    width: 6px;
+  }
+  .scroll-oscuro::-webkit-scrollbar-button {
+    display: none;
+  }
+  .scroll-oscuro::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scroll-oscuro::-webkit-scrollbar-thumb {
+    background: rgb(255 255 255 / 0.2);
+    border-radius: 9999px;
+  }
+  .scroll-oscuro::-webkit-scrollbar-thumb:hover {
+    background: rgb(255 255 255 / 0.35);
+  }
 }
 
 /* =============================================================================

@@ -51,9 +51,9 @@ function AreaProximamente({ area }: { area: AreaNav }) {
   return (
     <div className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold text-white/30 cursor-not-allowed select-none">
       <Icono className="size-[18px] shrink-0" />
-      <span className="flex-1">{area.titulo}</span>
-      <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium text-white/40">
-        Próximamente
+      <span className="min-w-0 flex-1 truncate">{area.titulo}</span>
+      <span className="shrink-0 rounded-full bg-white/10 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-white/40">
+        Pronto
       </span>
     </div>
   )
@@ -61,26 +61,24 @@ function AreaProximamente({ area }: { area: AreaNav }) {
 
 function GrupoArea({
   area,
+  abierto,
+  alternar,
   onNavigate,
 }: {
   area: AreaNav
+  abierto: boolean
+  alternar: () => void
   onNavigate?: () => void
 }) {
   const pathname = usePathname()
   const areaActiva = area.modulos.some((m) => estaActivo(pathname, m.href))
-  const [abierto, setAbierto] = useState(areaActiva)
-
-  useEffect(() => {
-    if (areaActiva) setAbierto(true)
-  }, [areaActiva])
-
   const Icono = area.icono
 
   return (
     <div>
       <button
         type="button"
-        onClick={() => setAbierto((v) => !v)}
+        onClick={alternar}
         aria-expanded={abierto}
         className={cn(
           "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors",
@@ -127,7 +125,21 @@ function GrupoArea({
   )
 }
 
+/** Área a la que pertenece la ruta actual (para abrirla sola). */
+function areaDeRuta(pathname: string) {
+  return NAV_AREAS.find((a) => a.modulos.some((m) => estaActivo(pathname, m.href)))?.id ?? null
+}
+
 export function SidebarNav({ onNavigate, soloProfesor }: { onNavigate?: () => void; soloProfesor?: boolean }) {
+  const pathname = usePathname()
+  // Una sola área abierta a la vez: el menú se mantiene corto.
+  const [abierta, setAbierta] = useState<string | null>(() => areaDeRuta(pathname))
+
+  useEffect(() => {
+    const actual = areaDeRuta(pathname)
+    if (actual) setAbierta(actual)
+  }, [pathname])
+
   if (soloProfesor) {
     return (
       <nav className="flex flex-col gap-1">
@@ -149,7 +161,13 @@ export function SidebarNav({ onNavigate, soloProfesor }: { onNavigate?: () => vo
         area.proximamente ? (
           <AreaProximamente key={area.id} area={area} />
         ) : (
-          <GrupoArea key={area.id} area={area} onNavigate={onNavigate} />
+          <GrupoArea
+            key={area.id}
+            area={area}
+            abierto={abierta === area.id}
+            alternar={() => setAbierta(abierta === area.id ? null : area.id)}
+            onNavigate={onNavigate}
+          />
         )
       )}
 
