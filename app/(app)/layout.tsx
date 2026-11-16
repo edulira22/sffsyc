@@ -14,6 +14,7 @@ export default async function AppLayout({
         nombre: session.user.nombre,
         email: session.user.email ?? null,
       }}
+      soloProfesor={session.user.rol === "profesor_stem"}
     >
       {children}
     </AppShell>

@@ -20,6 +20,13 @@ export const authConfig = {
         nextUrl.pathname.startsWith("/informe")
       if (esPublica) return true
 
+      // Los profesores del Centro STEM solo usan "Mis cursos": cualquier otra
+      // ruta (incluido /login ya con sesión) los regresa ahí.
+      if (estaLogueado && auth.user.rol === "profesor_stem") {
+        if (nextUrl.pathname.startsWith("/stem/mis-cursos")) return true
+        return Response.redirect(new URL("/stem/mis-cursos", nextUrl))
+      }
+
       if (enLogin) {
         if (estaLogueado) {
           return Response.redirect(new URL("/dashboard", nextUrl))

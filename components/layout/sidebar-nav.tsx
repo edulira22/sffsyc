@@ -10,6 +10,7 @@ import {
   NAV_INICIO,
   NAV_ADMINISTRACION,
   NAV_AREAS,
+  NAV_PROFESOR_STEM,
   type AreaNav,
   type ItemSimple,
 } from "@/lib/navegacion"
@@ -126,7 +127,14 @@ function GrupoArea({
   )
 }
 
-export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
+export function SidebarNav({ onNavigate, soloProfesor }: { onNavigate?: () => void; soloProfesor?: boolean }) {
+  if (soloProfesor) {
+    return (
+      <nav className="flex flex-col gap-1">
+        <EnlaceSimple item={NAV_PROFESOR_STEM} onNavigate={onNavigate} />
+      </nav>
+    )
+  }
   return (
     <nav className="flex flex-col gap-1">
       <EnlaceSimple item={NAV_INICIO} onNavigate={onNavigate} />

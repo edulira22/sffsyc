@@ -14,6 +14,12 @@ import {
   Mail,
   Inbox,
   FilePlus2,
+  Cpu,
+  BarChart3,
+  CalendarRange,
+  GraduationCap,
+  Bot,
+  ClipboardCheck,
   type LucideIcon,
 } from "lucide-react"
 
@@ -52,6 +58,13 @@ export const NAV_INICIO: ItemSimple = {
   icono: LayoutDashboard,
 }
 
+/** Único enlace que ven los profesores del Centro STEM. */
+export const NAV_PROFESOR_STEM: ItemSimple = {
+  titulo: "Mis cursos",
+  href: "/stem/mis-cursos",
+  icono: ClipboardCheck,
+}
+
 export const NAV_ADMINISTRACION: ItemSimple = {
   titulo: "Administración",
   href: "/admin",
@@ -81,6 +94,19 @@ export const NAV_AREAS: AreaNav[] = [
     modulos: [
       { titulo: "Bandeja de oficios", href: "/oficios", icono: Inbox },
       { titulo: "Registrar oficios", href: "/oficios/nuevo", icono: FilePlus2 },
+    ],
+  },
+  {
+    id: "centro-stem",
+    titulo: "Centro STEM",
+    descripcion: "Cursos, alumnos y asistencia del Centro STEM San Quintín",
+    icono: Cpu,
+    modulos: [
+      { titulo: "Panel", href: "/stem/panel", icono: BarChart3 },
+      { titulo: "Cursos", href: "/stem/cursos", icono: CalendarRange },
+      { titulo: "Alumnos", href: "/stem/alumnos", icono: Users },
+      { titulo: "Clases", href: "/stem/clases", icono: Bot },
+      { titulo: "Profesores", href: "/stem/profesores", icono: GraduationCap },
     ],
   },
   {

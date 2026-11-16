@@ -85,6 +85,8 @@ enum RolUsuario {
   coordinacion_general
   coordinadora_zona
   oficina
+  /// Profesor del Centro STEM: solo ve sus cursos.
+  profesor_stem
 }
 
 enum EstatusUsuario {
@@ -596,7 +598,174 @@ model UsuarioSistema {
   createdAt        DateTime       @default(now()) @map("created_at")
   updatedAt        DateTime       @updatedAt @map("updated_at")
 
-  zona Zona? @relation(fields: [zonaId], references: [id])
+  zona        Zona?         @relation(fields: [zonaId], references: [id])
+  profesorStem StemProfesor?
 
   @@map("usuarios_sistema")
+}
+
+// =============================================================================
+//  Centro STEM — clases, profesores, cursos, alumnos y asistencia
+//  (tablas creadas con prisma/sql/centro_stem.sql)
+// =============================================================================
+
+/// Catálogo de clases (p. ej. VEX IQ). Un curso es una clase con fechas,
+/// horario, profesor y cupo.
+model StemClase {
+  id         Int      @id @default(autoincrement())
+  nombre     String   @unique(map: "stem_clases_nombre_unico")
+  resumen    String   @default("")
+  edadMinima Int?     @map("edad_minima")
+  edadMaxima Int?     @map("edad_maxima")
+  /// activa | inactiva
+  estatus    String   @default("activa")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  profesores StemProfesorClase[]
+  cursos     StemCurso[]
+
+  @@map("stem_clases")
+}
+
+/// Perfil del profesor; su acceso a la plataforma es un UsuarioSistema con
+/// rol profesor_stem.
+model StemProfesor {
+  id        Int      @id @default(autoincrement())
+  usuarioId Int      @unique @map("usuario_id")
+  nombre    String
+  telefono  String   @default("")
+  notas     String   @default("")
+  /// activo | inactivo
+  estatus   String   @default("activo")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  usuario UsuarioSistema      @relation(fields: [usuarioId], references: [id])
+  clases  StemProfesorClase[]
+  cursos  StemCurso[]
+
+  @@map("stem_profesores")
+}
+
+/// Clases que un profesor puede impartir.
+model StemProfesorClase {
+  profesorId Int @map("profesor_id")
+  claseId    Int @map("clase_id")
+
+  profesor StemProfesor @relation(fields: [profesorId], references: [id])
+  clase    StemClase    @relation(fields: [claseId], references: [id])
+
+  @@id([profesorId, claseId])
+  @@map("stem_profesor_clases")
+}
+
+/// Alumno identificado por su CURP (única). Folio ST-0001 derivado del id.
+model StemAlumno {
+  id              Int      @id @default(autoincrement())
+  curp            String   @unique
+  nombres         String
+  apellidoPaterno String   @map("apellido_paterno")
+  apellidoMaterno String   @default("") @map("apellido_materno")
+  fechaNacimiento DateTime @map("fecha_nacimiento") @db.Date
+  /// H | M | X (de la CURP)
+  sexo            String
+  escuela         String   @default("")
+  tipoEscuela     String   @default("") @map("tipo_escuela")
+  gradoEscolar    String   @default("") @map("grado_escolar")
+  tutorNombre     String   @map("tutor_nombre")
+  tutorParentesco String   @map("tutor_parentesco")
+  tutorTelefono   String   @map("tutor_telefono")
+  telefonoAlterno String   @default("") @map("telefono_alterno")
+  tutorCorreo     String   @default("") @map("tutor_correo")
+  /// Alergias, condiciones o medicamentos que el profesor debe saber.
+  salud           String   @default("")
+  observaciones   String   @default("")
+  estatus         String   @default("activo")
+  creadoPorId     Int?     @map("creado_por_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  inscripciones StemInscripcion[]
+  asistencias   StemAsistencia[]
+
+  @@map("stem_alumnos")
+}
+
+/// Curso: una clase en un periodo, con profesor, días, horario y cupo.
+model StemCurso {
+  id                Int      @id @default(autoincrement())
+  claseId           Int      @map("clase_id")
+  profesorId        Int      @map("profesor_id")
+  fechaInicio       DateTime @map("fecha_inicio") @db.Date
+  fechaFin          DateTime @map("fecha_fin") @db.Date
+  /// lun | mar | mie | jue | vie | sab | dom
+  dias              String[] @default([])
+  /// HH:MM (24 h)
+  horaInicio        String   @map("hora_inicio")
+  horaFin           String   @map("hora_fin")
+  cupo              Int
+  notas             String   @default("")
+  /// activo | cancelado (por iniciar / en curso / concluido se calcula por fechas)
+  estatus           String   @default("activo")
+  motivoCancelacion String   @default("") @map("motivo_cancelacion")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  clase         StemClase         @relation(fields: [claseId], references: [id])
+  profesor      StemProfesor      @relation(fields: [profesorId], references: [id])
+  inscripciones StemInscripcion[]
+  sesiones      StemSesion[]
+
+  @@index([profesorId], map: "stem_cursos_profesor")
+  @@map("stem_cursos")
+}
+
+model StemInscripcion {
+  id               Int      @id @default(autoincrement())
+  cursoId          Int      @map("curso_id")
+  alumnoId         Int      @map("alumno_id")
+  fechaInscripcion DateTime @default(now()) @map("fecha_inscripcion") @db.Date
+  /// activa | baja
+  estatus          String   @default("activa")
+  motivoBaja       String   @default("") @map("motivo_baja")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  curso  StemCurso  @relation(fields: [cursoId], references: [id])
+  alumno StemAlumno @relation(fields: [alumnoId], references: [id])
+
+  @@unique([cursoId, alumnoId], map: "stem_inscripcion_unica")
+  @@index([alumnoId], map: "stem_inscripciones_alumno")
+  @@map("stem_inscripciones")
+}
+
+/// Un día de clase en el que se tomó asistencia.
+model StemSesion {
+  id            Int      @id @default(autoincrement())
+  cursoId       Int      @map("curso_id")
+  fecha         DateTime @db.Date
+  tema          String   @default("")
+  registradaPor String   @default("") @map("registrada_por")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  curso       StemCurso        @relation(fields: [cursoId], references: [id])
+  asistencias StemAsistencia[]
+
+  @@unique([cursoId, fecha], map: "stem_sesion_unica")
+  @@map("stem_sesiones")
+}
+
+model StemAsistencia {
+  sesionId Int    @map("sesion_id")
+  alumnoId Int    @map("alumno_id")
+  /// asistio | falta | justificada
+  estado   String
+
+  sesion StemSesion @relation(fields: [sesionId], references: [id])
+  alumno StemAlumno @relation(fields: [alumnoId], references: [id])
+
+  @@id([sesionId, alumnoId])
+  @@map("stem_asistencias")
 }

@@ -12,6 +12,7 @@ export const NOMBRE_ROL: Record<RolUsuario, string> = {
   coordinacion_general: "Coordinación General",
   coordinadora_zona: "Coordinadora de Zona",
   oficina: "Oficina",
+  profesor_stem: "Profesor STEM",
 }
 
 /** Solo el administrador gestiona usuarios y zonas del sistema. */

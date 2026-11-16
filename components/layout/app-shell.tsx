@@ -14,11 +14,11 @@ export type UsuarioShell = {
   email: string | null
 }
 
-function ContenidoSidebar({ onNavigate }: { onNavigate?: () => void }) {
+function ContenidoSidebar({ onNavigate, soloProfesor }: { onNavigate?: () => void; soloProfesor?: boolean }) {
   return (
     <div className="flex h-full flex-col">
       <Link
-        href="/dashboard"
+        href={soloProfesor ? "/stem/mis-cursos" : "/dashboard"}
         onClick={onNavigate}
         className="flex items-center gap-3 px-5 py-5"
       >
@@ -32,7 +32,7 @@ function ContenidoSidebar({ onNavigate }: { onNavigate?: () => void }) {
       </Link>
 
       <div className="mt-2 flex-1 overflow-y-auto px-3">
-        <SidebarNav onNavigate={onNavigate} />
+        <SidebarNav onNavigate={onNavigate} soloProfesor={soloProfesor} />
       </div>
 
       <div className="px-5 py-4 text-[11px] text-white/40">
@@ -44,9 +44,12 @@ function ContenidoSidebar({ onNavigate }: { onNavigate?: () => void }) {
 
 export function AppShell({
   usuario,
+  soloProfesor = false,
   children,
 }: {
   usuario: UsuarioShell
+  /** Profesor del Centro STEM: el menú solo muestra "Mis cursos". */
+  soloProfesor?: boolean
   children: React.ReactNode
 }) {
   const [menuAbierto, setMenuAbierto] = useState(false)
@@ -54,13 +57,13 @@ export function AppShell({
   return (
     <div className="flex min-h-screen">
       <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col bg-gobierno md:flex print:hidden">
-        <ContenidoSidebar />
+        <ContenidoSidebar soloProfesor={soloProfesor} />
       </aside>
 
       <Sheet open={menuAbierto} onOpenChange={setMenuAbierto}>
         <SheetContent side="left" className="w-64 border-0 bg-gobierno p-0">
           <SheetTitle className="sr-only">Menú de navegación</SheetTitle>
-          <ContenidoSidebar onNavigate={() => setMenuAbierto(false)} />
+          <ContenidoSidebar onNavigate={() => setMenuAbierto(false)} soloProfesor={soloProfesor} />
         </SheetContent>
       </Sheet>
 
