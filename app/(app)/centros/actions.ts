@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache"
 import type { EstatusCentro } from "@prisma/client"
 
+import { requerirArea } from "@/lib/acceso"
 import { prisma } from "@/lib/prisma"
-import { requerirRol } from "@/lib/session"
 import { exito, fallo, type ResultadoAccion } from "@/lib/acciones"
 import { centroSchema, type CentroInput } from "@/lib/schemas/centro"
 import {
@@ -12,7 +12,6 @@ import {
   type AsignarClaseInput,
 } from "@/lib/schemas/clase-centro"
 
-const ROLES_EDICION = ["admin", "coordinacion_general", "coordinadora_zona"] as const
 
 type ResultadoCrear = { ok: true; id: number } | { ok: false; error: string }
 
@@ -31,7 +30,7 @@ function datosCentro(d: CentroInput, zonaId: number) {
 }
 
 export async function crearCentro(input: CentroInput): Promise<ResultadoCrear> {
-  const session = await requerirRol([...ROLES_EDICION])
+  const session = await requerirArea("centros-comunitarios")
 
   const parsed = centroSchema.safeParse(input)
   if (!parsed.success) {
@@ -57,7 +56,7 @@ export async function editarCentro(
   id: number,
   input: CentroInput
 ): Promise<ResultadoAccion> {
-  const session = await requerirRol([...ROLES_EDICION])
+  const session = await requerirArea("centros-comunitarios")
 
   const parsed = centroSchema.safeParse(input)
   if (!parsed.success) {
@@ -86,7 +85,7 @@ export async function cambiarEstatusCentro(
   id: number,
   estatus: EstatusCentro
 ): Promise<ResultadoAccion> {
-  const session = await requerirRol([...ROLES_EDICION])
+  const session = await requerirArea("centros-comunitarios")
 
   const existente = await prisma.centro.findUnique({ where: { id } })
   if (!existente) return fallo("El centro no existe.")
@@ -110,7 +109,7 @@ export async function asignarClase(
   centroId: number,
   input: AsignarClaseInput
 ): Promise<ResultadoAccion> {
-  const session = await requerirRol([...ROLES_EDICION])
+  const session = await requerirArea("centros-comunitarios")
 
   const centro = await prisma.centro.findUnique({ where: { id: centroId } })
   if (!centro) return fallo("El centro no existe.")
@@ -153,7 +152,7 @@ export async function cambiarEstatusClaseCentro(
   centroId: number,
   estatus: "activa" | "inactiva"
 ): Promise<ResultadoAccion> {
-  await requerirRol([...ROLES_EDICION])
+  await requerirArea("centros-comunitarios")
   await prisma.claseCentro.update({
     where: { id: claseCentroId },
     data: { estatus },

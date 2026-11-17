@@ -2,8 +2,8 @@
 
 import { revalidatePath } from "next/cache"
 
+import { requerirArea } from "@/lib/acceso"
 import { prisma } from "@/lib/prisma"
-import { requerirSesion } from "@/lib/session"
 import { exito, fallo, type ResultadoAccion } from "@/lib/acciones"
 import {
   DOCUMENTOS_VERANO,
@@ -24,7 +24,7 @@ export async function actualizarStatusVerano(
   documentos: string[],
   reciboPago: string
 ): Promise<ResultadoAccion> {
-  await requerirSesion()
+  await requerirArea("eventos")
 
   const validos = documentos.filter((d) =>
     DOCUMENTOS_VERANO.some((doc) => doc.id === d)
@@ -50,7 +50,7 @@ export async function darDeBajaVerano(
   id: number,
   motivo: string
 ): Promise<ResultadoAccion> {
-  await requerirSesion()
+  await requerirArea("eventos")
   const m = motivo.trim()
   if (!m) return fallo("Indica el motivo de la baja.")
 
@@ -69,7 +69,7 @@ export async function darDeBajaVerano(
 
 // Reactiva una inscripción dada de baja.
 export async function reactivarVerano(id: number): Promise<ResultadoAccion> {
-  await requerirSesion()
+  await requerirArea("eventos")
   try {
     await prisma.inscripcionVerano.update({
       where: { id },
@@ -88,7 +88,7 @@ export async function reactivarVerano(id: number): Promise<ResultadoAccion> {
 export async function eliminarInscripcionVerano(
   id: number
 ): Promise<ResultadoAccion> {
-  await requerirSesion()
+  await requerirArea("eventos")
   try {
     await prisma.inscripcionVerano.delete({ where: { id } })
     revalidatePath("/eventos/verano-difertido/inscripciones")
@@ -105,7 +105,7 @@ export async function editarInscripcionVerano(
   id: number,
   input: InscripcionVeranoInput
 ): Promise<ResultadoAccion> {
-  await requerirSesion()
+  await requerirArea("eventos")
 
   const parsed = inscripcionVeranoSchema.safeParse(input)
   if (!parsed.success) {

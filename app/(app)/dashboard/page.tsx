@@ -11,6 +11,7 @@ import {
 } from "lucide-react"
 
 import { requerirSesion } from "@/lib/session"
+import { accesoDe } from "@/lib/acceso"
 import { NOMBRE_ROL, puedeGestionarCatalogos } from "@/lib/permisos"
 import { prisma } from "@/lib/prisma"
 import { metricasDashboard } from "@/lib/data/dashboard"
@@ -57,8 +58,12 @@ export default async function DashboardPage() {
   const esZona = session.user.rol === "coordinadora_zona"
   const zonaId = esZona ? session.user.zonaId ?? -1 : undefined
 
-  const { centrosActivos, clasesActivas, beneficiariosActivos, ultimos } =
-    await metricasDashboard(zonaId)
+  // Solo se muestran (y se consultan) las secciones que el usuario puede usar.
+  const acceso = await accesoDe(session)
+  const veCentros = acceso.areas.includes("centros-comunitarios")
+  const { centrosActivos, clasesActivas, beneficiariosActivos, ultimos } = veCentros
+    ? await metricasDashboard(zonaId)
+    : { centrosActivos: 0, clasesActivas: 0, beneficiariosActivos: 0, ultimos: [] }
 
   let zonaNombre: string | null = null
   if (esZona && session.user.zonaId) {
@@ -74,8 +79,9 @@ export default async function DashboardPage() {
       : []),
   ]
 
-  const areasActivas = NAV_AREAS.filter((a) => !a.proximamente)
-  const areasProximas = NAV_AREAS.filter((a) => a.proximamente)
+  const misAreas = NAV_AREAS.filter((a) => acceso.areas.includes(a.id as (typeof acceso.areas)[number]))
+  const areasActivas = misAreas.filter((a) => !a.proximamente)
+  const areasProximas = misAreas.filter((a) => a.proximamente)
 
   return (
     <div className="space-y-8">
@@ -152,6 +158,7 @@ export default async function DashboardPage() {
       </section>
 
       {/* Métricas de Centros Comunitarios */}
+      {veCentros && (<>
       <section>
         <h2 className="mb-3 text-sm font-semibold text-foreground">
           Centros Comunitarios — resumen
@@ -252,6 +259,7 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+      </>)}
     </div>
   )
 }

@@ -1,11 +1,11 @@
 "use server"
 
-import { requerirSesion } from "@/lib/session"
+import { requerirArea } from "@/lib/acceso"
 import { prisma } from "@/lib/prisma"
 import type { ClaseOpcion } from "@/components/centros/registrador-masivo"
 
 export async function obtenerClasesCentro(centroId: number): Promise<ClaseOpcion[]> {
-  const session = await requerirSesion()
+  const session = await requerirArea("centros-comunitarios")
 
   const centro = await prisma.centro.findUnique({
     where: { id: centroId },

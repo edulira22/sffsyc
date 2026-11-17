@@ -3,15 +3,14 @@
 import { revalidatePath } from "next/cache"
 import type { EstatusActivo } from "@prisma/client"
 
+import { requerirArea } from "@/lib/acceso"
 import { prisma } from "@/lib/prisma"
-import { requerirRol } from "@/lib/session"
 import { exito, fallo, type ResultadoAccion } from "@/lib/acciones"
 import { claseSchema, type ClaseInput } from "@/lib/schemas/clase"
 
-const ROLES = ["admin", "coordinacion_general"] as const
 
 export async function crearClase(input: ClaseInput): Promise<ResultadoAccion> {
-  await requerirRol([...ROLES])
+  await requerirArea("centros-comunitarios")
 
   const parsed = claseSchema.safeParse(input)
   if (!parsed.success) return fallo(parsed.error.issues[0]?.message ?? "Datos inválidos")
@@ -34,7 +33,7 @@ export async function editarClase(
   id: number,
   input: ClaseInput
 ): Promise<ResultadoAccion> {
-  await requerirRol([...ROLES])
+  await requerirArea("centros-comunitarios")
 
   const parsed = claseSchema.safeParse(input)
   if (!parsed.success) return fallo(parsed.error.issues[0]?.message ?? "Datos inválidos")
@@ -58,7 +57,7 @@ export async function cambiarEstatusClase(
   id: number,
   estatus: EstatusActivo
 ): Promise<ResultadoAccion> {
-  await requerirRol([...ROLES])
+  await requerirArea("centros-comunitarios")
   await prisma.catalogoClase.update({ where: { id }, data: { estatus } })
   revalidatePath("/catalogos/clases")
   return exito(estatus === "activa" ? "Clase activada" : "Clase desactivada")

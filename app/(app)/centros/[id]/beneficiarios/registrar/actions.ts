@@ -4,8 +4,8 @@ import { revalidatePath } from "next/cache"
 import { Prisma } from "@prisma/client"
 import { z } from "zod"
 
+import { requerirArea } from "@/lib/acceso"
 import { prisma } from "@/lib/prisma"
-import { requerirSesion } from "@/lib/session"
 import { aplicaGradoEscuela, ESCOLARIDADES } from "@/lib/schemas/beneficiario"
 
 // ---- Schema para una fila del registrador masivo ----------------------------
@@ -51,7 +51,7 @@ export async function verificarCurp(curp: string): Promise<{
   existe: boolean
   beneficiario?: { id: number; nombre: string; fechaNacimiento: string }
 }> {
-  await requerirSesion()
+  await requerirArea("centros-comunitarios")
   const limpia = curp.trim().toUpperCase()
   if (!limpia || !/^[A-Z0-9]{18}$/.test(limpia)) return { existe: false }
 
@@ -96,7 +96,7 @@ export async function registrarMasivo(
   filas: FilaBatch[],
   periodoFecha?: string
 ): Promise<{ ok: boolean; resultados: ResultadoFila[] }> {
-  const session = await requerirSesion()
+  const session = await requerirArea("centros-comunitarios")
 
   const centro = await prisma.centro.findUnique({
     where: { id: centroId },

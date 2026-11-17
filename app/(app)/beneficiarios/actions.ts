@@ -4,8 +4,8 @@ import { revalidatePath } from "next/cache"
 import { Prisma } from "@prisma/client"
 import type { EstatusBeneficiario, EstatusInscripcion } from "@prisma/client"
 
+import { requerirArea } from "@/lib/acceso"
 import { prisma } from "@/lib/prisma"
-import { requerirSesion } from "@/lib/session"
 import { exito, fallo, type ResultadoAccion } from "@/lib/acciones"
 import {
   beneficiarioSchema,
@@ -19,7 +19,7 @@ type ResultadoCrear = { ok: true; id: number } | { ok: false; error: string }
 
 // Búsqueda de duplicados expuesta como acción para el flujo de registro.
 export async function accionBuscarDuplicados(params: ParamsDuplicado) {
-  await requerirSesion()
+  await requerirArea("centros-comunitarios")
   const resultados = await buscarDuplicados(params)
   return resultados.map((b) => ({
     id: b.id,
@@ -51,7 +51,7 @@ function datosBeneficiario(d: BeneficiarioInput) {
 export async function crearBeneficiario(
   input: BeneficiarioInput
 ): Promise<ResultadoCrear> {
-  await requerirSesion()
+  await requerirArea("centros-comunitarios")
 
   const parsed = beneficiarioSchema.safeParse(input)
   if (!parsed.success) {
@@ -76,7 +76,7 @@ export async function editarBeneficiario(
   id: number,
   input: BeneficiarioInput
 ): Promise<ResultadoAccion> {
-  await requerirSesion()
+  await requerirArea("centros-comunitarios")
 
   const parsed = beneficiarioSchema.safeParse(input)
   if (!parsed.success) {
@@ -103,7 +103,7 @@ export async function cambiarEstatusBeneficiario(
   id: number,
   estatus: EstatusBeneficiario
 ): Promise<ResultadoAccion> {
-  await requerirSesion()
+  await requerirArea("centros-comunitarios")
   await prisma.beneficiario.update({ where: { id }, data: { estatus } })
   revalidatePath("/beneficiarios")
   revalidatePath(`/beneficiarios/${id}`)
@@ -121,7 +121,7 @@ export async function crearInscripcion(
   beneficiarioId: number,
   input: InscripcionInput
 ): Promise<ResultadoAccion> {
-  const session = await requerirSesion()
+  const session = await requerirArea("centros-comunitarios")
 
   const parsed = inscripcionSchema.safeParse(input)
   if (!parsed.success) {
@@ -175,7 +175,7 @@ export async function cambiarEstatusInscripcion(
   beneficiarioId: number,
   estatus: EstatusInscripcion
 ): Promise<ResultadoAccion> {
-  await requerirSesion()
+  await requerirArea("centros-comunitarios")
   await prisma.inscripcion.update({ where: { id }, data: { estatus } })
   revalidatePath(`/beneficiarios/${beneficiarioId}`)
   return exito(

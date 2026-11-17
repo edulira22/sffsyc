@@ -2,8 +2,8 @@
 
 import { revalidatePath, revalidateTag } from "next/cache"
 
+import { requerirArea } from "@/lib/acceso"
 import { prisma } from "@/lib/prisma"
-import { requerirSesion } from "@/lib/session"
 import { TAG_ACOMODO } from "@/lib/data/informe-acomodo"
 import {
   POR_REVISAR,
@@ -59,7 +59,7 @@ export async function guardarInvitadoAcomodo(
   id: number | null,
   input: InvitadoAcomodoInput
 ): Promise<ResultadoAcomodo> {
-  await requerirSesion()
+  await requerirArea("eventos")
   const parsed = invitadoAcomodoSchema.safeParse(input)
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Datos inválidos" }
@@ -100,7 +100,7 @@ export async function cambiarAsistenciaAcomodo(
   id: number,
   asistencia: AsistenciaInforme
 ): Promise<ResultadoAcomodo> {
-  await requerirSesion()
+  await requerirArea("eventos")
   if (!["confirmado", "no_asiste", "sin_confirmar"].includes(asistencia)) {
     return { ok: false, error: "Asistencia inválida" }
   }
@@ -119,7 +119,7 @@ export async function cambiarAsistenciaAcomodo(
 
 /** Baja lógica: el registro se conserva, solo deja de aparecer. */
 export async function darDeBajaInvitadoAcomodo(id: number): Promise<ResultadoAcomodo> {
-  await requerirSesion()
+  await requerirArea("eventos")
   try {
     await prisma.informeInvitado.update({ where: { id }, data: { estatus: "baja" } })
     refrescar()
@@ -138,7 +138,7 @@ export async function darDeBajaInvitadoAcomodo(id: number): Promise<ResultadoAco
 export async function moverGrupoAcomodo(
   input: MoverGrupoInput
 ): Promise<ResultadoAcomodo & { cuantos?: number; bloques?: string[] }> {
-  await requerirSesion()
+  await requerirArea("eventos")
   const parsed = moverGrupoSchema.safeParse(input)
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Datos inválidos" }

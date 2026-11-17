@@ -3,15 +3,14 @@
 import { revalidatePath } from "next/cache"
 import type { EstatusActivo } from "@prisma/client"
 
+import { requerirArea } from "@/lib/acceso"
 import { prisma } from "@/lib/prisma"
-import { requerirRol } from "@/lib/session"
 import { exito, fallo, type ResultadoAccion } from "@/lib/acciones"
 import {
   coordinadoraSchema,
   type CoordinadoraInput,
 } from "@/lib/schemas/coordinadora"
 
-const ROLES_AUTORIZADOS = ["admin", "coordinacion_general"] as const
 
 // La zona solo se guarda cuando el rol es "zona".
 function normalizarZona(input: CoordinadoraInput) {
@@ -21,7 +20,7 @@ function normalizarZona(input: CoordinadoraInput) {
 export async function crearCoordinadora(
   input: CoordinadoraInput
 ): Promise<ResultadoAccion> {
-  await requerirRol([...ROLES_AUTORIZADOS])
+  await requerirArea("centros-comunitarios")
 
   const parsed = coordinadoraSchema.safeParse(input)
   if (!parsed.success) {
@@ -48,7 +47,7 @@ export async function editarCoordinadora(
   id: number,
   input: CoordinadoraInput
 ): Promise<ResultadoAccion> {
-  await requerirRol([...ROLES_AUTORIZADOS])
+  await requerirArea("centros-comunitarios")
 
   const parsed = coordinadoraSchema.safeParse(input)
   if (!parsed.success) {
@@ -76,7 +75,7 @@ export async function cambiarEstatusCoordinadora(
   id: number,
   estatus: EstatusActivo
 ): Promise<ResultadoAccion> {
-  await requerirRol([...ROLES_AUTORIZADOS])
+  await requerirArea("centros-comunitarios")
 
   await prisma.coordinadora.update({ where: { id }, data: { estatus } })
 

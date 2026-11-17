@@ -594,6 +594,8 @@ model UsuarioSistema {
   areasPermitidas  String[]       @default([]) @map("areas_permitidas")
   /// Áreas de Oficios que puede ver; vacío = todas.
   areasOficios     String[]       @default([]) @map("areas_oficios")
+  /// Puede entrar a Administración (usuarios, contraseñas, zonas). Por defecto no.
+  esAdminSistema   Boolean        @default(false) @map("es_admin_sistema")
   estatus          EstatusUsuario @default(activo)
   createdAt        DateTime       @default(now()) @map("created_at")
   updatedAt        DateTime       @updatedAt @map("updated_at")

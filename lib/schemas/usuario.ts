@@ -7,6 +7,8 @@ const campos = z.object({
   areasPermitidas: z.array(z.string()).default([]),
   // Áreas de Oficios que puede ver. Lista vacía = todas.
   areasOficios: z.array(z.string()).default([]),
+  // Administración (usuarios, contraseñas, zonas). Por defecto no.
+  esAdminSistema: z.boolean().default(false),
 })
 
 export const editarUsuarioSchema = campos

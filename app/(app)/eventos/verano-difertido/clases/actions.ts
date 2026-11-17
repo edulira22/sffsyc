@@ -2,8 +2,8 @@
 
 import { revalidatePath } from "next/cache"
 
+import { requerirArea } from "@/lib/acceso"
 import { prisma } from "@/lib/prisma"
-import { requerirSesion } from "@/lib/session"
 import { exito, fallo, type ResultadoAccion } from "@/lib/acciones"
 import { aTitulo, aOracion, soloDigitos } from "@/lib/texto"
 import {
@@ -23,7 +23,7 @@ export async function guardarPersonalVerano(
   id: number | null,
   input: PersonalVeranoInput
 ): Promise<ResultadoAccion> {
-  await requerirSesion()
+  await requerirArea("eventos")
   const parsed = personalVeranoSchema.safeParse(input)
   if (!parsed.success) return fallo(parsed.error.issues[0]?.message ?? "Datos inválidos")
   const d = parsed.data
@@ -45,7 +45,7 @@ export async function guardarPersonalVerano(
 }
 
 export async function eliminarPersonalVerano(id: number): Promise<ResultadoAccion> {
-  await requerirSesion()
+  await requerirArea("eventos")
   try {
     // Baja lógica: si tuviera clases asignadas, la relación queda en null.
     await prisma.personalVerano.update({ where: { id }, data: { estatus: "inactivo" } })
@@ -62,7 +62,7 @@ export async function guardarClaseVerano(
   id: number | null,
   input: ClaseVeranoInput
 ): Promise<ResultadoAccion> {
-  await requerirSesion()
+  await requerirArea("eventos")
   const parsed = claseVeranoSchema.safeParse(input)
   if (!parsed.success) return fallo(parsed.error.issues[0]?.message ?? "Datos inválidos")
   const d = parsed.data
@@ -83,7 +83,7 @@ export async function guardarClaseVerano(
 }
 
 export async function eliminarClaseVerano(id: number): Promise<ResultadoAccion> {
-  await requerirSesion()
+  await requerirArea("eventos")
   try {
     // Borra la clase y sus bloques de horario (cascade en BD).
     await prisma.claseVerano.delete({ where: { id } })
@@ -99,7 +99,7 @@ export async function eliminarClaseVerano(id: number): Promise<ResultadoAccion> 
 export async function agregarBloqueHorario(
   input: HorarioVeranoInput
 ): Promise<ResultadoAccion> {
-  await requerirSesion()
+  await requerirArea("eventos")
   const parsed = horarioVeranoSchema.safeParse(input)
   if (!parsed.success) return fallo(parsed.error.issues[0]?.message ?? "Datos inválidos")
   const d = parsed.data
@@ -121,7 +121,7 @@ export async function agregarBloqueHorario(
 }
 
 export async function eliminarBloqueHorario(id: number): Promise<ResultadoAccion> {
-  await requerirSesion()
+  await requerirArea("eventos")
   try {
     await prisma.horarioVerano.delete({ where: { id } })
     revalidatePath(RUTA)

@@ -64,6 +64,7 @@ export function UsuarioFormDialog({
       password: "",
       areasPermitidas: TODAS_LAS_AREAS,
       areasOficios: TODAS_AREAS_OFICIO,
+      esAdminSistema: false,
     },
   })
 
@@ -76,12 +77,14 @@ export function UsuarioFormDialog({
       // Se carga el acceso guardado; antes se reiniciaba a "todo" al editar.
       areasPermitidas: oTodas(usuario?.areasPermitidas, TODAS_LAS_AREAS),
       areasOficios: oTodas(usuario?.areasOficios, TODAS_AREAS_OFICIO),
+      esAdminSistema: usuario?.esAdminSistema ?? false,
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, usuario])
 
   const areasActuales = form.watch("areasPermitidas")
   const oficiosActuales = form.watch("areasOficios")
+  const esAdmin = form.watch("esAdminSistema")
 
   function alternar(campo: "areasPermitidas" | "areasOficios", valor: string) {
     const actual = form.getValues(campo)
@@ -227,6 +230,23 @@ export function UsuarioFormDialog({
                 </div>
               </div>
             )}
+
+            <div className="border-t pt-4">
+              <label className="flex cursor-pointer items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={esAdmin}
+                  onChange={(e) => form.setValue("esAdminSistema", e.target.checked)}
+                  className="mt-0.5 size-4 accent-gobierno"
+                />
+                <span>
+                  <span className="block text-sm font-semibold leading-tight text-foreground">Administra usuarios y contraseñas</span>
+                  <span className="mt-1 block text-sm text-muted-foreground">
+                    Puede entrar a Administración: crear usuarios, cambiar contraseñas y accesos. Márcalo solo para quien lo necesite.
+                  </span>
+                </span>
+              </label>
+            </div>
 
             <DialogFooter className="gap-2 pt-2">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

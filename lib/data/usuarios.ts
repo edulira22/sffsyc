@@ -13,6 +13,7 @@ export async function listarUsuarios() {
       createdAt: true,
       areasPermitidas: true,
       areasOficios: true,
+      esAdminSistema: true,
     },
     orderBy: { nombre: "asc" },
   })

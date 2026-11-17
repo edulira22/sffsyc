@@ -26,6 +26,7 @@ import { UsuarioFormDialog } from "@/components/admin/usuario-form-dialog"
 import { ResetPasswordDialog } from "@/components/admin/reset-password-dialog"
 import { cambiarEstatusUsuario } from "@/app/(app)/admin/usuarios/actions"
 import type { UsuarioListado } from "@/lib/data/usuarios"
+import { nombresAreas } from "@/lib/areas"
 
 export function UsuariosTabla({ usuarios }: { usuarios: UsuarioListado[] }) {
   const router = useRouter()
@@ -49,6 +50,7 @@ export function UsuariosTabla({ usuarios }: { usuarios: UsuarioListado[] }) {
             <TableRow className="bg-muted/40">
               <TableHead>Nombre</TableHead>
               <TableHead>Correo</TableHead>
+              <TableHead className="hidden md:table-cell">Acceso</TableHead>
               <TableHead>Estatus</TableHead>
               <TableHead className="w-12" />
             </TableRow>
@@ -58,6 +60,12 @@ export function UsuariosTabla({ usuarios }: { usuarios: UsuarioListado[] }) {
               <TableRow key={u.id}>
                 <TableCell className="font-medium">{u.nombre}</TableCell>
                 <TableCell className="text-muted-foreground">{u.email}</TableCell>
+                <TableCell className="hidden max-w-xs text-xs md:table-cell">
+                  {u.esAdminSistema && <span className="mr-1 font-semibold text-gobierno">Administra usuarios ·</span>}
+                  <span className="text-muted-foreground">
+                    {u.areasPermitidas.length === 0 ? "Todas las secciones" : nombresAreas(u.areasPermitidas).join(", ")}
+                  </span>
+                </TableCell>
                 <TableCell>
                   <StatusBadge estatus={u.estatus} />
                 </TableCell>

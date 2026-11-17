@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 
-import { requerirRol } from "@/lib/session"
+import { requerirArea } from "@/lib/acceso"
 import { ENTIDADES_EXCEL } from "@/lib/excel/columnas"
 import {
   leerXlsx,
@@ -11,14 +11,13 @@ import {
   type ResultadoAnalisis,
 } from "@/lib/excel/importar"
 
-const ROLES = ["admin", "coordinacion_general"] as const
 
 // Paso 1: analiza el archivo y devuelve la previsualización (no inserta nada).
 export async function analizarImportacion(
   entidad: string,
   formData: FormData
 ): Promise<ResultadoAnalisis> {
-  await requerirRol([...ROLES])
+  await requerirArea("centros-comunitarios")
 
   const vacio: ResultadoAnalisis = {
     ok: false,
@@ -80,7 +79,7 @@ export async function confirmarImportacion(
   entidad: string,
   valoresFilas: Record<string, string>[]
 ): Promise<{ ok: boolean; insertadas: number; omitidas: number; errores: number; error?: string }> {
-  await requerirRol([...ROLES])
+  await requerirArea("centros-comunitarios")
 
   if (!ENTIDADES_EXCEL[entidad]) {
     return { ok: false, insertadas: 0, omitidas: 0, errores: 0, error: "Entidad no válida" }

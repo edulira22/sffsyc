@@ -14,7 +14,17 @@ export type UsuarioShell = {
   email: string | null
 }
 
-function ContenidoSidebar({ onNavigate, soloProfesor }: { onNavigate?: () => void; soloProfesor?: boolean }) {
+function ContenidoSidebar({
+  onNavigate,
+  soloProfesor,
+  areasVisibles,
+  verAdministracion,
+}: {
+  onNavigate?: () => void
+  soloProfesor?: boolean
+  areasVisibles: string[]
+  verAdministracion: boolean
+}) {
   return (
     <div className="flex h-full flex-col">
       <Link
@@ -32,7 +42,12 @@ function ContenidoSidebar({ onNavigate, soloProfesor }: { onNavigate?: () => voi
       </Link>
 
       <div className="scroll-oscuro mt-2 min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-3">
-        <SidebarNav onNavigate={onNavigate} soloProfesor={soloProfesor} />
+        <SidebarNav
+          onNavigate={onNavigate}
+          soloProfesor={soloProfesor}
+          areasVisibles={areasVisibles}
+          verAdministracion={verAdministracion}
+        />
       </div>
 
       <div className="px-5 py-4 text-[11px] text-white/40">
@@ -45,11 +60,17 @@ function ContenidoSidebar({ onNavigate, soloProfesor }: { onNavigate?: () => voi
 export function AppShell({
   usuario,
   soloProfesor = false,
+  areasVisibles = [],
+  verAdministracion = false,
   children,
 }: {
   usuario: UsuarioShell
   /** Profesor del Centro STEM: el menú solo muestra "Mis cursos". */
   soloProfesor?: boolean
+  /** Secciones que el usuario puede usar (las demás no aparecen en el menú). */
+  areasVisibles?: string[]
+  /** Permiso de Administración (usuarios, contraseñas, zonas). */
+  verAdministracion?: boolean
   children: React.ReactNode
 }) {
   const [menuAbierto, setMenuAbierto] = useState(false)
@@ -57,13 +78,18 @@ export function AppShell({
   return (
     <div className="flex min-h-screen">
       <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col bg-gobierno md:flex print:hidden">
-        <ContenidoSidebar soloProfesor={soloProfesor} />
+        <ContenidoSidebar soloProfesor={soloProfesor} areasVisibles={areasVisibles} verAdministracion={verAdministracion} />
       </aside>
 
       <Sheet open={menuAbierto} onOpenChange={setMenuAbierto}>
         <SheetContent side="left" className="w-64 border-0 bg-gobierno p-0">
           <SheetTitle className="sr-only">Menú de navegación</SheetTitle>
-          <ContenidoSidebar onNavigate={() => setMenuAbierto(false)} soloProfesor={soloProfesor} />
+          <ContenidoSidebar
+            onNavigate={() => setMenuAbierto(false)}
+            soloProfesor={soloProfesor}
+            areasVisibles={areasVisibles}
+            verAdministracion={verAdministracion}
+          />
         </SheetContent>
       </Sheet>
 

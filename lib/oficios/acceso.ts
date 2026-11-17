@@ -37,11 +37,12 @@ export async function accesoOficios(sesion?: Session | null): Promise<AccesoOfic
   const u = usuarioId
     ? await prisma.usuarioSistema.findUnique({
         where: { id: usuarioId },
-        select: { areasPermitidas: true, areasOficios: true },
+        select: { areasPermitidas: true, areasOficios: true, estatus: true },
       })
     : null
 
-  const entra = puedeAccederArea(u?.areasPermitidas, "oficios")
+  // Una cuenta desactivada no entra aunque su sesión siga vigente.
+  const entra = !!u && u.estatus === "activo" && puedeAccederArea(u.areasPermitidas, "oficios")
   const areas = u && u.areasOficios.length > 0 ? u.areasOficios : null
   const filtro: Prisma.OficioWhereInput = !entra
     ? { id: -1 }

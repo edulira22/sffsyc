@@ -3,12 +3,11 @@
 import { revalidatePath } from "next/cache"
 import type { EstatusActivo } from "@prisma/client"
 
+import { requerirArea } from "@/lib/acceso"
 import { prisma } from "@/lib/prisma"
-import { requerirRol } from "@/lib/session"
 import { exito, fallo, type ResultadoAccion } from "@/lib/acciones"
 import { profesorSchema, type ProfesorInput } from "@/lib/schemas/profesor"
 
-const ROLES = ["admin", "coordinacion_general"] as const
 
 function datosProfesor(d: ProfesorInput) {
   return {
@@ -22,7 +21,7 @@ function datosProfesor(d: ProfesorInput) {
 }
 
 export async function crearProfesor(input: ProfesorInput): Promise<ResultadoAccion> {
-  await requerirRol([...ROLES])
+  await requerirArea("centros-comunitarios")
   const parsed = profesorSchema.safeParse(input)
   if (!parsed.success) return fallo(parsed.error.issues[0]?.message ?? "Datos inválidos")
 
@@ -35,7 +34,7 @@ export async function editarProfesor(
   id: number,
   input: ProfesorInput
 ): Promise<ResultadoAccion> {
-  await requerirRol([...ROLES])
+  await requerirArea("centros-comunitarios")
   const parsed = profesorSchema.safeParse(input)
   if (!parsed.success) return fallo(parsed.error.issues[0]?.message ?? "Datos inválidos")
 
@@ -48,7 +47,7 @@ export async function cambiarEstatusProfesor(
   id: number,
   estatus: EstatusActivo
 ): Promise<ResultadoAccion> {
-  await requerirRol([...ROLES])
+  await requerirArea("centros-comunitarios")
   await prisma.profesor.update({ where: { id }, data: { estatus } })
   revalidatePath("/catalogos/profesores")
   return exito(estatus === "activa" ? "Profesor activado" : "Profesor desactivado")

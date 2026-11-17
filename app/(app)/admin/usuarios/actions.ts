@@ -4,8 +4,8 @@ import { revalidatePath } from "next/cache"
 import { Prisma, type EstatusUsuario } from "@prisma/client"
 import bcrypt from "bcryptjs"
 
+import { requerirAdminSistema } from "@/lib/acceso"
 import { prisma } from "@/lib/prisma"
-import { requerirSesion } from "@/lib/session"
 import { exito, fallo, type ResultadoAccion } from "@/lib/acciones"
 import { normalizarAreas } from "@/lib/areas"
 import { normalizarAreasOficio } from "@/lib/oficios/catalogos"
@@ -19,7 +19,7 @@ import {
 } from "@/lib/schemas/usuario"
 
 export async function crearUsuario(input: CrearUsuarioInput): Promise<ResultadoAccion> {
-  await requerirSesion()
+  await requerirAdminSistema()
 
   const parsed = crearUsuarioSchema.safeParse(input)
   if (!parsed.success) return fallo(parsed.error.issues[0]?.message ?? "Datos inválidos")
@@ -36,6 +36,7 @@ export async function crearUsuario(input: CrearUsuarioInput): Promise<ResultadoA
         rol: "admin",
         areasPermitidas: normalizarAreas(d.areasPermitidas),
         areasOficios: normalizarAreasOficio(d.areasOficios),
+        esAdminSistema: d.esAdminSistema,
       },
     })
     revalidatePath("/admin/usuarios")
@@ -52,11 +53,16 @@ export async function editarUsuario(
   id: number,
   input: EditarUsuarioInput
 ): Promise<ResultadoAccion> {
-  await requerirSesion()
+  const session = await requerirAdminSistema()
 
   const parsed = editarUsuarioSchema.safeParse(input)
   if (!parsed.success) return fallo(parsed.error.issues[0]?.message ?? "Datos inválidos")
   const d = parsed.data
+
+  // Evita quedarse fuera por accidente: nadie se quita a sí mismo Administración.
+  if (Number(session.user.id) === id && !d.esAdminSistema) {
+    return fallo("No puedes quitarte a ti mismo el permiso de administrar usuarios.")
+  }
 
   try {
     await prisma.usuarioSistema.update({
@@ -66,6 +72,7 @@ export async function editarUsuario(
         email: d.email,
         areasPermitidas: normalizarAreas(d.areasPermitidas),
         areasOficios: normalizarAreasOficio(d.areasOficios),
+        esAdminSistema: d.esAdminSistema,
       },
     })
     revalidatePath("/admin/usuarios")
@@ -82,7 +89,7 @@ export async function cambiarEstatusUsuario(
   id: number,
   estatus: EstatusUsuario
 ): Promise<ResultadoAccion> {
-  const session = await requerirSesion()
+  const session = await requerirAdminSistema()
 
   if (Number(session.user.id) === id && estatus === "inactivo") {
     return fallo("No puedes desactivar tu propia cuenta.")
@@ -97,7 +104,7 @@ export async function resetearPassword(
   id: number,
   input: PasswordInput
 ): Promise<ResultadoAccion> {
-  await requerirSesion()
+  await requerirAdminSistema()
 
   const parsed = passwordSchema.safeParse(input)
   if (!parsed.success) return fallo(parsed.error.issues[0]?.message ?? "Contraseña inválida")

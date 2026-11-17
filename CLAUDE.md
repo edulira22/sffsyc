@@ -101,8 +101,9 @@ Coordinadoras are assigned to zonas and centros but are separate from system use
 - **Area access** (`areasPermitidas: string[]`) is stored in the `areas_permitidas` column (TEXT[]) in `usuarios_sistema`. It is **not** in the JWT or session.
 - `lib/areas.ts` is the single source of truth for area definitions. It must stay pure TypeScript (no React, no icons) to remain importable from the edge middleware.
 - `normalizarAreas()`: if all or none selected → saves `[]` (= full access). Subset → saves the restriction. Empty array always means unrestricted.
-- The sidebar shows all areas to all users (no client-side filtering on session).
-- Only the Oficios section enforces `areasPermitidas` (see Oficios module); the other sections still show to everyone.
+- **Enforcement is server-side, read from the DB on every request** (`lib/acceso.ts`, not the JWT, so revoking or deactivating applies immediately): section folders have a `layout.tsx` calling `requerirArea("<area>")` (`centros`, `beneficiarios`, `captura-mensual`, `catalogos`, `datos` → `centros-comunitarios`; `eventos` → `eventos`), and **every Server Action** of those sections calls `requerirArea(...)` instead of `requerirSesion()`. Denials redirect to `/sin-acceso`. Oficios and Centro STEM use their own checks (`lib/oficios/acceso.ts`, `lib/stem/acceso.ts`). The Excel export route checks the section per entity. New actions MUST call the guard of their section.
+- **Administración** (users, passwords, zonas) requires `usuarios_sistema.es_admin_sistema = true` (`requerirAdminSistema()` in `app/(app)/admin/layout.tsx` and in every admin action). It defaults to false; a user cannot remove it from themselves. Never use `rol` for permissions (almost everyone has `rol = "admin"`).
+- The sidebar and the dashboard show only the sections the user can use (`AppShell` gets `areasVisibles` and `verAdministracion` from `app/(app)/layout.tsx`).
 
 ### Navigation
 

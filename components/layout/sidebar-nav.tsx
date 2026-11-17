@@ -130,7 +130,17 @@ function areaDeRuta(pathname: string) {
   return NAV_AREAS.find((a) => a.modulos.some((m) => estaActivo(pathname, m.href)))?.id ?? null
 }
 
-export function SidebarNav({ onNavigate, soloProfesor }: { onNavigate?: () => void; soloProfesor?: boolean }) {
+export function SidebarNav({
+  onNavigate,
+  soloProfesor,
+  areasVisibles,
+  verAdministracion,
+}: {
+  onNavigate?: () => void
+  soloProfesor?: boolean
+  areasVisibles: string[]
+  verAdministracion: boolean
+}) {
   const pathname = usePathname()
   // Una sola área abierta a la vez: el menú se mantiene corto.
   const [abierta, setAbierta] = useState<string | null>(() => areaDeRuta(pathname))
@@ -157,7 +167,7 @@ export function SidebarNav({ onNavigate, soloProfesor }: { onNavigate?: () => vo
         </p>
       </div>
 
-      {NAV_AREAS.map((area) =>
+      {NAV_AREAS.filter((a) => areasVisibles.includes(a.id)).map((area) =>
         area.proximamente ? (
           <AreaProximamente key={area.id} area={area} />
         ) : (
@@ -171,8 +181,12 @@ export function SidebarNav({ onNavigate, soloProfesor }: { onNavigate?: () => vo
         )
       )}
 
-      <div className="my-2 border-t border-white/10" />
-      <EnlaceSimple item={NAV_ADMINISTRACION} onNavigate={onNavigate} />
+      {verAdministracion && (
+        <>
+          <div className="my-2 border-t border-white/10" />
+          <EnlaceSimple item={NAV_ADMINISTRACION} onNavigate={onNavigate} />
+        </>
+      )}
     </nav>
   )
 }
