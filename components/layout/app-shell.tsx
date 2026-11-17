@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense, useState } from "react"
 import Link from "next/link"
 import { Building2, Menu } from "lucide-react"
 
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { SidebarNav } from "@/components/layout/sidebar-nav"
 import { UserMenu } from "@/components/layout/user-menu"
+import { IndicadorNavegacion } from "@/components/layout/cargando"
 
 export type UsuarioShell = {
   nombre: string
@@ -77,6 +78,9 @@ export function AppShell({
 
   return (
     <div className="flex min-h-screen">
+      <Suspense fallback={null}>
+        <IndicadorNavegacion />
+      </Suspense>
       <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col bg-gobierno md:flex print:hidden">
         <ContenidoSidebar soloProfesor={soloProfesor} areasVisibles={areasVisibles} verAdministracion={verAdministracion} />
       </aside>
