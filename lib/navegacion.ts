@@ -20,6 +20,8 @@ import {
   GraduationCap,
   Bot,
   ClipboardCheck,
+  Gift,
+  PackageOpen,
   type LucideIcon,
 } from "lucide-react"
 
@@ -95,6 +97,13 @@ export const NAV_AREAS: AreaNav[] = [
       { titulo: "Bandeja de oficios", href: "/oficios", icono: Inbox },
       { titulo: "Registrar oficios", href: "/oficios/nuevo", icono: FilePlus2 },
     ],
+  },
+  {
+    id: "entregas",
+    titulo: "Entregas",
+    descripcion: "Solicitudes de apoyos en especie: autorización, aviso y entrega",
+    icono: Gift,
+    modulos: [{ titulo: "Entregas del año", href: "/entregas", icono: PackageOpen }],
   },
   {
     id: "centro-stem",

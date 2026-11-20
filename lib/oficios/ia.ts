@@ -38,7 +38,7 @@ import {
 } from "@/lib/oficios/catalogos"
 
 export const MODELO_OFICIOS = process.env.OFICIOS_MODELO?.trim() || "claude-opus-5-5"
-const ESFUERZO = (["low", "medium", "high"].includes(process.env.OFICIOS_ESFUERZO ?? "")
+export const ESFUERZO = (["low", "medium", "high"].includes(process.env.OFICIOS_ESFUERZO ?? "")
   ? process.env.OFICIOS_ESFUERZO
   : "low") as "low" | "medium" | "high"
 export const TOPE_MENSUAL_USD = Number(process.env.OFICIOS_TOPE_MENSUAL_USD) > 0
@@ -177,7 +177,7 @@ export async function recortarPdf(bytes: Uint8Array): Promise<{ datos: Uint8Arra
   }
 }
 
-function bloqueArchivo(tipo: string, datos: Uint8Array): Anthropic.Beta.BetaContentBlockParam {
+export function bloqueArchivo(tipo: string, datos: Uint8Array): Anthropic.Beta.BetaContentBlockParam {
   const data = Buffer.from(datos).toString("base64")
   if (tipo === "application/pdf") {
     return { type: "document", source: { type: "base64", media_type: "application/pdf", data } }
@@ -191,7 +191,7 @@ function bloqueArchivo(tipo: string, datos: Uint8Array): Anthropic.Beta.BetaCont
 
 // --- Gasto -------------------------------------------------------------------
 
-function costoUsd(modelo: string, u: Anthropic.Beta.BetaUsage): number {
+export function costoUsd(modelo: string, u: Anthropic.Beta.BetaUsage): number {
   const p = PRECIOS[modelo] ?? PRECIOS["claude-opus-5-5"]
   const cacheEscritura = u.cache_creation_input_tokens ?? 0
   const cacheLectura = u.cache_read_input_tokens ?? 0
@@ -204,21 +204,23 @@ function costoUsd(modelo: string, u: Anthropic.Beta.BetaUsage): number {
   )
 }
 
-/** Gasto estimado de la IA en el mes en curso (UTC). */
+/** Gasto estimado de Lirabot en el mes en curso (UTC): Oficios + Entregas. */
 export async function gastoDelMes(): Promise<number> {
   const ahora = new Date()
   const inicio = new Date(Date.UTC(ahora.getUTCFullYear(), ahora.getUTCMonth(), 1))
-  const r = await prisma.oficioLectura.aggregate({
-    _sum: { costoUsd: true },
-    where: { createdAt: { gte: inicio } },
-  })
-  return r._sum.costoUsd ?? 0
+  const where = { createdAt: { gte: inicio } }
+  const [o, e] = await Promise.all([
+    prisma.oficioLectura.aggregate({ _sum: { costoUsd: true }, where }),
+    prisma.entregaLectura.aggregate({ _sum: { costoUsd: true }, where }),
+  ])
+  return (o._sum.costoUsd ?? 0) + (e._sum.costoUsd ?? 0)
 }
 
-/** Lecturas hechas hoy (día de Chihuahua, UTC−6). */
+/** Lecturas de Lirabot hechas hoy (día de Chihuahua, UTC−6): Oficios + Entregas. */
 export async function lecturasDeHoy(): Promise<number> {
-  const inicio = new Date(`${hoyChihuahua()}T00:00:00-06:00`)
-  return prisma.oficioLectura.count({ where: { createdAt: { gte: inicio } } })
+  const where = { createdAt: { gte: new Date(`${hoyChihuahua()}T00:00:00-06:00`) } }
+  const [o, e] = await Promise.all([prisma.oficioLectura.count({ where }), prisma.entregaLectura.count({ where })])
+  return o + e
 }
 
 /** Energía de Lirabot para hoy: cuántas lecturas le quedan. */
@@ -233,7 +235,7 @@ export type ResultadoLectura =
   | { ok: true; datos: LecturaOficio; modelo: string; costoUsd: number; paginasPdf: number | null }
   | { ok: false; error: string }
 
-function mensajeError(e: unknown): string {
+export function mensajeError(e: unknown): string {
   if (e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError) {
     return "La clave de Lirabot no es válida. Revisa ANTHROPIC_API_KEY."
   }
@@ -251,7 +253,7 @@ function mensajeError(e: unknown): string {
       ? "Lirabot está saturado en este momento. Vuelve a intentar en unos minutos."
       : `Error de Lirabot (${e.status ?? "sin estado"}).`
   }
-  return "Lirabot no pudo leer el oficio."
+  return "Lirabot no pudo leer el documento."
 }
 
 /**

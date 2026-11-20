@@ -771,3 +771,117 @@ model StemAsistencia {
   @@id([sesionId, alumnoId])
   @@map("stem_asistencias")
 }
+
+// =============================================================================
+//  Entregas — campañas (dulces, piñatas…) y sus solicitudes escaneadas
+//  (tablas creadas con prisma/sql/entregas.sql)
+// =============================================================================
+
+/// Una entrega por tema y año: "Dulces y piñatas · Día del Niño 2026".
+model EntregaCampana {
+  id          Int      @id @default(autoincrement())
+  nombre      String
+  anio        Int
+  /// Prefijo del folio de sus solicitudes: DDN → DDN-001.
+  prefijo     String   @unique
+  descripcion String   @default("")
+  /// [{ clave, nombre, disponible }]
+  articulos   Json     @default("[]")
+  /// abierta | cerrada
+  estatus     String   @default("abierta")
+  creadoPor   String   @default("") @map("creado_por")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  solicitudes EntregaSolicitud[]
+
+  @@map("entregas_campanas")
+}
+
+model EntregaSolicitud {
+  id              Int       @id @default(autoincrement())
+  campanaId       Int       @map("campana_id")
+  consecutivo     Int
+  fechaSolicitud  DateTime? @map("fecha_solicitud") @db.Date
+  fechaEvento     DateTime? @map("fecha_evento") @db.Date
+  categoria       String    @default("por_definir")
+  solicitante     String    @default("")
+  cargo           String    @default("")
+  organizacion    String    @default("")
+  /// Qué pide y para qué (evento, a quién va dirigido).
+  resumen         String    @default("")
+  contacto        String    @default("")
+  /// { clave: { solicitado, autorizado } }
+  cantidades      Json      @default("{}")
+  /// recibida | autorizada | contactada | entregada | no_procede
+  estado          String    @default("recibida")
+  fechaEntrega    DateTime? @map("fecha_entrega") @db.Date
+  /// Quién recogió.
+  recibio         String    @default("")
+  observaciones   String    @default("")
+  revisado        Boolean   @default(false)
+  iaEstado        String    @default("pendiente") @map("ia_estado")
+  iaCamposDudosos String[]  @default([]) @map("ia_campos_dudosos")
+  iaObservacion   String    @default("") @map("ia_observacion")
+  creadoPorId     Int?      @map("creado_por_id")
+  creadoPor       String    @default("") @map("creado_por")
+  /// activa | baja
+  estatus         String    @default("activa")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  campana     EntregaCampana     @relation(fields: [campanaId], references: [id])
+  archivo     EntregaArchivo?
+  movimientos EntregaMovimiento[]
+  lecturas    EntregaLectura[]
+
+  @@unique([campanaId, consecutivo], map: "entregas_folio_unico")
+  @@map("entregas_solicitudes")
+}
+
+model EntregaArchivo {
+  solicitudId    Int      @id @map("solicitud_id")
+  nombreOriginal String   @map("nombre_original")
+  tipo           String
+  tamano         Int
+  contenido      Bytes
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  solicitud EntregaSolicitud @relation(fields: [solicitudId], references: [id])
+
+  @@map("entregas_archivos")
+}
+
+model EntregaMovimiento {
+  id            Int      @id @default(autoincrement())
+  solicitudId   Int      @map("solicitud_id")
+  tipo          String
+  descripcion   String   @default("")
+  usuarioId     Int?     @map("usuario_id")
+  usuarioNombre String   @default("") @map("usuario_nombre")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  solicitud EntregaSolicitud @relation(fields: [solicitudId], references: [id])
+
+  @@index([solicitudId], map: "entregas_movimientos_solicitud")
+  @@map("entregas_movimientos")
+}
+
+model EntregaLectura {
+  id                   Int      @id @default(autoincrement())
+  solicitudId          Int      @map("solicitud_id")
+  modelo               String
+  tokensEntrada        Int      @default(0) @map("tokens_entrada")
+  tokensSalida         Int      @default(0) @map("tokens_salida")
+  tokensCacheLectura   Int      @default(0) @map("tokens_cache_lectura")
+  tokensCacheEscritura Int      @default(0) @map("tokens_cache_escritura")
+  costoUsd             Float    @default(0) @map("costo_usd")
+  exito                Boolean  @default(false)
+  error                String   @default("")
+  duracionMs           Int      @default(0) @map("duracion_ms")
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  solicitud EntregaSolicitud @relation(fields: [solicitudId], references: [id])
+
+  @@map("entregas_lecturas")
+}

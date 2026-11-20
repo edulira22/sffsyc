@@ -10,7 +10,7 @@
 //  Nada más: el sidebar, el formulario de usuarios y el guard la toman de aquí.
 // =============================================================================
 
-export type AreaId = "centros-comunitarios" | "oficios" | "centro-stem" | "mantenimiento" | "eventos"
+export type AreaId = "centros-comunitarios" | "oficios" | "entregas" | "centro-stem" | "mantenimiento" | "eventos"
 
 export type AreaDef = {
   id: AreaId
@@ -33,6 +33,12 @@ export const AREAS: AreaDef[] = [
     titulo: "Oficios",
     descripcion: "Bitácora de oficios recibidos, turnado y seguimiento",
     rutas: ["/oficios"],
+  },
+  {
+    id: "entregas",
+    titulo: "Entregas",
+    descripcion: "Solicitudes de apoyos en especie: autorización, aviso y entrega",
+    rutas: ["/entregas"],
   },
   {
     id: "centro-stem",

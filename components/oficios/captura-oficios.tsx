@@ -44,7 +44,7 @@ type Item = {
  * para subir y en el tamaño exacto que aprovecha la IA (más grande solo
  * cuesta más tokens sin leer mejor).
  */
-async function prepararImagen(file: File): Promise<File> {
+export async function prepararImagen(file: File): Promise<File> {
   const bmp = await createImageBitmap(file)
   const escala = Math.min(1, 1568 / Math.max(bmp.width, bmp.height))
   const w = Math.round(bmp.width * escala)
@@ -67,7 +67,7 @@ async function prepararImagen(file: File): Promise<File> {
 const ETIQUETA: Record<Estado, { texto: string; clase: string }> = {
   en_cola: { texto: "En cola", clase: "bg-muted text-muted-foreground" },
   subiendo: { texto: "Registrando…", clase: "bg-sky-100 text-sky-800" },
-  leyendo: { texto: "Leyendo con IA…", clase: "bg-violet-100 text-violet-800" },
+  leyendo: { texto: "Lirabot está leyendo…", clase: "bg-violet-100 text-violet-800" },
   revisar: { texto: "Por revisar", clase: "bg-amber-100 text-amber-800" },
   confirmado: { texto: "Confirmado", clase: "bg-emerald-100 text-emerald-800" },
   error: { texto: "Error", clase: "bg-rose-100 text-rose-800" },
