@@ -40,9 +40,8 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     { header: "Observaciones", key: "observaciones", width: 40 },
     { header: "Solicitud (escaneo)", key: "enlace", width: 20 },
   ]
-  hoja.getRow(1).font = { bold: true, color: { argb: "FFFFFFFF" } }
-  hoja.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1A3A6B" } }
-  hoja.getRow(1).alignment = { vertical: "middle", wrapText: true }
+  // Tabla simple: una fila de encabezados en negritas y nada más.
+  hoja.getRow(1).font = { bold: true }
 
   for (const s of c.solicitudes) {
     const fila: Record<string, unknown> = {
@@ -67,18 +66,8 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       fila[`a_${a.clave}`] = s.cantidades[a.clave]?.autorizado ?? null
     }
     const r = hoja.addRow(fila)
-    r.getCell("enlace").font = { color: { argb: "FF2E8B7A" }, underline: true }
-    r.alignment = { vertical: "top", wrapText: true }
+    r.getCell("enlace").font = { color: { argb: "FF0563C1" }, underline: true }
   }
-
-  // Totales (lo autorizado solo cuenta si no es "no procede").
-  const total: Record<string, unknown> = { contacto: "TOTAL" }
-  for (const a of c.avance) {
-    total[`s_${a.clave}`] = a.solicitado
-    total[`a_${a.clave}`] = a.autorizado
-  }
-  const filaTotal = hoja.addRow(total)
-  filaTotal.font = { bold: true }
 
   const buffer = await libro.xlsx.writeBuffer()
   const nombre = `${c.prefijo}-${new Date().toISOString().slice(0, 10)}.xlsx`
