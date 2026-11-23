@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { BarraArticulo } from "@/components/entregas/campanas-lista"
 import { CampanaForm } from "@/components/entregas/campana-form"
+import { DescargarEscaneos } from "@/components/entregas/descargar-escaneos"
 
 const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
 type Filtro = "todas" | "por_revisar" | (typeof ESTADOS_SOLICITUD)[number]["valor"]
@@ -146,6 +147,10 @@ export function CampanaVista({ campana, energia }: { campana: CampanaDetalle; en
               <Download className="size-3.5" /> Exportar Excel
             </a>
           </Button>
+          <DescargarEscaneos
+            escaneos={lista.filter((s) => s.tieneArchivo).map((s) => ({ id: s.id, folio: s.folio }))}
+            nombreZip={`${campana.prefijo} ${campana.anio} - escaneos`}
+          />
           <Button
             variant="ghost"
             size="sm"

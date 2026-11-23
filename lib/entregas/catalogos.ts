@@ -101,3 +101,12 @@ export function fechaCorta(iso: string | null): string {
 
 export const MAX_BYTES_ARCHIVO = 4 * 1024 * 1024
 export const TIPOS_ARCHIVO = ["image/jpeg", "image/png", "image/webp", "application/pdf"]
+
+/** Extensión para guardar el escaneo con su folio: DYP-001.jpg */
+export function extensionArchivo(tipo: string): string {
+  const t = tipo.split(";")[0].trim().toLowerCase()
+  if (t === "image/jpeg") return "jpg"
+  if (t === "application/pdf") return "pdf"
+  if (t.startsWith("image/")) return t.slice(6)
+  return "bin"
+}
