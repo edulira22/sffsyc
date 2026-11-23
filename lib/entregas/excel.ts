@@ -57,5 +57,13 @@ export async function excelEntrega(c: CampanaDetalle, origen: string): Promise<A
     if (s.tieneArchivo) r.getCell("folio").font = { color: { argb: "FF0563C1" }, underline: true }
   }
 
+  // Cada texto se acomoda dentro de su celda. Si un texto largo se desborda sobre
+  // la celda vacía de junto, Excel lo copia como celda combinada y Google Sheets
+  // ya no deja convertir el rango en tabla.
+  const columnas = hoja.columns.length
+  hoja.eachRow({ includeEmpty: true }, (fila) => {
+    for (let i = 1; i <= columnas; i++) fila.getCell(i).alignment = { wrapText: true, vertical: "top" }
+  })
+
   return (await libro.xlsx.writeBuffer()) as ArrayBuffer
 }
