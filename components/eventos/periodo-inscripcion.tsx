@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
+import Link from "@/components/ui/enlace"
 import { CalendarCheck, Clock, ExternalLink } from "lucide-react"
 
 import { cn } from "@/lib/utils"

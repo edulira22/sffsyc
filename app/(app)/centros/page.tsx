@@ -1,4 +1,4 @@
-import Link from "next/link"
+import Link from "@/components/ui/enlace"
 import { Building2, Plus } from "lucide-react"
 import type { EstatusCentro, TipoCentro } from "@prisma/client"
 

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import Link from "next/link"
+import Link from "@/components/ui/enlace"
 import { FileCheck2, Loader2, Receipt, Printer, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
 

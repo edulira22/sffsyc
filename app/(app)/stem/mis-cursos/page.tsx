@@ -1,4 +1,4 @@
-import Link from "next/link"
+import Link from "@/components/ui/enlace"
 import { CalendarRange } from "lucide-react"
 
 import { quienStem } from "@/lib/stem/acceso"

@@ -1,4 +1,4 @@
-import Link from "next/link"
+import Link from "@/components/ui/enlace"
 
 import { requerirSesion } from "@/lib/session"
 import { listarUsuarios } from "@/lib/data/usuarios"

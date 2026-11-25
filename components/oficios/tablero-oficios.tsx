@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import Link from "next/link"
+import Link from "@/components/ui/enlace"
 import { Archive, FileText, Flag, PartyPopper, Sparkles, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"

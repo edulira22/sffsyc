@@ -1,4 +1,4 @@
-import Link from "next/link"
+import Link from "@/components/ui/enlace"
 
 import { requerirRol } from "@/lib/session"
 import { prisma } from "@/lib/prisma"

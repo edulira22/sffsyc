@@ -1,4 +1,4 @@
-import Link from "next/link"
+import Link from "@/components/ui/enlace"
 import { Lock } from "lucide-react"
 
 import { AREAS } from "@/lib/areas"

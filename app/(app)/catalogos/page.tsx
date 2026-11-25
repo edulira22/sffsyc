@@ -1,4 +1,4 @@
-import Link from "next/link"
+import Link from "@/components/ui/enlace"
 import { UserCog, GraduationCap, Presentation, ArrowRight } from "lucide-react"
 
 import { requerirRol } from "@/lib/session"

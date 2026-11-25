@@ -1,4 +1,4 @@
-import Link from "next/link"
+import Link from "@/components/ui/enlace"
 import { Users, Plus } from "lucide-react"
 
 import { requerirSesion } from "@/lib/session"

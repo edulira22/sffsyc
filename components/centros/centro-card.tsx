@@ -1,4 +1,4 @@
-import Link from "next/link"
+import Link from "@/components/ui/enlace"
 import { MapPin, UserCog, GraduationCap } from "lucide-react"
 
 import { Card, CardContent } from "@/components/ui/card"

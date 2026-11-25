@@ -1,4 +1,4 @@
-import Link from "next/link"
+import Link from "@/components/ui/enlace"
 import { notFound, redirect } from "next/navigation"
 import { Users } from "lucide-react"
 

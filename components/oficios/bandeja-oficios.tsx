@@ -1,7 +1,7 @@
 "use client"
 
 import { Fragment, useMemo, useState } from "react"
-import Link from "next/link"
+import Link from "@/components/ui/enlace"
 import { useRouter, useSearchParams } from "next/navigation"
 import {
   AlertTriangle,

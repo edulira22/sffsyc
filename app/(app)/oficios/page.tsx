@@ -1,4 +1,4 @@
-import Link from "next/link"
+import Link from "@/components/ui/enlace"
 import { Download, FilePlus2 } from "lucide-react"
 
 import { accesoOficios } from "@/lib/oficios/acceso"

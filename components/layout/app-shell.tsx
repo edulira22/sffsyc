@@ -1,7 +1,7 @@
 "use client"
 
 import { Suspense, useState } from "react"
-import Link from "next/link"
+import Link from "@/components/ui/enlace"
 import { Building2, Menu } from "lucide-react"
 
 import { Button } from "@/components/ui/button"

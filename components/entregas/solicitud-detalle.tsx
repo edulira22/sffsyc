@@ -1,7 +1,7 @@
 "use client"
 
 import { Fragment, useState, useTransition } from "react"
-import Link from "next/link"
+import Link from "@/components/ui/enlace"
 import { useRouter } from "next/navigation"
 import { Ban, CheckCircle2, ChevronDown, Download, Loader2, RefreshCw, Sparkles } from "lucide-react"
 import { toast } from "sonner"

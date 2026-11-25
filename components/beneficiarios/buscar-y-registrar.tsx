@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
+import Link from "@/components/ui/enlace"
 import { Search, Loader2, UserPlus, AlertTriangle, ArrowLeft } from "lucide-react"
 
 import { Card, CardContent } from "@/components/ui/card"

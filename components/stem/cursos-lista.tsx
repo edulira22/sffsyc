@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import Link from "next/link"
+import Link from "@/components/ui/enlace"
 import { CalendarRange } from "lucide-react"
 
 import { ESTADOS_CURSO, fechaCorta } from "@/lib/stem/catalogos"

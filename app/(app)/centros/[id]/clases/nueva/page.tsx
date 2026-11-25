@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/ui-patterns/page-header"
 import { EmptyState } from "@/components/ui-patterns/empty-state"
 import { AsignarClaseForm } from "@/components/centros/asignar-clase-form"
 import { GraduationCap } from "lucide-react"
-import Link from "next/link"
+import Link from "@/components/ui/enlace"
 import { Button } from "@/components/ui/button"
 
 export const metadata = { title: "Asignar clase" }
