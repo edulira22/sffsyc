@@ -17,6 +17,7 @@ import {
   Cpu,
   BarChart3,
   CalendarClock,
+  FileBarChart,
   CalendarRange,
   GraduationCap,
   Bot,
@@ -118,6 +119,7 @@ export const NAV_AREAS: AreaNav[] = [
       { titulo: "Alumnos", href: "/stem/alumnos", icono: Users },
       { titulo: "Clases", href: "/stem/clases", icono: Bot },
       { titulo: "Profesores", href: "/stem/profesores", icono: GraduationCap },
+      { titulo: "Reportes", href: "/stem/reportes", icono: FileBarChart },
     ],
   },
   {

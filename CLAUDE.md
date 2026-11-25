@@ -151,6 +151,8 @@ Robotics classes at Centro STEM San Quintín (`/stem`, tables `stem_*` from `pri
 
 Access (`lib/stem/acceso.ts`, read from the DB each request): admins are non-professor users with the `centro-stem` section; professors are confined by `auth.config.ts` to `/stem/mis-cursos` (any other route redirects there, including `/login`) and `puedeVerCurso` limits them to their own courses — they see students' full info and take attendance, but cannot enrol, edit or cancel. `AppShell` gets `soloProfesor` to show only "Mis cursos". Server rules in `app/(app)/stem/actions.ts`: profesor must teach the clase, no schedule overlap for the same profesor, cupo enforced, attendance only on real class dates up to today, CURP never duplicated. Profesores are hidden from Administración → Usuarios (managed in Centro STEM → Profesores).
 
+`/stem/horario` is the weekly timetable (rows = distinct time slots, columns = days). `/stem/reportes` builds reports: `lib/stem/reportes.ts` (pure) defines the report types, periods (`mes`/`anio`/`rango`/`todo`) and the URL params (`leerParametros`/`aQuery`); `lib/data/stem-reportes.ts` (`generarReporte`) returns a generic `{metricas, columnas, filas}`; the page and the Excel route `app/api/stem/reportes` (admins only, checks the DB itself) use the same params, so the download is exactly what is on screen. A course is in the period if its dates overlap it; classes taught and attendance count only sessions dated inside it; inscriptions count by `fechaInscripcion`.
+
 ## Key constraints (do not change without reason)
 
 - `prisma/schema.prisma`: records are never deleted — all have an `estatus` field. Age is never stored — always calculated from `fechaNacimiento`.
