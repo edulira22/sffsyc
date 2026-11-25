@@ -36,6 +36,23 @@ function sumar(c: Conteo, estado: string) {
 }
 const asistenciaDe = (c: Conteo) => porcentajeAsistencia(c.asistio, c.falta, c.justificada)
 
+/**
+ * Horas de clase en la semana más cargada del periodo, con las clases programadas
+ * de esos cursos (no suma cursos que no coinciden en el tiempo).
+ */
+function horasPorSemana(cursos: { fechasProgramadas: string[]; duracion: number }[]): number {
+  const porSemana = new Map<string, number>()
+  for (const c of cursos) {
+    for (const f of c.fechasProgramadas) {
+      const d = new Date(`${f}T12:00:00Z`)
+      d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7)) // lunes de esa semana
+      const lunes = d.toISOString().slice(0, 10)
+      porSemana.set(lunes, (porSemana.get(lunes) ?? 0) + c.duracion)
+    }
+  }
+  return Math.max(0, ...Array.from(porSemana.values()))
+}
+
 export async function generarReporte(p: ParametrosReporte, hoy: string): Promise<Reporte> {
   const { desde, hasta, texto } = rangoDe(p)
   const filtroCurso = { ...(p.clase ? { claseId: p.clase } : {}), ...(p.profesor ? { profesorId: p.profesor } : {}) }
@@ -121,7 +138,8 @@ export async function generarReporte(p: ParametrosReporte, hoy: string): Promise
     const estado = estadoCurso({ estatus: c.estatus, inicio, fin }, hoy)
     const desdeCurso = inicio > desde ? inicio : desde
     const hastaCurso = fin < hasta ? fin : hasta
-    const programadas = c.estatus === "cancelado" ? 0 : fechasDeClase(desdeCurso, hastaCurso, c.dias).length
+    const fechasProgramadas = c.estatus === "cancelado" ? [] : fechasDeClase(desdeCurso, hastaCurso, c.dias)
+    const programadas = fechasProgramadas.length
     const conteo = conteoVacio()
     for (const s of c.sesiones) for (const a of s.asistencias) sumar(conteo, a.estado)
     const activos = c.inscripciones.filter((i) => i.estatus === "activa")
@@ -137,6 +155,8 @@ export async function generarReporte(p: ParametrosReporte, hoy: string): Promise
       bajas: c.inscripciones.length - activos.length,
       impartidas: c.sesiones.length,
       horas: c.sesiones.length * duracion,
+      horasProgramadas: programadas * duracion,
+      fechasProgramadas,
       duracion,
     }
   })
@@ -174,6 +194,8 @@ export async function generarReporte(p: ParametrosReporte, hoy: string): Promise
           impartidas: g.cursos.reduce((s, c) => s + c.impartidas, 0),
           programadas: g.cursos.reduce((s, c) => s + c.programadas, 0),
           horas: redondear1(g.cursos.reduce((s, c) => s + c.horas, 0)),
+          horasProgramadas: redondear1(g.cursos.reduce((s, c) => s + c.horasProgramadas, 0)),
+          horasSemana: redondear1(horasPorSemana(g.cursos)),
           alumnos: alumnos.size,
           inscripciones: inscritos,
           ocupacion: pct(inscritos, cupo),
@@ -197,6 +219,7 @@ export async function generarReporte(p: ParametrosReporte, hoy: string): Promise
         { clave: "clase", titulo: "Clase", ancho: 24 },
         { clave: "profesor", titulo: "Profesor", ancho: 28 },
         { clave: "horario", titulo: "Días y horario", ancho: 28 },
+        { clave: "horasSemana", titulo: "Horas a la semana", tipo: "numero" },
         { clave: "inicio", titulo: "Inicio", tipo: "fecha" },
         { clave: "fin", titulo: "Fin", tipo: "fecha" },
         { clave: "estado", titulo: "Estado", ancho: 12 },
@@ -213,6 +236,7 @@ export async function generarReporte(p: ParametrosReporte, hoy: string): Promise
         clase: c.clase.nombre,
         profesor: c.profesor.nombre,
         horario: textoHorario(c.dias, c.horaInicio, c.horaFin),
+        horasSemana: redondear1(c.dias.length * c.duracion),
         inicio: c.inicio,
         fin: c.fin,
         estado: label(ESTADOS_CURSO, c.estado),
@@ -398,12 +422,15 @@ export async function generarReporte(p: ParametrosReporte, hoy: string): Promise
         { etiqueta: "Cursos", valor: vigentes.length },
         { etiqueta: "Clases impartidas", valor: grupos.reduce((s, g) => s + g.impartidas, 0) },
         { etiqueta: "Horas impartidas", valor: num(redondear1(grupos.reduce((s, g) => s + g.horas, 0))) },
+        { etiqueta: "Horas de clase a la semana", valor: num(redondear1(horasPorSemana(vigentes))), nota: "todos juntos, en la semana más cargada" },
       ],
       columnas: [
         { clave: "nombre", titulo: p.tipo === "clases" ? "Clase" : "Profesor", ancho: 30 },
         { clave: "cursos", titulo: "Cursos", tipo: "numero" },
+        { clave: "horasSemana", titulo: "Horas a la semana", tipo: "numero" },
         { clave: "programadas", titulo: "Clases programadas", tipo: "numero" },
         { clave: "impartidas", titulo: "Clases impartidas", tipo: "numero" },
+        { clave: "horasProgramadas", titulo: "Horas programadas", tipo: "numero" },
         { clave: "horas", titulo: "Horas impartidas", tipo: "numero" },
         { clave: "alumnos", titulo: "Alumnos", tipo: "numero" },
         { clave: "ocupacion", titulo: "Ocupación", tipo: "porcentaje" },
