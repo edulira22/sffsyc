@@ -115,6 +115,11 @@ Coordinadoras are assigned to zonas and centros but are separate from system use
 - **Primary actions** use `bg-agua hover:bg-agua-600`. Navigation/admin accents use `bg-gobierno`.
 - All shadcn/ui `<FormLabel>`, `<FormControl>`, `<FormDescription>`, `<FormMessage>` **must** be inside a `<FormField>` render prop — using them outside crashes with `useFormField should be used within <FormField>`.
 - Toasts via `sonner` (`toast.success` / `toast.error`). Page-level errors use the `error.tsx` boundary.
+- **Links**: always `import Link from "@/components/ui/enlace"`, never `next/link` directly. It defaults to `prefetch={false}`: Next's automatic prefetch fired one server request (session + DB query) per visible link, and long lists made the app slow. `PantallaCargando` covers the click instead.
+
+### Performance
+
+Vercel functions run in **pdx1** (`vercel.json`), the same region as the Supabase DB (us-west-2). In iad1 every query took ~300 ms (even `SELECT 1`); in pdx1 ~10 ms. Don't remove the region setting or move the DB without moving the other.
 
 ### Excel import/export
 
